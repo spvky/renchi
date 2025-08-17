@@ -1,0 +1,15 @@
+{
+	"identifier": "A",
+	"uniqueIdentifer": "ce0e19f0-3740-11f0-a20e-d339d5e67fc5",
+	"x": -1,
+	"y": -1,
+	"width": 512,
+	"height": 512,
+	"bgColor": "#696A79",
+	"neighbourLevels": [],
+	"customFields" : {},
+	"layers": [
+		"Main.png"
+	],
+	"entities" : {}
+}

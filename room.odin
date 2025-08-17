@@ -1,9 +1,10 @@
 package main
 
 Room :: struct {
-	cells:  map[Cell_Position]Cell,
-	width:  u8,
-	height: u8,
+	cells:      map[Cell_Position]Cell,
+	width:      u8,
+	height:     u8,
+	cell_count: u8,
 }
 
 Room_Rotation :: enum u8 {
@@ -13,14 +14,18 @@ Room_Rotation :: enum u8 {
 	South,
 }
 
-World_Map :: struct {
-	cells: map[Cell_Position]Cell,
-}
-
 Map_Room :: struct {
 	rotation: Room_Rotation,
 	origin:   Cell_Position,
 	room:     ^Room,
+}
+
+Room_Tag :: enum {
+	A,
+	B,
+	C,
+	D,
+	E,
 }
 
 Cell :: struct {
