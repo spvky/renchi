@@ -25,7 +25,6 @@ Room_Tag :: enum {
 	B,
 	C,
 	D,
-	E,
 }
 
 Cell :: struct {
@@ -39,10 +38,8 @@ Tile_Position :: [2]i16
 Tile :: enum u8 {
 	Empty,
 	Wall,
-	Exit,
-	Box,
-	Pipe,
-	Fan,
+	OneWay,
+	Door,
 }
 
 

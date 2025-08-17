@@ -1,6 +1,7 @@
 package main
 
 import "core:c"
+import "core:fmt"
 import rl "vendor:raylib"
 
 world: World
@@ -20,6 +21,7 @@ init :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game")
 	screen_texture = rl.LoadRenderTexture(SCREEN_HEIGHT, SCREEN_HEIGHT)
 	world = make_world()
+	room := read_room(.A)
 }
 
 update :: proc() {

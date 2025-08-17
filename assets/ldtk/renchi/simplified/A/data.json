@@ -8,8 +8,6 @@
 	"bgColor": "#696A79",
 	"neighbourLevels": [],
 	"customFields" : {},
-	"layers": [
-		"Main.png"
-	],
+	"layers": [],
 	"entities" : {}
 }

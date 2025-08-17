@@ -3,6 +3,7 @@ package main
 import "core:encoding/csv"
 import "core:fmt"
 import "core:os"
+import "core:strconv"
 
 read_room :: proc(tag: Room_Tag) -> Room {
 	filename := room_tag_as_filepath(tag, .CSV)
@@ -10,7 +11,6 @@ read_room :: proc(tag: Room_Tag) -> Room {
 	r.trim_leading_space = true
 	defer csv.reader_destroy(&r)
 
-	raw_cells := make(map[Cell_Position]Cell, 8, allocator = context.temp_allocator)
 	cells := make(map[Cell_Position]Cell, 8)
 
 	csv_data, ok := os.read_entire_file(filename)
@@ -35,31 +35,26 @@ read_room :: proc(tag: Room_Tag) -> Room {
 	height := len(records) / 16
 
 
-	rooms: [10][10]Cell
+	rooms: [16][16]Cell
 
 	for r, i in records {
 		for f, j in r {
-			x: i16 = i16(j) / 12 //X and Y inform which room cell we are populating
-			y: i16 = i16(i) / 12 //X and Y inform which room cell we are populating
-			ix := i16(j) - (x * 12)
-			iy := i16(i) - (y * 12)
-			current_cell := &rooms[x][y]
-			current_cell.location = Tile{x, y}
+			cx: i16 = i16(j) / 16
+			cy: i16 = i16(i) / 16
+			position := Cell_Position{cx, cy}
+			x := i16(j) - (cx * 16)
+			y := i16(i) - (cy * 16)
 			if field, ok := strconv.parse_uint(f); ok {
-				current_cell.pixels[iy][ix] = u8(field)
+				exists := position in cells
+				if !exists {
+					cells[position] = Cell{}
+				}
+				cell := &cells[position]
+				cell.tiles[y][x] = Tile(field)
 			}
 		}
 	}
-
-	for i in 0 ..< 10 {
-		for j in 0 ..< 10 {
-			validity := is_valid_room_cell(rooms[j][i])
-			if validity {
-				sa.append(&cell_array, rooms[j][i])
-			}
-		}
-	}
-	return MapRoom{cells = cell_array, name = tag}
+	return Room{cells = cells}
 }
 
 room_tag_as_filepath :: proc(tag: Room_Tag, extension: enum {
@@ -68,9 +63,9 @@ room_tag_as_filepath :: proc(tag: Room_Tag, extension: enum {
 	}) -> string {
 	switch extension {
 	case .CSV:
-		return fmt.tprintf("assets/ldtk/samples/simplified/%v/Main.csv", tag)
+		return fmt.tprintf("assets/ldtk/renchi/simplified/%v/Main.csv", tag)
 	case .PNG:
-		return fmt.tprintf("assets/ldtk/samples/simplified/%v/Main.png", tag)
+		return fmt.tprintf("assets/ldtk/renchi/simplified/%v/Main.png", tag)
 	}
 	return ""
 }
