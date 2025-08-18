@@ -2,6 +2,7 @@ package main
 
 import "core:encoding/csv"
 import "core:fmt"
+import "core:math"
 import "core:os"
 import "core:strconv"
 
@@ -31,11 +32,6 @@ read_room :: proc(tag: Room_Tag) -> Room {
 		}
 		delete(records)
 	}
-	width := len(records[0]) / 16
-	height := len(records) / 16
-
-
-	rooms: [16][16]Cell
 
 	for r, i in records {
 		for f, j in r {
@@ -45,16 +41,57 @@ read_room :: proc(tag: Room_Tag) -> Room {
 			x := i16(j) - (cx * 16)
 			y := i16(i) - (cy * 16)
 			if field, ok := strconv.parse_uint(f); ok {
-				exists := position in cells
-				if !exists {
-					cells[position] = Cell{}
+				value := Tile(field)
+				if value != .Empty {
+					exists := position in cells
+					if !exists {
+						cells[position] = Cell{}
+					}
+					cell := &cells[position]
+					cell.tiles[y][x] = value
 				}
-				cell := &cells[position]
-				cell.tiles[y][x] = Tile(field)
 			}
 		}
 	}
-	return Room{cells = cells}
+	room := Room {
+		cells = cells,
+	}
+	parse_room_stats(&room, tag)
+	return room
+}
+
+parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
+	pivot := room_pivot_from_tag(tag)
+	cell_count: u8
+	min_x, min_y, max_x, max_y: i16
+	for position, cell in room.cells {
+		cell_count += 1
+		if position.x < min_x {
+			min_x = position.x
+		}
+		if position.y < min_y {
+			min_y = position.y
+		}
+		if position.x > max_x {
+			max_x = position.x
+		}
+		if position.y > max_y {
+			max_y = position.y
+		}
+	}
+
+	new_cells := make(map[Cell_Position]Cell, cell_count)
+
+	for position, cell in room.cells {
+		converted_position := position - pivot
+		new_cells[converted_position] = cell
+	}
+
+	delete(room.cells)
+	room.cells = new_cells
+	room.width = u8(1 + (max_x - min_x))
+	room.height = u8(1 + (max_y - min_y))
+	room.cell_count = cell_count
 }
 
 room_tag_as_filepath :: proc(tag: Room_Tag, extension: enum {

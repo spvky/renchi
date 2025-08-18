@@ -16,8 +16,7 @@ Room_Rotation :: enum u8 {
 
 Map_Room :: struct {
 	rotation: Room_Rotation,
-	origin:   Cell_Position,
-	room:     ^Room,
+	ptr:      ^Room,
 }
 
 Room_Tag :: enum {
@@ -25,6 +24,17 @@ Room_Tag :: enum {
 	B,
 	C,
 	D,
+}
+
+room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
+	position: Cell_Position
+	#partial switch tag {
+	case .A:
+		position = {1, 0}
+	case .D:
+		position = {2, 1}
+	}
+	return position
 }
 
 Cell :: struct {

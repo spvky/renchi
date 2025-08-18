@@ -4,7 +4,7 @@ import rl "vendor:raylib"
 
 render_scene :: proc() {
 	rl.BeginTextureMode(screen_texture)
-	rl.ClearBackground({0,12,240,255})
+	rl.ClearBackground({0, 12, 240, 255})
 	// Draw the scene here
 	rl.EndTextureMode()
 }
@@ -20,5 +20,6 @@ draw_to_screen :: proc() {
 		0,
 		rl.WHITE,
 	)
+	draw_room(Map_Room{ptr = &room})
 	rl.EndDrawing()
 }

@@ -4,9 +4,12 @@ import "core:c"
 import "core:fmt"
 import rl "vendor:raylib"
 
+Vec2 :: [2]f32
+
 world: World
 screen_texture: rl.RenderTexture
 run: bool
+room: Room
 
 WINDOW_WIDTH: i32
 WINDOW_HEIGHT: i32
@@ -21,7 +24,8 @@ init :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game")
 	screen_texture = rl.LoadRenderTexture(SCREEN_HEIGHT, SCREEN_HEIGHT)
 	world = make_world()
-	room := read_room(.A)
+	room = read_room(.A)
+	fmt.printfln("Room: %v", room)
 }
 
 update :: proc() {
