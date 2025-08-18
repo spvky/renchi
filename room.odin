@@ -19,6 +19,7 @@ Map_Room :: struct {
 	ptr:      ^Room,
 }
 
+
 Room_Tag :: enum {
 	A,
 	B,
@@ -37,8 +38,15 @@ room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 	return position
 }
 
+// Permanent representation of a room cell
 Cell :: struct {
 	tiles: [16][16]Tile,
+}
+
+// Representation of a cell when it's in the world map
+Map_Cell :: struct {
+	rotation: Room_Rotation,
+	tiles:    [16][16]Tile,
 }
 
 Cell_Position :: [2]i16

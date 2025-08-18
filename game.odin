@@ -11,18 +11,16 @@ screen_texture: rl.RenderTexture
 run: bool
 room: Room
 
-WINDOW_WIDTH: i32
-WINDOW_HEIGHT: i32
-SCREEN_WIDTH :: 800
-SCREEN_HEIGHT :: 450
+WINDOW_WIDTH: i32 = 1600
+WINDOW_HEIGHT: i32 = 900
+SCREEN_WIDTH :: 480
+SCREEN_HEIGHT :: 360
 
 
 init :: proc() {
-	WINDOW_WIDTH = 1600
-	WINDOW_HEIGHT = 900
 	run = true
-	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game")
-	screen_texture = rl.LoadRenderTexture(SCREEN_HEIGHT, SCREEN_HEIGHT)
+	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
+	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
 	room = read_room(.A)
 	fmt.printfln("Room: %v", room)
@@ -46,7 +44,5 @@ should_run :: proc() -> bool {
 }
 
 parent_window_size_changed :: proc(w, h: int) {
-	WINDOW_WIDTH = i32(w)
-	WINDOW_HEIGHT = i32(h)
 	rl.SetWindowSize(c.int(WINDOW_WIDTH), c.int(WINDOW_WIDTH))
 }
