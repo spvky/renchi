@@ -8,14 +8,16 @@ Vec2 :: [2]f32
 
 world: World
 screen_texture: rl.RenderTexture
+map_screen_texture: rl.RenderTexture
 run: bool
 room: Room
+ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
+map_screen_cursor: Map_Screen_Cursor
 
-WINDOW_WIDTH: i32 = 1600
-WINDOW_HEIGHT: i32 = 900
+WINDOW_WIDTH: i32 = 1920
+WINDOW_HEIGHT: i32 = 1080
 SCREEN_WIDTH :: 480
-SCREEN_HEIGHT :: 360
-
+SCREEN_HEIGHT :: 270
 
 init :: proc() {
 	run = true
@@ -23,16 +25,20 @@ init :: proc() {
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
 	room = read_room(.A)
-	fmt.printfln("Room: %v", room)
+	ui_texture_atlas = load_ui_textures()
+
+
 }
 
 update :: proc() {
+	handle_map_screen_cursor()
 	render_scene()
 	draw_to_screen()
 }
 
 shutdown :: proc() {
 	rl.UnloadRenderTexture(screen_texture)
+	unload_ui_textures()
 	rl.CloseWindow()
 }
 

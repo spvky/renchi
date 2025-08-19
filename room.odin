@@ -61,18 +61,35 @@ Tile :: enum u8 {
 }
 
 
-rotate_cell :: proc(tiles: ^[16][16]Tile) {
-	for i in 0 ..< 16 {
-		for j in i + 1 ..< 16 {
-			tiles[i][j], tiles[j][i] = tiles[j][i], tiles[i][j]
-		}
+rotate_cell :: proc(in_tiles: [16][16]Tile, rotation: Room_Rotation) -> [16][16]Tile {
+	if rotation == .North {
+		return in_tiles
 	}
-	for i in 0 ..< 16 {
-		start, end := 0, 15
-		for start < end {
-			tiles[i][start], tiles[i][end] = tiles[i][end], tiles[i][start]
-			start += 1
-			end -= 1
-		}
+	rotations: int
+	#partial switch rotation {
+	case .East:
+		rotations = 1
+	case .South:
+		rotations = 2
+	case .West:
+		rotations = 3
 	}
+	tiles := in_tiles
+	for rotations > 0 {
+		for i in 0 ..< 16 {
+			for j in i + 1 ..< 16 {
+				tiles[i][j], tiles[j][i] = tiles[j][i], tiles[i][j]
+			}
+		}
+		for i in 0 ..< 16 {
+			start, end := 0, 15
+			for start < end {
+				tiles[i][start], tiles[i][end] = tiles[i][end], tiles[i][start]
+				start += 1
+				end -= 1
+			}
+		}
+		rotations -= 1
+	}
+	return tiles
 }
