@@ -10,9 +10,9 @@ world: World
 screen_texture: rl.RenderTexture
 map_screen_texture: rl.RenderTexture
 run: bool
-room: Room
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
-map_screen_cursor: Map_Screen_Cursor
+rooms: [Room_Tag]Room
+map_screen_state: Map_Screen_State
 
 WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080
@@ -24,10 +24,8 @@ init :: proc() {
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
-	room = read_room(.A)
+	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
-
-
 }
 
 update :: proc() {

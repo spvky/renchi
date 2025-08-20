@@ -8,7 +8,6 @@ render_scene :: proc() {
 	// Draw the scene here
 	rl.DrawCircleV({0, 0}, 50, rl.WHITE)
 	draw_map_grid()
-	draw_room(Map_Room{ptr = &room})
 	draw_map_cursor()
 	rl.EndTextureMode()
 }
@@ -24,6 +23,6 @@ draw_to_screen :: proc() {
 		0,
 		rl.WHITE,
 	)
+	map_screen_debug()
 	rl.EndDrawing()
-	// fmt.printfln("Offset: %.2f", x_offset)
 }

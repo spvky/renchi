@@ -1,20 +1,46 @@
 package main
 
 import "core:fmt"
+import "core:math"
+import "core:strings"
 import rl "vendor:raylib"
 
 MAP_SIZE: Vec2 : {256, 256}
 GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
+MAP_CELL_SIZE :: Vec2{16, 16}
+
+
+Map_Screen_State :: struct {
+	cursor:        Map_Screen_Cursor,
+	selected_room: Room_Tag,
+	rotation:      Room_Rotation,
+}
 
 Map_Screen_Cursor :: struct {
-	position: Cell_Position,
-	rotation: Room_Rotation,
-	mode:     Map_Screen_Cursor_Mode,
+	position:           Cell_Position,
+	rotation:           Room_Rotation,
+	target_rotation:    f32,
+	displayed_rotation: f32,
+	mode:               Map_Screen_Cursor_Mode,
 }
 
 Map_Screen_Cursor_Mode :: enum {
-	Select,
 	Place,
+	Select,
+}
+
+map_screen_debug :: proc() {
+	debug_string := fmt.tprintf(
+		"Map Screen\nCursor: %v\nSelected Room: %v\nRotation: %v",
+		map_screen_state.cursor,
+		map_screen_state.selected_room,
+		map_screen_state.rotation,
+	)
+
+	rl.DrawText(strings.clone_to_cstring(debug_string), 1200, 100, 16, rl.WHITE)
+}
+
+handle_cursor_rotation :: proc() {
 }
 
 draw_map_grid :: proc() {
@@ -24,32 +50,50 @@ draw_map_grid :: proc() {
 	for i in 1 ..< 16 {
 		i_f32 := f32(i) * 16
 		// Horizontal Line
-		rl.DrawRectangleV(GRID_OFFSET + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
+		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
 		// Vertical lines
-		rl.DrawRectangleV(GRID_OFFSET + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
+		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
 	}
 }
 
 draw_map_cursor :: proc() {
-	#partial switch map_screen_cursor.mode {
+	cursor := &map_screen_state.cursor
+	cursor_pos :=
+		Vec2{8, 8} + Vec2{f32(cursor.position.x) * 16, f32(cursor.position.y) * 16} + GRID_OFFSET
+	switch cursor.mode {
 	case .Select:
-		cursor_pos :=
-			Vec2{f32(map_screen_cursor.position.x) * 16, f32(map_screen_cursor.position.y) * 16} +
-			GRID_OFFSET
-		rl.DrawTextureV(ui_texture_atlas[.Cursor], cursor_pos, rl.WHITE)
+		rl.DrawTexturePro(
+			ui_texture_atlas[.Cursor],
+			{0, 0, 16, 16},
+			{cursor_pos.x, cursor_pos.y, 16, 16},
+			{8, 8},
+			0,
+			rl.WHITE,
+		)
+	case .Place:
+		draw_room(selected_room(), cursor_pos, cursor.displayed_rotation)
 	}
 }
 
-draw_room :: proc(room: Map_Room) {
-	cursor_pos := rl.GetMousePosition()
-	for position, cell in room.ptr.cells {
-		cell_position := cursor_pos + Vec2{f32(position.x * 16), f32(position.y * 16)}
-		draw_cell(cell, cell_position)
+draw_room :: proc(room: Room, position: Vec2, rotation: f32) {
+	room_cell_count := len(room.cells)
+
+	// fmt.printfln("Cells in room: %v", room_cell_count)
+	for pos, cell in room.cells {
+		cell_position := Vec2{f32(pos.x * 16), f32(pos.y * 16)}
+		draw_cell(cell, position, cell_position, rotation)
 	}
 }
 
-draw_cell :: proc(cell: Cell, origin: Vec2) {
-	rl.DrawRectangleV(origin, {16, 16}, rl.WHITE)
+draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
+	// rl.DrawRectangleV(position, MAP_CELL_SIZE, rl.WHITE)
+	true_position := origin + position
+	rl.DrawRectanglePro(
+		{origin.x, origin.y, MAP_CELL_SIZE.x, MAP_CELL_SIZE.y},
+		-position + (MAP_CELL_SIZE / 2),
+		rotation,
+		rl.WHITE,
+	)
 }
 
 // Concept of rooms might not matter as much when in the world map, everything will just become cells at that point

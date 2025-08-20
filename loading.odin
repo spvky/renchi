@@ -6,6 +6,10 @@ import "core:math"
 import "core:os"
 import "core:strconv"
 
+load_rooms :: proc() -> [Room_Tag]Room {
+	return {.A = read_room(.A), .B = read_room(.B), .C = read_room(.C), .D = read_room(.D)}
+}
+
 read_room :: proc(tag: Room_Tag) -> Room {
 	filename := room_tag_as_filepath(tag, .CSV)
 	r: csv.Reader
@@ -48,7 +52,8 @@ read_room :: proc(tag: Room_Tag) -> Room {
 						cells[position] = Cell{}
 					}
 					cell := &cells[position]
-					cell.tiles[y][x] = value
+					// fmt.printfln("setting tile at %v, %v with %v", x, y, value)
+					cell.tiles[tile_index(x, y)] = value
 				}
 			}
 		}

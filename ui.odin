@@ -18,16 +18,38 @@ unload_ui_textures :: proc() {
 }
 
 handle_map_screen_cursor :: proc() {
+	cursor := &map_screen_state.cursor
+	// Cursor Position
 	if rl.IsKeyPressed(.A) {
-		map_screen_cursor.position.x = math.clamp(map_screen_cursor.position.x - 1, 0, 15)
+		cursor.position.x = math.clamp(cursor.position.x - 1, 0, 15)
 	}
 	if rl.IsKeyPressed(.D) {
-		map_screen_cursor.position.x = math.clamp(map_screen_cursor.position.x + 1, 0, 15)
+		cursor.position.x = math.clamp(cursor.position.x + 1, 0, 15)
 	}
 	if rl.IsKeyPressed(.W) {
-		map_screen_cursor.position.y = math.clamp(map_screen_cursor.position.y - 1, 0, 15)
+		cursor.position.y = math.clamp(cursor.position.y - 1, 0, 15)
 	}
 	if rl.IsKeyPressed(.S) {
-		map_screen_cursor.position.y = math.clamp(map_screen_cursor.position.y + 1, 0, 15)
+		cursor.position.y = math.clamp(cursor.position.y + 1, 0, 15)
 	}
+	// Cursor Rotation
+	if rl.IsKeyPressed(.R) {
+		cursor.target_rotation += 90
+		switch cursor.rotation {
+		case .North:
+			cursor.rotation = .East
+		case .East:
+			cursor.rotation = .South
+		case .South:
+			cursor.rotation = .West
+		case .West:
+			cursor.rotation = .North
+		}
+	}
+
+	cursor.displayed_rotation = math.lerp(
+		cursor.displayed_rotation,
+		cursor.target_rotation,
+		rl.GetFrameTime() * 10,
+	)
 }

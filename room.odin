@@ -1,5 +1,10 @@
 package main
 
+import intr "base:intrinsics"
+import "core:fmt"
+
+CELL_WIDTH :: 16
+
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
 	width:      u8,
@@ -27,6 +32,11 @@ Room_Tag :: enum {
 	D,
 }
 
+selected_room :: proc() -> Room {
+	room := rooms[map_screen_state.selected_room]
+	return room
+}
+
 room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 	position: Cell_Position
 	#partial switch tag {
@@ -40,13 +50,13 @@ room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 
 // Permanent representation of a room cell
 Cell :: struct {
-	tiles: [16][16]Tile,
+	tiles: [256]Tile,
 }
 
 // Representation of a cell when it's in the world map
 Map_Cell :: struct {
 	rotation: Room_Rotation,
-	tiles:    [16][16]Tile,
+	tiles:    [256]Tile,
 }
 
 Cell_Position :: [2]i16
@@ -60,8 +70,12 @@ Tile :: enum u8 {
 	Door,
 }
 
+tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
+	return int(x + (y * CELL_WIDTH))
+}
 
-rotate_cell :: proc(in_tiles: [16][16]Tile, rotation: Room_Rotation) -> [16][16]Tile {
+
+rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 	if rotation == .North {
 		return in_tiles
 	}
@@ -78,13 +92,15 @@ rotate_cell :: proc(in_tiles: [16][16]Tile, rotation: Room_Rotation) -> [16][16]
 	for rotations > 0 {
 		for i in 0 ..< 16 {
 			for j in i + 1 ..< 16 {
-				tiles[i][j], tiles[j][i] = tiles[j][i], tiles[i][j]
+				tiles[tile_index(j, i)], tiles[tile_index(i, j)] =
+					tiles[tile_index(i, j)], tiles[tile_index(j, i)]
 			}
 		}
 		for i in 0 ..< 16 {
 			start, end := 0, 15
 			for start < end {
-				tiles[i][start], tiles[i][end] = tiles[i][end], tiles[i][start]
+				tiles[tile_index(i, start)], tiles[tile_index(i, end)] =
+					tiles[tile_index(i, end)], tiles[tile_index(i, start)]
 				start += 1
 				end -= 1
 			}
