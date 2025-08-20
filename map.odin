@@ -9,11 +9,17 @@ MAP_SIZE: Vec2 : {256, 256}
 GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
 MAP_CELL_SIZE :: Vec2{16, 16}
 
+World_Map :: struct {
+	cells: [256]Cell,
+	rooms: [256]Room_Tag,
+	occupation: [256]bool
+}
 
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
 	selected_room: Room_Tag,
 	rotation:      Room_Rotation,
+	placed_rooms: bit_set[Room_Rotation]
 }
 
 Map_Screen_Cursor :: struct {
@@ -38,9 +44,6 @@ map_screen_debug :: proc() {
 	)
 
 	rl.DrawText(strings.clone_to_cstring(debug_string), 1200, 100, 16, rl.WHITE)
-}
-
-handle_cursor_rotation :: proc() {
 }
 
 draw_map_grid :: proc() {
@@ -96,8 +99,3 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 	)
 }
 
-// Concept of rooms might not matter as much when in the world map, everything will just become cells at that point
-World_Map :: struct {
-	cells: map[Cell_Position]Cell,
-	rooms: map[Cell_Position]Room_Tag,
-}

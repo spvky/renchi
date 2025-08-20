@@ -74,6 +74,20 @@ tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 	return int(x + (y * CELL_WIDTH))
 }
 
+place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Tag) {
+}
+
+can_place_room :: proc(cells_to_occupy: []Cell_Position) -> bool {
+	can_place := true
+
+	for position in cells_to_occupy {
+		if world.world_map.occupation[tile_index(position.x, position.y)] {
+			can_place = false
+		}
+	}
+	
+	return can_place
+}
 
 rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 	if rotation == .North {
