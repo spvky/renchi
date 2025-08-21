@@ -10,16 +10,15 @@ GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE 
 MAP_CELL_SIZE :: Vec2{16, 16}
 
 World_Map :: struct {
-	cells: [256]Cell,
-	rooms: [256]Room_Tag,
-	occupation: [256]bool
+	cells:      [256]Cell,
+	rooms:      [256]Room_Tag,
+	occupation: [256]bool,
 }
 
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
 	selected_room: Room_Tag,
-	rotation:      Room_Rotation,
-	placed_rooms: bit_set[Room_Rotation]
+	placed_rooms:  bit_set[Room_Rotation],
 }
 
 Map_Screen_Cursor :: struct {
@@ -36,14 +35,43 @@ Map_Screen_Cursor_Mode :: enum {
 }
 
 map_screen_debug :: proc() {
-	debug_string := fmt.tprintf(
+	cursor_string := fmt.tprintf(
 		"Map Screen\nCursor: %v\nSelected Room: %v\nRotation: %v",
 		map_screen_state.cursor,
 		map_screen_state.selected_room,
-		map_screen_state.rotation,
+		map_screen_state.cursor.rotation,
 	)
 
-	rl.DrawText(strings.clone_to_cstring(debug_string), 1200, 100, 16, rl.WHITE)
+	rl.DrawText(strings.clone_to_cstring(cursor_string), 1200, 100, 16, rl.WHITE)
+
+	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
+
+	rotations: int
+
+	#partial switch map_screen_state.cursor.rotation {
+	case .East:
+		rotations = 1
+	case .South:
+		rotations = 2
+	case .West:
+		rotations = 3
+	}
+	for position, cell in selected_room().cells {
+		rotated_position := position
+
+		for _ in 0 ..< rotations {
+			rotated_position = {-rotated_position.y, rotated_position.x}
+		}
+		append(&positions_to_place, rotated_position)
+	}
+
+	positions_string := fmt.tprintf(
+		"Rotations: %v\nPositions to place\n%v",
+		rotations,
+		positions_to_place,
+	)
+
+	rl.DrawText(strings.clone_to_cstring(positions_string), 200, 100, 16, rl.WHITE)
 }
 
 draw_map_grid :: proc() {
@@ -98,4 +126,3 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 		rl.WHITE,
 	)
 }
-
