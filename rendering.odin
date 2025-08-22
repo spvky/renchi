@@ -4,8 +4,6 @@ import rl "vendor:raylib"
 render_scene :: proc() {
 	rl.BeginTextureMode(screen_texture)
 	rl.ClearBackground({0, 12, 240, 255})
-	// Draw the scene here
-	rl.DrawCircleV({0, 0}, 50, rl.WHITE)
 	draw_map()
 	rl.EndTextureMode()
 }

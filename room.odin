@@ -94,6 +94,8 @@ place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotati
 	room.rotation = rotation
 	select_next_valid_tag()
 	map_screen_state.cursor.rotation = .North
+	map_screen_state.cursor.target_rotation = 0
+	map_screen_state.cursor.displayed_rotation = 0
 }
 
 positions_from_rotation :: proc(

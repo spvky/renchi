@@ -42,18 +42,30 @@ map_screen_debug :: proc() {
 		map_screen_state.selected_room,
 		map_screen_state.cursor.rotation,
 	)
-
 	rl.DrawText(strings.clone_to_cstring(cursor_string), 1200, 100, 16, rl.WHITE)
 
-	positions_to_place := positions_from_rotation(
-		map_screen_state.selected_room,
-		map_screen_state.cursor.position,
-		map_screen_state.cursor.rotation,
-	)
+	y_offset := 100
+	i: int
+	for room, tag in rooms {
+		if room.placed && tag != .None {
+			rooms_string := fmt.tprintf(
+				"Room: %v\n\tPlaced: %v\n\tPosition: %v\n\tRotation: %v",
+				tag,
+				room.placed,
+				room.position,
+				room.rotation,
+			)
 
-	positions_string := fmt.tprintf("Positions to place\n%v", positions_to_place)
-
-	rl.DrawText(strings.clone_to_cstring(positions_string), 200, 100, 16, rl.WHITE)
+			rl.DrawText(
+				strings.clone_to_cstring(rooms_string),
+				150,
+				i32(y_offset + (i * 70)),
+				16,
+				rl.WHITE,
+			)
+			i += 1
+		}
+	}
 }
 
 draw_map_grid :: proc() {
