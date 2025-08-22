@@ -2,6 +2,7 @@ package main
 
 import intr "base:intrinsics"
 import "core:fmt"
+import "core:slice"
 
 CELL_WIDTH :: 16
 
@@ -77,11 +78,29 @@ tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 }
 
 can_place :: proc(positions: []Cell_Position) -> bool {
-	can_place: bool
+	can_place := true
+	placed_positions := make([dynamic]Cell_Position, 0, 64, allocator = context.temp_allocator)
 	for room, tag in rooms {
-		fmt.printfln("%v: %v", tag, room.placed)
+		if room.placed {
+			append_elems(
+				&placed_positions,
+				..positions_from_rotation(tag, room.position, room.rotation)[:],
+			)
+		}
+	}
+	for pos in positions {
+		if slice.contains(placed_positions[:], pos) {
+			can_place = false
+		}
 	}
 	return can_place
+}
+
+place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotation) {
+	room := &rooms[tag]
+	room.placed = true
+	room.position = position
+	room.rotation = rotation
 }
 
 positions_from_rotation :: proc(
@@ -111,9 +130,6 @@ positions_from_rotation :: proc(
 		append(&positions_to_place, rotated_position)
 	}
 	return positions_to_place
-}
-
-place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Tag) {
 }
 
 rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {

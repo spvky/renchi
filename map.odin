@@ -52,7 +52,6 @@ map_screen_debug :: proc() {
 		map_screen_state.cursor.rotation,
 	)
 
-
 	positions_string := fmt.tprintf("Positions to place\n%v", positions_to_place)
 
 	rl.DrawText(strings.clone_to_cstring(positions_string), 200, 100, 16, rl.WHITE)

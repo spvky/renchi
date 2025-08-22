@@ -6,7 +6,7 @@ import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 
-world: ^World
+world: World
 screen_texture: rl.RenderTexture
 map_screen_texture: rl.RenderTexture
 run: bool
@@ -40,7 +40,6 @@ update :: proc() {
 shutdown :: proc() {
 	rl.UnloadRenderTexture(screen_texture)
 	unload_ui_textures()
-	delete_world()
 	rl.CloseWindow()
 }
 
