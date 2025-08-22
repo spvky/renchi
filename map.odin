@@ -1,7 +1,6 @@
 package main
 
 import "core:fmt"
-import "core:math"
 import "core:strings"
 import rl "vendor:raylib"
 
@@ -85,15 +84,12 @@ draw_map_cursor :: proc() {
 			rl.WHITE,
 		)
 	case .Place:
-		draw_room(selected_room(), cursor_pos, cursor.displayed_rotation)
+		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
 	// can_place()
 	}
 }
 
 draw_room :: proc(room: Room, position: Vec2, rotation: f32) {
-	room_cell_count := len(room.cells)
-
-	// fmt.printfln("Cells in room: %v", room_cell_count)
 	for pos, cell in room.cells {
 		cell_position := Vec2{f32(pos.x * 16), f32(pos.y * 16)}
 		draw_cell(cell, position, cell_position, rotation)
@@ -101,8 +97,6 @@ draw_room :: proc(room: Room, position: Vec2, rotation: f32) {
 }
 
 draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
-	// rl.DrawRectangleV(position, MAP_CELL_SIZE, rl.WHITE)
-	true_position := origin + position
 	rl.DrawRectanglePro(
 		{origin.x, origin.y, MAP_CELL_SIZE.x, MAP_CELL_SIZE.y},
 		-position + (MAP_CELL_SIZE / 2),

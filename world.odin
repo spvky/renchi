@@ -1,7 +1,5 @@
 package main
 
-import rl "vendor:raylib"
-
 World :: struct {
 	world_map: World_Map,
 }

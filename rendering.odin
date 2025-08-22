@@ -1,5 +1,4 @@
 package main
-import "core:fmt"
 import rl "vendor:raylib"
 
 render_scene :: proc() {

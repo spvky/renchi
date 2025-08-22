@@ -2,7 +2,6 @@ package main
 
 import "core:encoding/csv"
 import "core:fmt"
-import "core:math"
 import "core:os"
 import "core:strconv"
 
@@ -50,7 +49,7 @@ read_room :: proc(tag: Room_Tag) -> Room {
 			position := Cell_Position{cx, cy}
 			x := i16(j) - (cx * 16)
 			y := i16(i) - (cy * 16)
-			if field, ok := strconv.parse_uint(f); ok {
+			if field, field_ok := strconv.parse_uint(f); field_ok {
 				value := Tile(field)
 				if value != .Empty {
 					exists := position in cells
@@ -75,7 +74,7 @@ parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
 	pivot := room_pivot_from_tag(tag)
 	cell_count: u8
 	min_x, min_y, max_x, max_y: i16
-	for position, cell in room.cells {
+	for position, _ in room.cells {
 		cell_count += 1
 		if position.x < min_x {
 			min_x = position.x

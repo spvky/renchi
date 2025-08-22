@@ -1,7 +1,6 @@
 package main
 
 import intr "base:intrinsics"
-import "core:fmt"
 import "core:slice"
 
 CELL_WIDTH :: 16
@@ -35,11 +34,6 @@ Room_Tag :: enum {
 	B,
 	C,
 	D,
-}
-
-selected_room :: proc() -> Room {
-	room := rooms[map_screen_state.selected_room]
-	return room
 }
 
 room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
@@ -92,6 +86,9 @@ can_place :: proc(positions: []Cell_Position) -> bool {
 		if slice.contains(placed_positions[:], pos) {
 			can_place = false
 		}
+		if pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 {
+			can_place = false
+		}
 	}
 	return can_place
 }
@@ -101,6 +98,7 @@ place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotati
 	room.placed = true
 	room.position = position
 	room.rotation = rotation
+	select_next_valid_tag()
 }
 
 positions_from_rotation :: proc(
@@ -108,6 +106,7 @@ positions_from_rotation :: proc(
 	origin: Cell_Position,
 	rotation: Room_Rotation,
 ) -> [dynamic]Cell_Position {
+	room := rooms[tag]
 	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
 
 	rotations: int
@@ -120,7 +119,7 @@ positions_from_rotation :: proc(
 	case .West:
 		rotations = 3
 	}
-	for position, _ in selected_room().cells {
+	for position, _ in room.cells {
 		rotated_position := position
 
 		for _ in 0 ..< rotations {
@@ -165,4 +164,12 @@ rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 		rotations -= 1
 	}
 	return tiles
+}
+
+select_next_valid_tag :: proc() {
+	for room, tag in rooms {
+		if tag != .None && room.placed == false {
+			map_screen_state.selected_room = tag
+		}
+	}
 }
