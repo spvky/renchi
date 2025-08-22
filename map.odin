@@ -36,14 +36,6 @@ Map_Screen_Cursor_Mode :: enum {
 }
 
 map_screen_debug :: proc() {
-	cursor_string := fmt.tprintf(
-		"Map Screen\nCursor: %v\nSelected Room: %v\nRotation: %v",
-		map_screen_state.cursor,
-		map_screen_state.selected_room,
-		map_screen_state.cursor.rotation,
-	)
-	rl.DrawText(strings.clone_to_cstring(cursor_string), 1200, 100, 16, rl.WHITE)
-
 	y_offset := 100
 	i: int
 	for room, tag in rooms {
