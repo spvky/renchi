@@ -10,15 +10,17 @@ GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE 
 MAP_CELL_SIZE :: Vec2{16, 16}
 
 World_Map :: struct {
-	cells:      [256]Cell,
-	rooms:      [256]Room_Tag,
-	occupation: [256]bool,
+	rooms: [256]Room_Tag,
 }
 
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
 	selected_room: Room_Tag,
 	placed_rooms:  bit_set[Room_Rotation],
+}
+
+make_map_screen_state :: proc() -> Map_Screen_State {
+	return Map_Screen_State{selected_room = .A}
 }
 
 Map_Screen_Cursor :: struct {
@@ -44,32 +46,14 @@ map_screen_debug :: proc() {
 
 	rl.DrawText(strings.clone_to_cstring(cursor_string), 1200, 100, 16, rl.WHITE)
 
-	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
-
-	rotations: int
-
-	#partial switch map_screen_state.cursor.rotation {
-	case .East:
-		rotations = 1
-	case .South:
-		rotations = 2
-	case .West:
-		rotations = 3
-	}
-	for position, cell in selected_room().cells {
-		rotated_position := position
-
-		for _ in 0 ..< rotations {
-			rotated_position = {-rotated_position.y, rotated_position.x}
-		}
-		append(&positions_to_place, rotated_position)
-	}
-
-	positions_string := fmt.tprintf(
-		"Rotations: %v\nPositions to place\n%v",
-		rotations,
-		positions_to_place,
+	positions_to_place := positions_from_rotation(
+		map_screen_state.selected_room,
+		map_screen_state.cursor.position,
+		map_screen_state.cursor.rotation,
 	)
+
+
+	positions_string := fmt.tprintf("Positions to place\n%v", positions_to_place)
 
 	rl.DrawText(strings.clone_to_cstring(positions_string), 200, 100, 16, rl.WHITE)
 }
@@ -103,6 +87,7 @@ draw_map_cursor :: proc() {
 		)
 	case .Place:
 		draw_room(selected_room(), cursor_pos, cursor.displayed_rotation)
+	// can_place()
 	}
 }
 

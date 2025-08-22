@@ -10,6 +10,9 @@ Room :: struct {
 	width:      u8,
 	height:     u8,
 	cell_count: u8,
+	position:   Cell_Position,
+	rotation:   Room_Rotation,
+	placed:     bool,
 }
 
 Room_Rotation :: enum u8 {
@@ -26,6 +29,7 @@ Map_Room :: struct {
 
 
 Room_Tag :: enum {
+	None,
 	A,
 	B,
 	C,
@@ -61,8 +65,6 @@ Map_Cell :: struct {
 
 Cell_Position :: [2]i16
 
-Tile_Position :: [2]i16
-
 Tile :: enum u8 {
 	Empty,
 	Wall,
@@ -74,19 +76,44 @@ tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 	return int(x + (y * CELL_WIDTH))
 }
 
-place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Tag) {
+can_place :: proc(positions: []Cell_Position) -> bool {
+	can_place: bool
+	for room, tag in rooms {
+		fmt.printfln("%v: %v", tag, room.placed)
+	}
+	return can_place
 }
 
-can_place_room :: proc(cells_to_occupy: []Cell_Position) -> bool {
-	can_place := true
+positions_from_rotation :: proc(
+	tag: Room_Tag,
+	origin: Cell_Position,
+	rotation: Room_Rotation,
+) -> [dynamic]Cell_Position {
+	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
 
-	for position in cells_to_occupy {
-		if world.world_map.occupation[tile_index(position.x, position.y)] {
-			can_place = false
-		}
+	rotations: int
+
+	#partial switch rotation {
+	case .East:
+		rotations = 1
+	case .South:
+		rotations = 2
+	case .West:
+		rotations = 3
 	}
-	
-	return can_place
+	for position, _ in selected_room().cells {
+		rotated_position := position
+
+		for _ in 0 ..< rotations {
+			rotated_position = {-rotated_position.y, rotated_position.x}
+		}
+		rotated_position += origin
+		append(&positions_to_place, rotated_position)
+	}
+	return positions_to_place
+}
+
+place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Tag) {
 }
 
 rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {

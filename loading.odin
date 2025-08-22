@@ -7,7 +7,13 @@ import "core:os"
 import "core:strconv"
 
 load_rooms :: proc() -> [Room_Tag]Room {
-	return {.A = read_room(.A), .B = read_room(.B), .C = read_room(.C), .D = read_room(.D)}
+	return {
+		.None = Room{},
+		.A = read_room(.A),
+		.B = read_room(.B),
+		.C = read_room(.C),
+		.D = read_room(.D),
+	}
 }
 
 read_room :: proc(tag: Room_Tag) -> Room {

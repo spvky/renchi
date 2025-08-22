@@ -24,7 +24,8 @@ init :: proc() {
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
-	fmt.printfln("WORLD SIZE: %v bytes",size_of(World))
+	map_screen_state = make_map_screen_state()
+	fmt.printfln("WORLD SIZE: %v bytes", size_of(World))
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
 }
@@ -33,6 +34,7 @@ update :: proc() {
 	handle_map_screen_cursor()
 	render_scene()
 	draw_to_screen()
+	free_all(context.temp_allocator)
 }
 
 shutdown :: proc() {
