@@ -136,8 +136,31 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 		{origin.x, origin.y, MAP_CELL_SIZE.x, MAP_CELL_SIZE.y},
 		-position + (MAP_CELL_SIZE / 2),
 		rotation,
-		rl.WHITE,
+		rl.BLUE,
 	)
+	for x in 0 ..< 16 {
+		for y in 0 ..< 16 {
+			tile := cell.tiles[tile_index(x, y)]
+			tile_color: rl.Color
+			#partial switch tile {
+			case .Wall:
+				tile_color = {255, 255, 255, 255}
+			case .OneWay:
+				tile_color = {130, 130, 130, 200}
+			case .Door:
+				tile_color = {220, 235, 16, 255}
+			}
+			if tile != .Empty {
+				tile_offset := Vec2{f32(x) - 7, f32(y) - 7}
+				rl.DrawRectanglePro(
+					{origin.x, origin.y, 1, 1},
+					position + tile_offset,
+					rotation + 180,
+					tile_color,
+				)
+			}
+		}
+	}
 }
 
 draw_map :: proc() {
