@@ -69,10 +69,11 @@ draw_map_grid :: proc() {
 	}
 }
 
+
 draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
-	cursor_pos :=
-		Vec2{8, 8} + Vec2{f32(cursor.position.x) * 16, f32(cursor.position.y) * 16} + GRID_OFFSET
+	cursor_pos := vec_from_map_cell_position(cursor.position)
+	// Vec2{8, 8} + Vec2{f32(cursor.position.x) * 16, f32(cursor.position.y) * 16} + GRID_OFFSET
 	switch cursor.mode {
 	case .Select:
 		rl.DrawTexturePro(
@@ -86,6 +87,36 @@ draw_map_cursor :: proc() {
 	case .Place:
 		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
 	// can_place()
+	}
+}
+
+vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
+	return Vec2{8, 8} + Vec2{f32(position.x) * 16, f32(position.y) * 16} + GRID_OFFSET
+}
+
+float_rotation_from_room_rotation :: proc(rotation: Room_Rotation) -> f32 {
+	float_rotation: f32
+	#partial switch rotation {
+	case .East:
+		float_rotation = 90
+	case .South:
+		float_rotation = 180
+	case .West:
+		float_rotation = 270
+	}
+
+	return float_rotation
+}
+
+draw_placed_rooms :: proc() {
+	for room, _ in rooms {
+		if room.placed {
+			draw_room(
+				room,
+				vec_from_map_cell_position(room.position),
+				float_rotation_from_room_rotation(room.rotation),
+			)
+		}
 	}
 }
 
@@ -103,4 +134,10 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 		rotation,
 		rl.WHITE,
 	)
+}
+
+draw_map :: proc() {
+	draw_map_grid()
+	draw_placed_rooms()
+	draw_map_cursor()
 }

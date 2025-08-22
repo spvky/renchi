@@ -6,8 +6,7 @@ render_scene :: proc() {
 	rl.ClearBackground({0, 12, 240, 255})
 	// Draw the scene here
 	rl.DrawCircleV({0, 0}, 50, rl.WHITE)
-	draw_map_grid()
-	draw_map_cursor()
+	draw_map()
 	rl.EndTextureMode()
 }
 

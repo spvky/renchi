@@ -55,5 +55,12 @@ handle_map_screen_cursor :: proc() {
 
 	// Room Placement
 	if rl.IsKeyPressed(.SPACE) {
+		tag := map_screen_state.selected_room
+		position := cursor.position
+		rotation := cursor.rotation
+		placement_positions := positions_from_rotation(tag, position, rotation)
+		if can_place(placement_positions[:]) {
+			place_room(tag, position, rotation)
+		}
 	}
 }

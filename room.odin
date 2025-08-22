@@ -42,7 +42,7 @@ room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 	case .A:
 		position = {1, 0}
 	case .D:
-		position = {2, 1}
+		position = {1, 1}
 	}
 	return position
 }
@@ -50,12 +50,6 @@ room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 // Permanent representation of a room cell
 Cell :: struct {
 	tiles: [256]Tile,
-}
-
-// Representation of a cell when it's in the world map
-Map_Cell :: struct {
-	rotation: Room_Rotation,
-	tiles:    [256]Tile,
 }
 
 Cell_Position :: [2]i16
@@ -99,6 +93,7 @@ place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotati
 	room.position = position
 	room.rotation = rotation
 	select_next_valid_tag()
+	map_screen_state.cursor.rotation = .North
 }
 
 positions_from_rotation :: proc(
