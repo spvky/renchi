@@ -13,6 +13,7 @@ run: bool
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
+tilemap: [65536]Tile
 
 WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080

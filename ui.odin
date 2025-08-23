@@ -63,4 +63,8 @@ handle_map_screen_cursor :: proc() {
 			place_room(tag, position, rotation)
 		}
 	}
+
+	if rl.IsKeyPressed(.ENTER) {
+		bake_map()
+	}
 }

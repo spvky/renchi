@@ -65,6 +65,10 @@ tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 	return int(x + (y * CELL_WIDTH))
 }
 
+tile_global_index :: proc(x, y: $T, cell: Cell_Position) -> int where intr.type_is_integer(T) {
+	return int((x + (int(cell.x) * 16)) + ((y + (int(cell.y) * 16)) * CELL_WIDTH))
+}
+
 can_place :: proc(positions: []Cell_Position) -> bool {
 	can_place := true
 	placed_positions := make([dynamic]Cell_Position, 0, 64, allocator = context.temp_allocator)
