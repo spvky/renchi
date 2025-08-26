@@ -1,9 +1,11 @@
 package main
 
 import intr "base:intrinsics"
+import "core:fmt"
 import "core:slice"
 
 CELL_WIDTH :: 16
+MAP_WIDTH :: 256
 
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
@@ -65,8 +67,8 @@ tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 	return int(x + (y * CELL_WIDTH))
 }
 
-tile_global_index :: proc(x, y: $T, cell: Cell_Position) -> int where intr.type_is_integer(T) {
-	return int((x + (int(cell.x) * 16)) + ((y + (int(cell.y) * 16)) * CELL_WIDTH))
+global_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
+	return int(x + (y * MAP_WIDTH))
 }
 
 can_place :: proc(positions: []Cell_Position) -> bool {
@@ -132,7 +134,29 @@ positions_from_rotation :: proc(
 	return positions_to_place
 }
 
-rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
+cell_global_position :: proc(
+	cell_pos, room_pos: Cell_Position,
+	room_rot: Room_Rotation,
+) -> Cell_Position {
+	rotated_pos := cell_pos
+	rotations: int
+	#partial switch room_rot {
+	case .East:
+		rotations = 1
+	case .South:
+		rotations = 2
+	case .West:
+		rotations = 3
+	}
+
+	for _ in 0 ..< rotations {
+		rotated_pos = {-rotated_pos.y, rotated_pos.x}
+	}
+	final_pos := rotated_pos + room_pos
+	return final_pos
+}
+
+rotate_cell_old :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 	if rotation == .North {
 		return in_tiles
 	}
@@ -147,22 +171,57 @@ rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 	}
 	tiles := in_tiles
 	for rotations > 0 {
-		for i in 0 ..< 16 {
-			for j in i + 1 ..< 16 {
-				tiles[tile_index(j, i)], tiles[tile_index(i, j)] =
-					tiles[tile_index(i, j)], tiles[tile_index(j, i)]
+		for y in 0 ..< 16 {
+			for x in y + 1 ..< 16 {
+				tiles[tile_index(x, y)], tiles[tile_index(y, x)] =
+					tiles[tile_index(y, x)], tiles[tile_index(x, y)]
 			}
 		}
-		for i in 0 ..< 16 {
+		for x in 0 ..< 16 {
 			start, end := 0, 15
 			for start < end {
-				tiles[tile_index(i, start)], tiles[tile_index(i, end)] =
-					tiles[tile_index(i, end)], tiles[tile_index(i, start)]
+				tiles[tile_index(x, start)], tiles[tile_index(x, end)] =
+					tiles[tile_index(x, end)], tiles[tile_index(x, start)]
 				start += 1
 				end -= 1
 			}
 		}
 		rotations -= 1
+	}
+	return tiles
+}
+
+rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
+	if rotation == .North {
+		return in_tiles
+	}
+	if ODIN_DEBUG {
+		fmt.println("Original:")
+		copy := in_tiles
+		for y in 0 ..< 16 {
+			start := int(y * 16)
+			fmt.printfln("%v", copy[start:start + 16])
+		}
+	}
+	tiles: [256]Tile
+	for x in 0 ..< 16 {
+		for y in 0 ..< 16 {
+			#partial switch rotation {
+			case .East:
+				tiles[tile_index(x, y)] = in_tiles[tile_index(y, 15 - x)]
+			case .South:
+				tiles[tile_index(x, y)] = in_tiles[tile_index(15 - x, 15 - y)]
+			case .West:
+				tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
+			}
+		}
+	}
+	if ODIN_DEBUG {
+		fmt.printfln("%v:", rotation)
+		for y in 0 ..< 16 {
+			start := int(y * 16)
+			fmt.printfln("%v", tiles[start:start + 16])
+		}
 	}
 	return tiles
 }

@@ -4,7 +4,17 @@ import "core:c"
 import "core:fmt"
 import rl "vendor:raylib"
 
+Game_State :: enum {
+	Map,
+	Gameplay,
+}
+
 Vec2 :: [2]f32
+
+WINDOW_WIDTH: i32 = 1920
+WINDOW_HEIGHT: i32 = 1080
+SCREEN_WIDTH :: 480
+SCREEN_HEIGHT :: 270
 
 world: World
 screen_texture: rl.RenderTexture
@@ -14,11 +24,8 @@ ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
 tilemap: [65536]Tile
+game_state: Game_State
 
-WINDOW_WIDTH: i32 = 1920
-WINDOW_HEIGHT: i32 = 1080
-SCREEN_WIDTH :: 480
-SCREEN_HEIGHT :: 270
 
 init :: proc() {
 	run = true

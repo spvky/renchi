@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:image/qoi"
 import "core:strings"
 import rl "vendor:raylib"
 

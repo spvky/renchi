@@ -4,7 +4,12 @@ import rl "vendor:raylib"
 render_scene :: proc() {
 	rl.BeginTextureMode(screen_texture)
 	rl.ClearBackground({0, 12, 240, 255})
-	draw_map()
+	switch game_state {
+	case .Map:
+		draw_map()
+	case .Gameplay:
+		draw_tilemap()
+	}
 	rl.EndTextureMode()
 }
 

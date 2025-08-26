@@ -66,5 +66,11 @@ handle_map_screen_cursor :: proc() {
 
 	if rl.IsKeyPressed(.ENTER) {
 		bake_map()
+		game_state = .Gameplay
+	}
+
+	if rl.IsKeyPressed(.BACKSPACE) {
+		reset_map()
+		game_state = .Map
 	}
 }

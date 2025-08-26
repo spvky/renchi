@@ -1,9 +1,30 @@
 package main
 
 import "core:fmt"
+import "core:math"
+import rl "vendor:raylib"
 
 bake_map :: proc() {
 	place_tiles()
+	generate_collision()
+}
+
+reset_map :: proc() {
+	tilemap = [65536]Tile{}
+	for &room, _ in rooms {
+		room.placed = false
+	}
+}
+
+draw_tilemap :: proc() {
+	for y in 0 ..< 256 {
+		for x in 0 ..< 256 {
+			tile := tilemap[global_index(x, y)]
+			if tile == .Wall {
+				rl.DrawCircleV({f32(x) * 2, f32(y) * 2}, 1, rl.BLACK)
+			}
+		}
+	}
 }
 
 place_tiles :: proc() {
@@ -13,17 +34,63 @@ place_tiles :: proc() {
 			for position, cell in room.cells {
 				tiles := rotate_cell(cell.tiles, room.rotation)
 				// add rooms tiles to the tilemap
-				for x in 0 ..< 16 {
-					for y in 0 ..< 16 {
+				for y in 0 ..< 16 {
+					for x in 0 ..< 16 {
+						cell_pos := cell_global_position(position, room.position, room.rotation)
+
+						raw_x := x + int(cell_pos.x * 16)
+						raw_y := y + int(cell_pos.y * 16)
 						tile := tiles[tile_index(x, y)]
 						if tile != .Empty {
+							// fmt.printfln(
+							// 	"Placing tile:\n\tCell Pos: %v\n\tx,y : %v, %v\n\traw x,y : %v, %v",
+							// 	cell_pos,
+							// 	x,
+							// 	y,
+							// 	raw_x,
+							// 	raw_y,
+							// )
+							tilemap[global_index(raw_x, raw_y)] = tile
 							tiles_added += 1
-							tilemap[tile_global_index(x, y, room.position - position)] = tile
 						}
 					}
 				}
 			}
 		}
 	}
-	fmt.printfln("%v Tiles Placed", tiles_added)
+}
+
+Wall_Chain :: struct {
+	y_value: int,
+	start:   int,
+	end:     int,
+}
+
+generate_collision :: proc() {
+	// colliders := make([dynamic]Collider, 0, 128)
+	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
+	current_chain: Wall_Chain
+	x, y: int
+	for y < 256 {
+		for x < 256 {
+			tile := tilemap[global_index(x, y)]
+			if tile == .Wall {
+				// fmt.printfln("Found a wall at %v, %v starting a chain", x, y)
+				current_chain.start, current_chain.y_value = x, y
+				x += 1
+				for tilemap[global_index(x, y)] == .Wall && x < 256 {
+					// fmt.printfln("Inside the inner forward loop, x = %v", x)
+					current_chain.end = x
+					x += 1
+				}
+				// fmt.printfln("Appnending Chain: %v\ncontinuing loop with x = %v", current_chain, x)
+				append(&wall_chains, current_chain)
+				current_chain = Wall_Chain{}
+			}
+			x += 1
+		}
+		y += 1
+	}
+	// fmt.printfln("Generated %v wall chains", len(wall_chains))
+	// fmt.printfln("Chains: %v", wall_chains)
 }
