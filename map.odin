@@ -20,7 +20,7 @@ Map_Screen_State :: struct {
 }
 
 make_map_screen_state :: proc() -> Map_Screen_State {
-	return Map_Screen_State{selected_room = .A}
+	return Map_Screen_State{selected_room = .B}
 }
 
 Map_Screen_Cursor :: struct {

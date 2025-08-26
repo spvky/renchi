@@ -1,6 +1,6 @@
 package main
 
-import "core:fmt"
+import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 
@@ -69,28 +69,29 @@ Wall_Chain :: struct {
 generate_collision :: proc() {
 	// colliders := make([dynamic]Collider, 0, 128)
 	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
-	current_chain: Wall_Chain
 	x, y: int
 	for y < 256 {
+		x = 0
 		for x < 256 {
 			tile := tilemap[global_index(x, y)]
 			if tile == .Wall {
-				// fmt.printfln("Found a wall at %v, %v starting a chain", x, y)
-				current_chain.start, current_chain.y_value = x, y
+				log.debugf("Found a wall at %v, %v starting a chain\n", x, y)
+				chain := Wall_Chain {
+					start   = x,
+					end     = x,
+					y_value = y,
+				}
 				x += 1
 				for tilemap[global_index(x, y)] == .Wall && x < 256 {
-					// fmt.printfln("Inside the inner forward loop, x = %v", x)
-					current_chain.end = x
+					chain.end = x
 					x += 1
 				}
-				// fmt.printfln("Appnending Chain: %v\ncontinuing loop with x = %v", current_chain, x)
-				append(&wall_chains, current_chain)
-				current_chain = Wall_Chain{}
+				append(&wall_chains, chain)
 			}
 			x += 1
 		}
 		y += 1
 	}
-	// fmt.printfln("Generated %v wall chains", len(wall_chains))
-	// fmt.printfln("Chains: %v", wall_chains)
+	log.debugf("Generated %v wall chains", len(wall_chains))
+	log.debugf("Chains: %v", wall_chains)
 }
