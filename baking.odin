@@ -61,7 +61,8 @@ place_tiles :: proc() {
 }
 
 Wall_Chain :: struct {
-	y_value: int,
+	y_start: int,
+	y_end: int,
 	start:   int,
 	end:     int,
 }
@@ -69,6 +70,7 @@ Wall_Chain :: struct {
 generate_collision :: proc() {
 	// colliders := make([dynamic]Collider, 0, 128)
 	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
+	column_segments := make(map[Tile_Position]struct{}, 32, allocator = context.temp_allocator)
 	x, y: int
 	for y < 256 {
 		x = 0
@@ -79,18 +81,39 @@ generate_collision :: proc() {
 				chain := Wall_Chain {
 					start   = x,
 					end     = x,
-					y_value = y,
+					y_start = y,
+					y_end = y,
 				}
 				x += 1
 				for tilemap[global_index(x, y)] == .Wall && x < 256 {
 					chain.end = x
 					x += 1
 				}
-				append(&wall_chains, chain)
+				if chain.end == chain.start {
+					column_segments[{u16(chain.start), u16(chain.y_start)}] = {}
+				} else {
+					append(&wall_chains, chain)
+				}	
 			}
 			x += 1
 		}
 		y += 1
+	}
+
+	for position, _ in column_segments {
+		chain := Wall_Chain {start = int(position.x), end = int(position.x), y_start = int(position.y), y_end = int(position.y)}
+		offset: u16
+		still_searching:=true
+		for still_searching {
+			offset += 1
+			search_position := Tile_Position{position.x, position.y + offset}
+		if _, position_exists := column_segments[search_position]; position_exists {
+			chain.y_end = int(search_position.y)
+			delete_key(&column_segments, search_position)
+		} else {
+			still_searching = false
+		}
+		}
 	}
 	log.debugf("Generated %v wall chains", len(wall_chains))
 	log.debugf("Chains: %v", wall_chains)

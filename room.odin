@@ -55,6 +55,7 @@ Cell :: struct {
 }
 
 Cell_Position :: [2]i16
+Tile_Position :: [2]u16
 
 Tile :: enum u8 {
 	Empty,
