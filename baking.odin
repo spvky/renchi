@@ -1,6 +1,7 @@
 package main
 
 import "core:log"
+import "core:time"
 import "core:math"
 import rl "vendor:raylib"
 
@@ -68,7 +69,7 @@ Wall_Chain :: struct {
 }
 
 generate_collision :: proc() {
-	// colliders := make([dynamic]Collider, 0, 128)
+	start_time := time.now()
 	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
 	column_segments := make(map[Tile_Position]struct{}, 32, allocator = context.temp_allocator)
 	x, y: int
@@ -77,7 +78,6 @@ generate_collision :: proc() {
 		for x < 256 {
 			tile := tilemap[global_index(x, y)]
 			if tile == .Wall {
-				log.debugf("Found a wall at %v, %v starting a chain\n", x, y)
 				chain := Wall_Chain {
 					start   = x,
 					end     = x,
@@ -99,22 +99,33 @@ generate_collision :: proc() {
 		}
 		y += 1
 	}
-
-	for position, _ in column_segments {
-		chain := Wall_Chain {start = int(position.x), end = int(position.x), y_start = int(position.y), y_end = int(position.y)}
-		offset: u16
-		still_searching:=true
-		for still_searching {
-			offset += 1
-			search_position := Tile_Position{position.x, position.y + offset}
-		if _, position_exists := column_segments[search_position]; position_exists {
-			chain.y_end = int(search_position.y)
-			delete_key(&column_segments, search_position)
-		} else {
-			still_searching = false
-		}
+	for y in 0..<256 {
+		for x in 0..<256 {
+		position := Tile_Position{u16(x), u16(y)}
+			if _, column_exists := column_segments[position]; column_exists {
+				chain := Wall_Chain {start = int(position.x), end = int(position.x), y_start = int(position.y), y_end = int(position.y)}
+				offset: u16
+				still_searching:=true
+				for still_searching {
+					offset += 1
+					search_position := Tile_Position{position.x, position.y + offset}
+					if _, position_exists := column_segments[search_position]; position_exists {
+						chain.y_end = int(search_position.y)
+						delete_key(&column_segments, search_position)
+					} else {
+						still_searching = false
+						append(&wall_chains, chain)
+					}
+				}
+			}
 		}
 	}
+	end_time := time.now()
+	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
+	
+	log.debugf("Collision Generation took %v ms", total_duration)
 	log.debugf("Generated %v wall chains", len(wall_chains))
-	log.debugf("Chains: %v", wall_chains)
+	for chain in wall_chains {
+	log.debugf("%v", chain)
+	}
 }

@@ -196,14 +196,6 @@ rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 	if rotation == .North {
 		return in_tiles
 	}
-	if ODIN_DEBUG {
-		fmt.println("Original:")
-		copy := in_tiles
-		for y in 0 ..< 16 {
-			start := int(y * 16)
-			fmt.printfln("%v", copy[start:start + 16])
-		}
-	}
 	tiles: [256]Tile
 	for x in 0 ..< 16 {
 		for y in 0 ..< 16 {
@@ -215,13 +207,6 @@ rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
 			case .West:
 				tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
 			}
-		}
-	}
-	if ODIN_DEBUG {
-		fmt.printfln("%v:", rotation)
-		for y in 0 ..< 16 {
-			start := int(y * 16)
-			fmt.printfln("%v", tiles[start:start + 16])
 		}
 	}
 	return tiles
