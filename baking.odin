@@ -133,7 +133,7 @@ generate_collision :: proc() {
 		}
 	}
 
-	tile_size: f32 = 2
+	tile_size: f32 = 16
 
 	for chain in wall_chains {
 		collider := Collider {

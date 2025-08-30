@@ -41,6 +41,7 @@ init :: proc() {
 
 update :: proc() {
 	handle_map_screen_cursor()
+	move_camera()
 	render_scene()
 	draw_to_screen()
 	free_all(context.temp_allocator)
