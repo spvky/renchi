@@ -9,14 +9,9 @@ MAP_SIZE: Vec2 : {256, 256}
 GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
 MAP_CELL_SIZE :: Vec2{16, 16}
 
-World_Map :: struct {
-	rooms: [256]Room_Tag,
-}
-
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
 	selected_room: Room_Tag,
-	placed_rooms:  bit_set[Room_Rotation],
 }
 
 make_map_screen_state :: proc() -> Map_Screen_State {
@@ -25,7 +20,7 @@ make_map_screen_state :: proc() -> Map_Screen_State {
 
 Map_Screen_Cursor :: struct {
 	position:           Cell_Position,
-	rotation:           Room_Rotation,
+	rotation:           Direction,
 	target_rotation:    f32,
 	displayed_rotation: f32,
 	mode:               Map_Screen_Cursor_Mode,
@@ -67,9 +62,7 @@ draw_map_grid :: proc() {
 	rl.DrawRectangleV(GRID_OFFSET, MAP_SIZE, grid_color)
 	for i in 1 ..< 16 {
 		i_f32 := f32(i) * 16
-		// Horizontal Line
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
-		// Vertical lines
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
 	}
 }
@@ -78,7 +71,6 @@ draw_map_grid :: proc() {
 draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
 	cursor_pos := vec_from_map_cell_position(cursor.position)
-	// Vec2{8, 8} + Vec2{f32(cursor.position.x) * 16, f32(cursor.position.y) * 16} + GRID_OFFSET
 	switch cursor.mode {
 	case .Select:
 		rl.DrawTexturePro(
@@ -91,7 +83,6 @@ draw_map_cursor :: proc() {
 		)
 	case .Place:
 		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
-	// can_place()
 	}
 }
 
@@ -99,7 +90,7 @@ vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
 	return Vec2{8, 8} + Vec2{f32(position.x) * 16, f32(position.y) * 16} + GRID_OFFSET
 }
 
-float_rotation_from_room_rotation :: proc(rotation: Room_Rotation) -> f32 {
+float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {
 	float_rotation: f32
 	#partial switch rotation {
 	case .East:

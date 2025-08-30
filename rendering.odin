@@ -26,6 +26,8 @@ draw_to_screen :: proc() {
 		0,
 		rl.WHITE,
 	)
-	map_screen_debug()
+	if ODIN_DEBUG {
+		map_screen_debug()
+	}
 	rl.EndDrawing()
 }

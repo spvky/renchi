@@ -7,28 +7,37 @@ import "core:slice"
 CELL_WIDTH :: 16
 MAP_WIDTH :: 256
 
+Cell_Position :: [2]i16
+Tile_Position :: [2]u16
+
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
 	width:      u8,
 	height:     u8,
 	cell_count: u8,
 	position:   Cell_Position,
-	rotation:   Room_Rotation,
+	rotation:   Direction,
 	placed:     bool,
 }
 
-Room_Rotation :: enum u8 {
+Cell :: struct {
+	tiles: [256]Tile,
+}
+
+
+Tile :: enum u8 {
+	Empty,
+	Wall,
+	OneWay,
+	Door,
+}
+
+Direction :: enum u8 {
 	North,
 	East,
 	West,
 	South,
 }
-
-Map_Room :: struct {
-	rotation: Room_Rotation,
-	ptr:      ^Room,
-}
-
 
 Room_Tag :: enum {
 	None,
@@ -47,21 +56,6 @@ room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 		position = {1, 1}
 	}
 	return position
-}
-
-// Permanent representation of a room cell
-Cell :: struct {
-	tiles: [256]Tile,
-}
-
-Cell_Position :: [2]i16
-Tile_Position :: [2]u16
-
-Tile :: enum u8 {
-	Empty,
-	Wall,
-	OneWay,
-	Door,
 }
 
 tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
@@ -94,7 +88,7 @@ can_place :: proc(positions: []Cell_Position) -> bool {
 	return can_place
 }
 
-place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotation) {
+place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Direction) {
 	room := &rooms[tag]
 	room.placed = true
 	room.position = position
@@ -108,7 +102,7 @@ place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Room_Rotati
 positions_from_rotation :: proc(
 	tag: Room_Tag,
 	origin: Cell_Position,
-	rotation: Room_Rotation,
+	rotation: Direction,
 ) -> [dynamic]Cell_Position {
 	room := rooms[tag]
 	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
@@ -137,7 +131,7 @@ positions_from_rotation :: proc(
 
 cell_global_position :: proc(
 	cell_pos, room_pos: Cell_Position,
-	room_rot: Room_Rotation,
+	room_rot: Direction,
 ) -> Cell_Position {
 	rotated_pos := cell_pos
 	rotations: int
@@ -157,7 +151,7 @@ cell_global_position :: proc(
 	return final_pos
 }
 
-rotate_cell_old :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
+rotate_cell_old :: proc(in_tiles: [256]Tile, rotation: Direction) -> [256]Tile {
 	if rotation == .North {
 		return in_tiles
 	}
@@ -192,7 +186,7 @@ rotate_cell_old :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Ti
 	return tiles
 }
 
-rotate_cell :: proc(in_tiles: [256]Tile, rotation: Room_Rotation) -> [256]Tile {
+rotate_cell :: proc(in_tiles: [256]Tile, rotation: Direction) -> [256]Tile {
 	if rotation == .North {
 		return in_tiles
 	}

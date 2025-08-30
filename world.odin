@@ -3,8 +3,7 @@ package main
 import rl "vendor:raylib"
 
 World :: struct {
-	camera:    rl.Camera2D,
-	world_map: World_Map,
+	camera: rl.Camera2D,
 }
 
 make_world :: proc() -> World {
