@@ -25,6 +25,7 @@ rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
 tilemap: [65536]Tile
 game_state: Game_State
+colliders: [dynamic]Collider
 
 
 init :: proc() {
@@ -33,9 +34,9 @@ init :: proc() {
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
 	map_screen_state = make_map_screen_state()
-	fmt.printfln("WORLD SIZE: %v bytes", size_of(World))
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
+	colliders := make([dynamic]Collider, 0, 64)
 }
 
 update :: proc() {
