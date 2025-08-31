@@ -139,6 +139,31 @@
 			"overrideTilesetUid": null,
 			"gridTiles": [],
 			"entityInstances": []
+		},
+		{
+			"__identifier": "Camera_regions",
+			"__type": "IntGrid",
+			"__cWid": 2,
+			"__cHei": 2,
+			"__gridSize": 256,
+			"__opacity": 1,
+			"__pxTotalOffsetX": 0,
+			"__pxTotalOffsetY": 0,
+			"__tilesetDefUid": null,
+			"__tilesetRelPath": null,
+			"iid": "43941650-8560-11f0-acb3-91f91859d31c",
+			"levelId": 0,
+			"layerDefUid": 57,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"visible": true,
+			"optionalRules": [],
+			"intGridCsv": [1,1,0,2],
+			"autoLayerTiles": [],
+			"seed": 3416141,
+			"overrideTilesetUid": null,
+			"gridTiles": [],
+			"entityInstances": []
 		}
 	],
 	"__neighbours": []

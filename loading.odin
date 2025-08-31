@@ -16,21 +16,31 @@ load_rooms :: proc() -> [Room_Tag]Room {
 }
 
 read_room :: proc(tag: Room_Tag) -> Room {
-	filename := room_tag_as_filepath(tag, .CSV)
+	cells := read_cell_tile_data(tag)
+
+	room := Room {
+		cells = cells,
+	}
+	parse_room_stats(&room, tag)
+	return room
+}
+
+read_cell_tile_data :: proc(tag: Room_Tag) -> map[Cell_Position]Cell {
+	cells := make(map[Cell_Position]Cell, 8)
+	filename := room_tag_as_filepath(tag, .Main)
 	r: csv.Reader
 	r.trim_leading_space = true
 	defer csv.reader_destroy(&r)
 
-	cells := make(map[Cell_Position]Cell, 8)
 
-	csv_data, ok := os.read_entire_file(filename)
+	data, ok := os.read_entire_file(filename)
 	if ok {
-		csv.reader_init_with_string(&r, string(csv_data))
+		csv.reader_init_with_string(&r, string(data))
 	} else {
 		fmt.printfln("Unable to open file: %v", filename)
-		return Room{}
+		return cells
 	}
-	defer delete(csv_data)
+	defer delete(data)
 
 	records, err := csv.read_all(&r)
 	if err != nil do fmt.printfln("Failed to parse CSV file for %v\nErr: %v", filename, err)
@@ -57,17 +67,12 @@ read_room :: proc(tag: Room_Tag) -> Room {
 						cells[position] = Cell{}
 					}
 					cell := &cells[position]
-					// fmt.printfln("setting tile at %v, %v with %v", x, y, value)
 					cell.tiles[tile_index(x, y)] = value
 				}
 			}
 		}
 	}
-	room := Room {
-		cells = cells,
-	}
-	parse_room_stats(&room, tag)
-	return room
+	return cells
 }
 
 parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
@@ -104,15 +109,45 @@ parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
 	room.cell_count = cell_count
 }
 
-room_tag_as_filepath :: proc(tag: Room_Tag, extension: enum {
-		CSV,
-		PNG,
+room_tag_as_filepath :: proc(tag: Room_Tag, map_type: enum {
+		Main,
+		Exits,
 	}) -> string {
-	switch extension {
-	case .CSV:
-		return fmt.tprintf("assets/ldtk/renchi/simplified/%v/Main.csv", tag)
-	case .PNG:
-		return fmt.tprintf("assets/ldtk/renchi/simplified/%v/Main.png", tag)
+	return fmt.tprintf("assets/ldtk/renchi/simplified/%v/%v.csv", tag, map_type)
+}
+
+exits_from_int_grid :: proc(value: int) -> bit_set[Direction] {
+	switch value {
+	case 1:
+		return {.North}
+	case 2:
+		return {.South}
+	case 3:
+		return {.East}
+	case 4:
+		return {.West}
+	case 5:
+		return {.North, .East}
+	case 6:
+		return {.North, .West}
+	case 7:
+		return {.North, .South}
+	case 8:
+		return {.South, .East}
+	case 9:
+		return {.South, .West}
+	case 10:
+		return {.East, .West}
+	case 11:
+		return {.North, .East, .West}
+	case 12:
+		return {.South, .East, .West}
+	case 13:
+		return {.North, .South, .East}
+	case 14:
+		return {.North, .South, .West}
+	case 15:
+		return {.North, .South, .East, .West}
 	}
-	return ""
+	return bit_set[Direction]{}
 }

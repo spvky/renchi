@@ -22,6 +22,7 @@ Room :: struct {
 
 Cell :: struct {
 	tiles: [256]Tile,
+	exits: bit_set[Direction],
 }
 
 
