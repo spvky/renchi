@@ -48,11 +48,10 @@ place_tiles :: proc() {
 	for room, tag in rooms {
 		if room.placed {
 			for position, cell in room.cells {
-				tiles := rotate_cell(cell.tiles, room.rotation)
+				tiles, exits := rotate_cell(cell.tiles, cell.exits, room.rotation)
 				for y in 0 ..< 16 {
 					for x in 0 ..< 16 {
 						cell_pos := cell_global_position(position, room.position, room.rotation)
-
 						raw_x := x + int(cell_pos.x * 16)
 						raw_y := y + int(cell_pos.y * 16)
 						tile := tiles[tile_index(x, y)]

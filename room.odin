@@ -48,6 +48,45 @@ Room_Tag :: enum {
 	D,
 }
 
+rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {
+	new_dir := dir
+	#partial switch rotation {
+	case .East:
+		switch dir {
+		case .North:
+			new_dir = .East
+		case .East:
+			new_dir = .South
+		case .South:
+			new_dir = .West
+		case .West:
+			new_dir = .North
+		}
+	case .South:
+		switch dir {
+		case .North:
+			new_dir = .South
+		case .East:
+			new_dir = .West
+		case .South:
+			new_dir = .North
+		case .West:
+			new_dir = .East
+		}
+	case .West:
+		switch dir {
+		case .North:
+			new_dir = .West
+		case .East:
+			new_dir = .North
+		case .South:
+			new_dir = .East
+		case .West:
+			new_dir = .South
+		}
+	}
+	return new_dir
+}
 room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
 	position: Cell_Position
 	#partial switch tag {
@@ -152,59 +191,33 @@ cell_global_position :: proc(
 	return final_pos
 }
 
-rotate_cell_old :: proc(in_tiles: [256]Tile, rotation: Direction) -> [256]Tile {
+rotate_cell :: proc(
+	in_tiles: [256]Tile,
+	in_exits: bit_set[Direction],
+	rotation: Direction,
+) -> (
+	out_tiles: [256]Tile,
+	out_exits: bit_set[Direction],
+) {
 	if rotation == .North {
-		return in_tiles
+		return in_tiles, in_exits
 	}
-	rotations: int
-	#partial switch rotation {
-	case .East:
-		rotations = 1
-	case .South:
-		rotations = 2
-	case .West:
-		rotations = 3
-	}
-	tiles := in_tiles
-	for rotations > 0 {
-		for y in 0 ..< 16 {
-			for x in y + 1 ..< 16 {
-				tiles[tile_index(x, y)], tiles[tile_index(y, x)] =
-					tiles[tile_index(y, x)], tiles[tile_index(x, y)]
-			}
-		}
-		for x in 0 ..< 16 {
-			start, end := 0, 15
-			for start < end {
-				tiles[tile_index(x, start)], tiles[tile_index(x, end)] =
-					tiles[tile_index(x, end)], tiles[tile_index(x, start)]
-				start += 1
-				end -= 1
-			}
-		}
-		rotations -= 1
-	}
-	return tiles
-}
-
-rotate_cell :: proc(in_tiles: [256]Tile, rotation: Direction) -> [256]Tile {
-	if rotation == .North {
-		return in_tiles
-	}
-	tiles: [256]Tile
 	for x in 0 ..< 16 {
 		for y in 0 ..< 16 {
 			#partial switch rotation {
 			case .East:
-				tiles[tile_index(x, y)] = in_tiles[tile_index(y, 15 - x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, 15 - x)]
 			case .South:
-				tiles[tile_index(x, y)] = in_tiles[tile_index(15 - x, 15 - y)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - x, 15 - y)]
 			case .West:
-				tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
 			}
 		}
 	}
-	return tiles
+	for e in in_exits {
+		out_exits += {rotate_direction(e, rotation)}
+	}
+	return
 }
 
 select_next_valid_tag :: proc() {

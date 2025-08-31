@@ -2,6 +2,7 @@ package main
 
 import "core:encoding/csv"
 import "core:fmt"
+import "core:log"
 import "core:os"
 import "core:strconv"
 
@@ -37,12 +38,12 @@ write_cell_tile_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 	if ok {
 		csv.reader_init_with_string(&r, string(data))
 	} else {
-		fmt.printfln("Unable to open file: %v", filename)
+		log.errorf("Unable to open file: %v", filename)
 	}
 	defer delete(data)
 
 	records, err := csv.read_all(&r)
-	if err != nil do fmt.printfln("Failed to parse CSV file for %v\nErr: %v", filename, err)
+	if err != nil do log.errorf("Failed to parse CSV file for %v\nErr: %v", filename, err)
 
 	defer {
 		for rec in records {
@@ -84,12 +85,12 @@ write_cell_exit_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 	if ok {
 		csv.reader_init_with_string(&r, string(data))
 	} else {
-		fmt.printfln("Unable to open file: %v", filename)
+		log.errorf("Unable to open file: %v", filename)
 	}
 	defer delete(data)
 
 	records, err := csv.read_all(&r)
-	if err != nil do fmt.printfln("Failed to parse CSV file for %v\nErr: %v", filename, err)
+	if err != nil do log.errorf("Failed to parse CSV file for %v\nErr: %v", filename, err)
 
 	defer {
 		for rec in records {
