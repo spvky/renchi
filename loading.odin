@@ -16,8 +16,9 @@ load_rooms :: proc() -> [Room_Tag]Room {
 }
 
 read_room :: proc(tag: Room_Tag) -> Room {
-	cells := read_cell_tile_data(tag)
-
+	cells := make(map[Cell_Position]Cell, 8)
+	write_cell_tile_data(&cells, tag)
+	write_cell_exit_data(&cells, tag)
 	room := Room {
 		cells = cells,
 	}
@@ -25,8 +26,7 @@ read_room :: proc(tag: Room_Tag) -> Room {
 	return room
 }
 
-read_cell_tile_data :: proc(tag: Room_Tag) -> map[Cell_Position]Cell {
-	cells := make(map[Cell_Position]Cell, 8)
+write_cell_tile_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 	filename := room_tag_as_filepath(tag, .Main)
 	r: csv.Reader
 	r.trim_leading_space = true
@@ -38,7 +38,6 @@ read_cell_tile_data :: proc(tag: Room_Tag) -> map[Cell_Position]Cell {
 		csv.reader_init_with_string(&r, string(data))
 	} else {
 		fmt.printfln("Unable to open file: %v", filename)
-		return cells
 	}
 	defer delete(data)
 
@@ -72,7 +71,46 @@ read_cell_tile_data :: proc(tag: Room_Tag) -> map[Cell_Position]Cell {
 			}
 		}
 	}
-	return cells
+}
+
+write_cell_exit_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
+	filename := room_tag_as_filepath(tag, .Exits)
+	r: csv.Reader
+	r.trim_leading_space = true
+	defer csv.reader_destroy(&r)
+
+
+	data, ok := os.read_entire_file(filename)
+	if ok {
+		csv.reader_init_with_string(&r, string(data))
+	} else {
+		fmt.printfln("Unable to open file: %v", filename)
+	}
+	defer delete(data)
+
+	records, err := csv.read_all(&r)
+	if err != nil do fmt.printfln("Failed to parse CSV file for %v\nErr: %v", filename, err)
+
+	defer {
+		for rec in records {
+			delete(rec)
+		}
+		delete(records)
+	}
+
+	for r, i in records {
+		for f, j in r {
+			if field, field_ok := strconv.parse_int(f); field_ok {
+				if field != 0 {
+					exits := exits_from_int_grid(field)
+					position := Cell_Position{i16(j), i16(i)}
+					cell := cells[position]
+					cell.exits = exits
+					cells[position] = cell
+				}
+			}
+		}
+	}
 }
 
 parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
