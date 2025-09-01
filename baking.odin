@@ -52,6 +52,7 @@ place_tiles :: proc() {
 				for y in 0 ..< 16 {
 					for x in 0 ..< 16 {
 						cell_pos := cell_global_position(position, room.position, room.rotation)
+						exit_map[tile_index(cell_pos.x, cell_pos.y)] = exits
 						raw_x := x + int(cell_pos.x * 16)
 						raw_y := y + int(cell_pos.y * 16)
 						tile := tiles[tile_index(x, y)]

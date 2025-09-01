@@ -24,6 +24,7 @@ ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
 tilemap: [65536]Tile
+exit_map: [256]bit_set[Direction]
 game_state: Game_State
 colliders: [dynamic]Collider
 
