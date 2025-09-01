@@ -15,6 +15,7 @@ WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080
 SCREEN_WIDTH :: 480
 SCREEN_HEIGHT :: 270
+TILE_SIZE :: 16
 
 world: World
 screen_texture: rl.RenderTexture
@@ -27,6 +28,7 @@ tilemap: [65536]Tile
 exit_map: [256]bit_set[Direction]
 game_state: Game_State
 colliders: [dynamic]Collider
+rigidbodies: [dynamic]Rigidbody
 
 
 init :: proc() {
@@ -38,6 +40,7 @@ init :: proc() {
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
 	colliders := make([dynamic]Collider, 0, 64)
+	rigidbodies := make([dynamic]Rigidbody, 0, 16)
 }
 
 update :: proc() {

@@ -2,6 +2,25 @@ package main
 
 import l "core:math/linalg"
 
+Rigidbody :: struct {
+	translation: Vec2,
+	velocity:    Vec2,
+	snapshot:    Vec2,
+	shape:       Collision_Shape,
+}
+
+Collision_Shape :: union {
+	Circle,
+	Rectangle,
+}
+
+Circle :: struct {
+	radius: f32,
+}
+
+Rectangle :: struct {
+	extents: Vec2,
+}
 
 Collider :: struct {
 	max: Vec2,
