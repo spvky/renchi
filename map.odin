@@ -1,13 +1,51 @@
 package main
 
-import "core:fmt"
 import "core:image/qoi"
-import "core:strings"
+import "core:slice"
 import rl "vendor:raylib"
 
 MAP_SIZE: Vec2 : {256, 256}
 GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
 MAP_CELL_SIZE :: Vec2{16, 16}
+CELL_WIDTH :: 16
+MAP_WIDTH :: 256
+
+Room :: struct {
+	cells:      map[Cell_Position]Cell,
+	width:      u8,
+	height:     u8,
+	cell_count: u8,
+	position:   Cell_Position,
+	rotation:   Direction,
+	placed:     bool,
+}
+
+Cell :: struct {
+	tiles: [256]Tile,
+	exits: bit_set[Direction],
+}
+
+Tile :: enum u8 {
+	Empty,
+	Wall,
+	OneWay,
+	Door,
+}
+
+Direction :: enum u8 {
+	North,
+	East,
+	West,
+	South,
+}
+
+Room_Tag :: enum {
+	None,
+	A,
+	B,
+	C,
+	D,
+}
 
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
@@ -31,27 +69,142 @@ Map_Screen_Cursor_Mode :: enum {
 	Select,
 }
 
-map_screen_debug :: proc() {
-	y_offset := 100
-	i: int
-	for room, tag in rooms {
-		if room.placed && tag != .None {
-			rooms_string := fmt.tprintf(
-				"Room: %v\n\tPlaced: %v\n\tPosition: %v\n\tRotation: %v",
-				tag,
-				room.placed,
-				room.position,
-				room.rotation,
-			)
+rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {
+	new_dir := dir
+	#partial switch rotation {
+	case .East:
+		switch dir {
+		case .North:
+			new_dir = .East
+		case .East:
+			new_dir = .South
+		case .South:
+			new_dir = .West
+		case .West:
+			new_dir = .North
+		}
+	case .South:
+		switch dir {
+		case .North:
+			new_dir = .South
+		case .East:
+			new_dir = .West
+		case .South:
+			new_dir = .North
+		case .West:
+			new_dir = .East
+		}
+	case .West:
+		switch dir {
+		case .North:
+			new_dir = .West
+		case .East:
+			new_dir = .North
+		case .South:
+			new_dir = .East
+		case .West:
+			new_dir = .South
+		}
+	}
+	return new_dir
+}
 
-			rl.DrawText(
-				strings.clone_to_cstring(rooms_string),
-				150,
-				i32(y_offset + (i * 70)),
-				16,
-				rl.WHITE,
+can_place :: proc(positions: []Cell_Position) -> bool {
+	can_place := true
+	placed_positions := make([dynamic]Cell_Position, 0, 64, allocator = context.temp_allocator)
+	for room, tag in rooms {
+		if room.placed {
+			append_elems(
+				&placed_positions,
+				..positions_from_rotation(tag, room.position, room.rotation)[:],
 			)
-			i += 1
+		}
+	}
+	for pos in positions {
+		if slice.contains(placed_positions[:], pos) {
+			can_place = false
+		}
+		if pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 {
+			can_place = false
+		}
+	}
+	return can_place
+}
+
+place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Direction) {
+	room := &rooms[tag]
+	room.placed = true
+	room.position = position
+	room.rotation = rotation
+	select_next_valid_tag()
+	map_screen_state.cursor.rotation = .North
+	map_screen_state.cursor.target_rotation = 0
+	map_screen_state.cursor.displayed_rotation = 0
+}
+
+positions_from_rotation :: proc(
+	tag: Room_Tag,
+	origin: Cell_Position,
+	rotation: Direction,
+) -> [dynamic]Cell_Position {
+	room := rooms[tag]
+	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
+
+	rotations: int
+
+	#partial switch rotation {
+	case .East:
+		rotations = 1
+	case .South:
+		rotations = 2
+	case .West:
+		rotations = 3
+	}
+	for position, _ in room.cells {
+		rotated_position := position
+
+		for _ in 0 ..< rotations {
+			rotated_position = {-rotated_position.y, rotated_position.x}
+		}
+		rotated_position += origin
+		append(&positions_to_place, rotated_position)
+	}
+	return positions_to_place
+}
+
+rotate_cell :: proc(
+	in_tiles: [256]Tile,
+	in_exits: bit_set[Direction],
+	rotation: Direction,
+) -> (
+	out_tiles: [256]Tile,
+	out_exits: bit_set[Direction],
+) {
+	if rotation == .North {
+		return in_tiles, in_exits
+	}
+	for x in 0 ..< 16 {
+		for y in 0 ..< 16 {
+			#partial switch rotation {
+			case .East:
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, 15 - x)]
+			case .South:
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - x, 15 - y)]
+			case .West:
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
+			}
+		}
+	}
+	for e in in_exits {
+		out_exits += {rotate_direction(e, rotation)}
+	}
+	return
+}
+
+select_next_valid_tag :: proc() {
+	for room, tag in rooms {
+		if tag != .None && room.placed == false {
+			map_screen_state.selected_room = tag
 		}
 	}
 }
@@ -66,7 +219,6 @@ draw_map_grid :: proc() {
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
 	}
 }
-
 
 draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
@@ -84,24 +236,6 @@ draw_map_cursor :: proc() {
 	case .Place:
 		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
 	}
-}
-
-vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
-	return Vec2{8, 8} + Vec2{f32(position.x) * 16, f32(position.y) * 16} + GRID_OFFSET
-}
-
-float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {
-	float_rotation: f32
-	#partial switch rotation {
-	case .East:
-		float_rotation = 90
-	case .South:
-		float_rotation = 180
-	case .West:
-		float_rotation = 270
-	}
-
-	return float_rotation
 }
 
 draw_placed_rooms :: proc() {

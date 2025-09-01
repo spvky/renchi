@@ -2,6 +2,7 @@ package main
 
 import "core:c"
 import "core:fmt"
+import "core:math"
 import rl "vendor:raylib"
 
 Game_State :: enum {
@@ -9,13 +10,28 @@ Game_State :: enum {
 	Gameplay,
 }
 
-Vec2 :: [2]f32
+World :: struct {
+	camera: rl.Camera2D,
+	player: Player,
+}
+
+make_world :: proc() -> World {
+	player_rigidbody := Rigidbody {
+		shape = Circle{radius = 8},
+	}
+	player := Player {
+		rigidbody = &player_rigidbody,
+	}
+	append(&rigidbodies, player_rigidbody)
+	return World{camera = rl.Camera2D{zoom = 1}, player = player}
+}
 
 WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080
 SCREEN_WIDTH :: 480
 SCREEN_HEIGHT :: 270
 TILE_SIZE :: 16
+TICK_RATE :: 1.0 / 200.0
 
 world: World
 screen_texture: rl.RenderTexture
@@ -25,6 +41,7 @@ ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
 tilemap: [65536]Tile
+time: Time
 exit_map: [256]bit_set[Direction]
 game_state: Game_State
 colliders: [dynamic]Collider
@@ -44,11 +61,38 @@ init :: proc() {
 }
 
 update :: proc() {
-	handle_map_screen_cursor()
-	move_camera()
+	switch game_state {
+	case .Map:
+		mapping()
+	case .Gameplay:
+		playing()
+	}
 	render_scene()
 	draw_to_screen()
 	free_all(context.temp_allocator)
+}
+
+mapping :: proc() {
+	handle_map_screen_cursor()
+}
+
+playing :: proc() {
+	move_camera()
+	frametime := rl.GetFrameTime()
+
+	if !time.started {
+		time.t = f32(rl.GetTime())
+		time.started = true
+	}
+	// get playing input
+	t1 := f32(rl.GetTime())
+	elapsed := math.min(t1 - time.t, 0.25)
+	time.t = t1
+	time.simulation_time += elapsed
+	for time.simulation_time >= TICK_RATE {
+		//Physics step
+		time.simulation_time -= TICK_RATE
+	}
 }
 
 shutdown :: proc() {

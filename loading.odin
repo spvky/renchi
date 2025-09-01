@@ -190,3 +190,14 @@ exits_from_int_grid :: proc(value: int) -> bit_set[Direction] {
 	}
 	return bit_set[Direction]{}
 }
+
+room_pivot_from_tag :: proc(tag: Room_Tag) -> Cell_Position {
+	position: Cell_Position
+	#partial switch tag {
+	case .A:
+		position = {1, 0}
+	case .D:
+		position = {1, 1}
+	}
+	return position
+}
