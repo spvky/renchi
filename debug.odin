@@ -19,7 +19,7 @@ map_screen_debug :: proc() {
 
 			rl.DrawText(
 				strings.clone_to_cstring(rooms_string),
-				150,
+				1550,
 				i32(y_offset + (i * 70)),
 				16,
 				rl.WHITE,
@@ -27,4 +27,14 @@ map_screen_debug :: proc() {
 			i += 1
 		}
 	}
+}
+
+player_debug :: proc() {
+	player := world.player
+	debug_string := fmt.tprintf(
+		"Player:\n\tTranslation: [%.1f,%.1f]",
+		player.translation.x,
+		player.translation.y,
+	)
+	rl.DrawText(strings.clone_to_cstring(debug_string), 20, 100, 16, rl.WHITE)
 }

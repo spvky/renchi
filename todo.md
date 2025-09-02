@@ -5,6 +5,6 @@
 ## Camera
 - [ ] Read exits for camera logic
 ## Player
-- [ ] Implement a basic player
+- [x] Implement a basic player
 ## Rendering
 - [ ] Autotiling

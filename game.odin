@@ -1,7 +1,7 @@
 package main
 
 import "core:c"
-import "core:fmt"
+import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 
@@ -11,18 +11,18 @@ Game_State :: enum {
 }
 
 World :: struct {
-	camera: rl.Camera2D,
-	player: Player,
+	camera:       rl.Camera2D,
+	player:       Player,
+	current_cell: Cell_Position,
 }
 
 make_world :: proc() -> World {
-	player_rigidbody := Rigidbody {
-		shape = Circle{radius = 8},
-	}
 	player := Player {
-		rigidbody = &player_rigidbody,
+		translation  = {128, 0},
+		radius       = 8,
+		acceleration = 275,
+		deceleration = 0.75,
 	}
-	append(&rigidbodies, player_rigidbody)
 	return World{camera = rl.Camera2D{zoom = 1}, player = player}
 }
 
@@ -50,14 +50,20 @@ rigidbodies: [dynamic]Rigidbody
 
 init :: proc() {
 	run = true
+	log.info("Rigidbodies Initialized")
+	rigidbodies = make([dynamic]Rigidbody, 0, 16)
+	log.info("Colliders Initialized")
+	colliders = make([dynamic]Collider, 0, 64)
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	world = make_world()
+	log.infof("Rigidbodies Length: %v", len(rigidbodies))
+	for rb in rigidbodies {
+		log.infof("Rigidbody Translation: %v", rb.translation)
+	}
 	map_screen_state = make_map_screen_state()
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
-	colliders := make([dynamic]Collider, 0, 64)
-	rigidbodies := make([dynamic]Rigidbody, 0, 16)
 }
 
 update :: proc() {
@@ -84,15 +90,17 @@ playing :: proc() {
 		time.t = f32(rl.GetTime())
 		time.started = true
 	}
-	// get playing input
+	player_input()
 	t1 := f32(rl.GetTime())
 	elapsed := math.min(t1 - time.t, 0.25)
 	time.t = t1
 	time.simulation_time += elapsed
 	for time.simulation_time >= TICK_RATE {
-		//Physics step
+		physics_step()
 		time.simulation_time -= TICK_RATE
 	}
+	alpha := time.simulation_time / TICK_RATE
+	world.player.snapshot = math.lerp(world.player.snapshot, world.player.translation, alpha)
 }
 
 shutdown :: proc() {

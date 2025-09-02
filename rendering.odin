@@ -10,6 +10,7 @@ render_scene :: proc() {
 		draw_map()
 	case .Gameplay:
 		draw_tilemap()
+		draw_player()
 	}
 	rl.EndMode2D()
 	rl.EndTextureMode()
@@ -28,6 +29,7 @@ draw_to_screen :: proc() {
 	)
 	if ODIN_DEBUG {
 		map_screen_debug()
+		player_debug()
 	}
 	rl.EndDrawing()
 }
