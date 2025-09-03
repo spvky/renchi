@@ -46,6 +46,7 @@ exit_map: [256]bit_set[Direction]
 game_state: Game_State
 colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
+input_buffer: Input_Buffer
 
 
 init :: proc() {
@@ -84,13 +85,12 @@ mapping :: proc() {
 
 playing :: proc() {
 	move_camera()
-	frametime := rl.GetFrameTime()
 
 	if !time.started {
 		time.t = f32(rl.GetTime())
 		time.started = true
 	}
-	player_input()
+	poll_input()
 	t1 := f32(rl.GetTime())
 	elapsed := math.min(t1 - time.t, 0.25)
 	time.t = t1

@@ -37,6 +37,7 @@ Collision_Data :: struct {
 physics_step :: proc() {
 	player_platform_collision()
 	player_movement()
+	player_jump()
 	apply_player_gravity()
 	apply_player_velocity()
 }

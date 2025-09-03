@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math"
 import l "core:math/linalg"
 import rl "vendor:raylib"
@@ -64,15 +65,16 @@ apply_player_gravity :: proc() {
 	}
 }
 
-player_input :: proc() {
-	delta: f32
-	if rl.IsKeyDown(.A) {
-		delta -= 1
+player_jump :: proc() {
+	player := &world.player
+	if is_action_buffered(.Jump) {
+		switch player.state {
+		case .Grounded:
+			player.velocity.y = jump_speed
+			consume_action(.Jump)
+		case .Airborne:
+		}
 	}
-	if rl.IsKeyDown(.D) {
-		delta += 1
-	}
-	world.player.move_delta = delta
 }
 
 player_movement :: proc() {
@@ -92,12 +94,17 @@ player_movement :: proc() {
 
 player_platform_collision :: proc() {
 	player := &world.player
+	player_feet := player.translation + Vec2{0, 8}
+	foot_collision: bool
 	collisions := make([dynamic]Collision_Data, 0, 8, allocator = context.temp_allocator)
 	for collider in colliders {
 		nearest_point := collider_nearest_point(collider, player.translation)
 		if l.distance(nearest_point, player.translation) < player.radius {
 			collision := calculate_collision(player, nearest_point)
 			append(&collisions, collision)
+		}
+		if l.distance(nearest_point, player_feet) < 1.5 {
+			foot_collision = true
 		}
 		for collision in collisions {
 			player.translation += collision.mtv
@@ -110,6 +117,11 @@ player_platform_collision :: proc() {
 				player.velocity.y = 0
 			}
 		}
+	}
+	if foot_collision {
+		player.state = .Grounded
+	} else {
+		player.state = .Airborne
 	}
 }
 
