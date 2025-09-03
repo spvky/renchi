@@ -96,26 +96,26 @@ player_platform_collision :: proc() {
 	player := &world.player
 	player_feet := player.translation + Vec2{0, 8}
 	foot_collision: bool
-	collisions := make([dynamic]Collision_Data, 0, 8, allocator = context.temp_allocator)
 	for collider in colliders {
 		nearest_point := collider_nearest_point(collider, player.translation)
 		if l.distance(nearest_point, player.translation) < player.radius {
-			collision := calculate_collision(player, nearest_point)
-			append(&collisions, collision)
-		}
-		if l.distance(nearest_point, player_feet) < 1.5 {
-			foot_collision = true
-		}
-		for collision in collisions {
-			player.translation += collision.mtv
-			x_dot := math.abs(l.dot(collision.normal, Vec2{1, 0}))
-			y_dot := math.abs(l.dot(collision.normal, Vec2{0, 1}))
+			collision_vector := player.translation - nearest_point
+			collision_normal := l.normalize0(collision_vector)
+			pen_depth := player.radius - l.length(collision_vector)
+			mtv := collision_normal * pen_depth
+
+			player.translation += mtv
+			x_dot := math.abs(l.dot(collision_normal, Vec2{1, 0}))
+			y_dot := math.abs(l.dot(collision_normal, Vec2{0, 1}))
 			if x_dot > 0.7 {
 				player.velocity.x = 0
 			}
 			if y_dot > 0.7 {
 				player.velocity.y = 0
 			}
+		}
+		if l.distance(nearest_point, player_feet) < 1.5 {
+			foot_collision = true
 		}
 	}
 	if foot_collision {
