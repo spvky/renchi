@@ -2,7 +2,6 @@ package main
 
 import intr "base:intrinsics"
 import "core:strings"
-import "utils"
 import rl "vendor:raylib"
 
 Vec2 :: [2]f32
@@ -48,7 +47,11 @@ cell_global_position :: proc(
 }
 
 vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
-	return Vec2{8, 8} + Vec2{f32(position.x) * 16, f32(position.y) * 16} + GRID_OFFSET
+	return(
+		Vec2{12.5, 12.5} +
+		Vec2{f32(position.x) * TILE_COUNT, f32(position.y) * TILE_COUNT} +
+		GRID_OFFSET \
+	)
 }
 
 float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {

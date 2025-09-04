@@ -1,6 +1,5 @@
 package main
 
-import "core:math"
 import l "core:math/linalg"
 
 

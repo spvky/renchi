@@ -1,7 +1,6 @@
 package main
 
 import "core:log"
-import "core:math"
 import "core:time"
 import rl "vendor:raylib"
 
@@ -11,21 +10,13 @@ bake_map :: proc() {
 }
 
 reset_map :: proc() {
-	tilemap = [65536]Tile{}
+	tilemap = [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile{}
 	for &room, _ in rooms {
 		room.placed = false
 	}
 }
 
 draw_tilemap :: proc() {
-	// for y in 0 ..< 256 {
-	// 	for x in 0 ..< 256 {
-	// 		tile := tilemap[global_index(x, y)]
-	// 		if tile == .Wall {
-	// 			rl.DrawCircleV({f32(x) * 2, f32(y) * 2}, 1, rl.BLACK)
-	// 		}
-	// 	}
-	// }
 	draw_colliders()
 }
 
@@ -45,16 +36,16 @@ draw_colliders :: proc() {
 
 place_tiles :: proc() {
 	tiles_added: int
-	for room, tag in rooms {
+	for room, _ in rooms {
 		if room.placed {
 			for position, cell in room.cells {
 				tiles, exits := rotate_cell(cell.tiles, cell.exits, room.rotation)
-				for y in 0 ..< 16 {
-					for x in 0 ..< 16 {
+				for y in 0 ..< TILE_COUNT {
+					for x in 0 ..< TILE_COUNT {
 						cell_pos := cell_global_position(position, room.position, room.rotation)
 						exit_map[tile_index(cell_pos.x, cell_pos.y)] = exits
-						raw_x := x + int(cell_pos.x * 16)
-						raw_y := y + int(cell_pos.y * 16)
+						raw_x := x + int(cell_pos.x * TILE_COUNT)
+						raw_y := y + int(cell_pos.y * TILE_COUNT)
 						tile := tiles[tile_index(x, y)]
 						if tile != .Empty {
 							tilemap[global_index(raw_x, raw_y)] = tile
@@ -79,9 +70,9 @@ generate_collision :: proc() {
 	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
 	column_segments := make(map[Tile_Position]struct {}, 32, allocator = context.temp_allocator)
 	x, y: int
-	for y < 256 {
+	for y < CELL_COUNT * TILE_COUNT {
 		x = 0
-		for x < 256 {
+		for x < CELL_COUNT * TILE_COUNT {
 			tile := tilemap[global_index(x, y)]
 			if tile == .Wall {
 				chain := Wall_Chain {
@@ -91,7 +82,7 @@ generate_collision :: proc() {
 					y_end   = y,
 				}
 				x += 1
-				for tilemap[global_index(x, y)] == .Wall && x < 256 {
+				for tilemap[global_index(x, y)] == .Wall && x < TILE_COUNT * TILE_COUNT {
 					chain.end = x
 					x += 1
 				}
@@ -106,8 +97,8 @@ generate_collision :: proc() {
 		y += 1
 	}
 
-	for y in 0 ..< 256 {
-		for x in 0 ..< 256 {
+	for y in 0 ..< TILE_COUNT * TILE_COUNT {
+		for x in 0 ..< TILE_COUNT * TILE_COUNT {
 			position := Tile_Position{u16(x), u16(y)}
 			if _, column_exists := column_segments[position]; column_exists {
 				chain := Wall_Chain {
@@ -133,12 +124,10 @@ generate_collision :: proc() {
 		}
 	}
 
-	tile_size: f32 = 16
-
 	for chain in wall_chains {
 		collider := Collider {
-			min = {f32(chain.start) * tile_size, f32(chain.y_start) * tile_size},
-			max = {f32(chain.end + 1) * tile_size, f32(chain.y_end + 1) * tile_size},
+			min = {f32(chain.start) * TILE_SIZE, f32(chain.y_start) * TILE_SIZE},
+			max = {f32(chain.end + 1) * TILE_SIZE, f32(chain.y_end + 1) * TILE_SIZE},
 		}
 		append(&colliders, collider)
 	}
