@@ -54,11 +54,11 @@ write_cell_tile_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 
 	for r, i in records {
 		for f, j in r {
-			cx: i16 = i16(j) / 16
-			cy: i16 = i16(i) / 16
+			cx: i16 = i16(j) / TILE_COUNT
+			cy: i16 = i16(i) / TILE_COUNT
 			position := Cell_Position{cx, cy}
-			x := i16(j) - (cx * 16)
-			y := i16(i) - (cy * 16)
+			x := i16(j) - (cx * TILE_COUNT)
+			y := i16(i) - (cy * TILE_COUNT)
 			if field, field_ok := strconv.parse_uint(f); field_ok {
 				value := Tile(field)
 				if value != .Empty {

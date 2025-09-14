@@ -1,14 +1,13 @@
 package main
 
-import "core:image/qoi"
 import "core:slice"
 import rl "vendor:raylib"
 
-MAP_SIZE: Vec2 : {256, 256}
+MAP_SIZE: Vec2 : {250, 250}
 GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
-MAP_CELL_SIZE :: Vec2{16, 16}
-CELL_WIDTH :: 16
-MAP_WIDTH :: 256
+MAP_CELL_SIZE :: Vec2{25, 25}
+CELL_WIDTH :: 25
+MAP_WIDTH :: 250
 
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
@@ -21,7 +20,7 @@ Room :: struct {
 }
 
 Cell :: struct {
-	tiles: [256]Tile,
+	tiles: [TILE_COUNT * TILE_COUNT]Tile,
 	exits: bit_set[Direction],
 }
 
@@ -53,7 +52,7 @@ Map_Screen_State :: struct {
 }
 
 make_map_screen_state :: proc() -> Map_Screen_State {
-	return Map_Screen_State{selected_room = .C}
+	return Map_Screen_State{selected_room = .D}
 }
 
 Map_Screen_Cursor :: struct {
@@ -124,7 +123,7 @@ can_place :: proc(positions: []Cell_Position) -> bool {
 		if slice.contains(placed_positions[:], pos) {
 			can_place = false
 		}
-		if pos.x < 0 || pos.x > 15 || pos.y < 0 || pos.y > 15 {
+		if pos.x < 0 || pos.x >= CELL_COUNT || pos.y < 0 || pos.y >= CELL_COUNT {
 			can_place = false
 		}
 	}
@@ -173,25 +172,26 @@ positions_from_rotation :: proc(
 }
 
 rotate_cell :: proc(
-	in_tiles: [256]Tile,
+	in_tiles: [TILE_COUNT * TILE_COUNT]Tile,
 	in_exits: bit_set[Direction],
 	rotation: Direction,
 ) -> (
-	out_tiles: [256]Tile,
+	out_tiles: [TILE_COUNT * TILE_COUNT]Tile,
 	out_exits: bit_set[Direction],
 ) {
 	if rotation == .North {
 		return in_tiles, in_exits
 	}
-	for x in 0 ..< 16 {
-		for y in 0 ..< 16 {
+	for x in 0 ..< TILE_COUNT {
+		for y in 0 ..< TILE_COUNT {
 			#partial switch rotation {
 			case .East:
-				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, 15 - x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, (TILE_COUNT - 1) - x)]
 			case .South:
-				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - x, 15 - y)]
+				out_tiles[tile_index(x, y)] =
+					in_tiles[tile_index((TILE_COUNT - 1) - x, (TILE_COUNT - 1) - y)]
 			case .West:
-				out_tiles[tile_index(x, y)] = in_tiles[tile_index(15 - y, x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index((TILE_COUNT - 1) - y, x)]
 			}
 		}
 	}
@@ -213,8 +213,8 @@ draw_map_grid :: proc() {
 	grid_color := rl.Color{255, 255, 255, 125}
 	line_color := rl.Color{0, 0, 0, 25}
 	rl.DrawRectangleV(GRID_OFFSET, MAP_SIZE, grid_color)
-	for i in 1 ..< 16 {
-		i_f32 := f32(i) * 16
+	for i in 1 ..< CELL_COUNT {
+		i_f32 := f32(i) * TILE_COUNT
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
 	}
@@ -228,7 +228,7 @@ draw_map_cursor :: proc() {
 		rl.DrawTexturePro(
 			ui_texture_atlas[.Cursor],
 			{0, 0, 16, 16},
-			{cursor_pos.x, cursor_pos.y, 16, 16},
+			{cursor_pos.x, cursor_pos.y, 25, 25},
 			{8, 8},
 			0,
 			rl.WHITE,
@@ -252,20 +252,20 @@ draw_placed_rooms :: proc() {
 
 draw_room :: proc(room: Room, position: Vec2, rotation: f32) {
 	for pos, cell in room.cells {
-		cell_position := Vec2{f32(pos.x * 16), f32(pos.y * 16)}
+		cell_position := Vec2{f32(pos.x * TILE_COUNT), f32(pos.y * TILE_COUNT)}
 		draw_cell(cell, position, cell_position, rotation)
 	}
 }
 
 draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 	rl.DrawRectanglePro(
-		{origin.x, origin.y, MAP_CELL_SIZE.x, MAP_CELL_SIZE.y},
-		-position + (MAP_CELL_SIZE / 2),
+		{origin.x, origin.y, TILE_COUNT, TILE_COUNT},
+		-position + (f32(TILE_COUNT) / 2),
 		rotation,
 		rl.BLUE,
 	)
-	for x in 0 ..< 16 {
-		for y in 0 ..< 16 {
+	for x in 0 ..< TILE_COUNT {
+		for y in 0 ..< TILE_COUNT {
 			tile := cell.tiles[tile_index(x, y)]
 			tile_color: rl.Color
 			#partial switch tile {
@@ -277,7 +277,7 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 				tile_color = {220, 235, 16, 255}
 			}
 			if tile != .Empty {
-				tile_offset := Vec2{f32(x) - 7, f32(y) - 7}
+				tile_offset := Vec2{f32(x) - 11.5, f32(y) - 11.5}
 				rl.DrawRectanglePro(
 					{origin.x, origin.y, 1, 1},
 					position + tile_offset,

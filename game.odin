@@ -26,11 +26,14 @@ make_world :: proc() -> World {
 	return World{camera = rl.Camera2D{zoom = 1}, player = player}
 }
 
+CELL_COUNT :: 10
+TILE_COUNT :: 25
+TILE_SIZE :: 16
+
 WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080
-SCREEN_WIDTH :: 480
-SCREEN_HEIGHT :: 270
-TILE_SIZE :: 16
+SCREEN_WIDTH :: 768
+SCREEN_HEIGHT :: 432
 TICK_RATE :: 1.0 / 200.0
 
 world: World
@@ -40,9 +43,9 @@ run: bool
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
 map_screen_state: Map_Screen_State
-tilemap: [65536]Tile
+tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 time: Time
-exit_map: [256]bit_set[Direction]
+exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 game_state: Game_State
 colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
@@ -84,7 +87,8 @@ mapping :: proc() {
 }
 
 playing :: proc() {
-	move_camera()
+	// move_camera()
+	camera_follow()
 
 	if !time.started {
 		time.t = f32(rl.GetTime())
