@@ -43,7 +43,7 @@ place_tiles :: proc() {
 				for y in 0 ..< TILE_COUNT {
 					for x in 0 ..< TILE_COUNT {
 						cell_pos := cell_global_position(position, room.position, room.rotation)
-						exit_map[tile_index(cell_pos.x, cell_pos.y)] = exits
+						exit_map[cell_index(cell_pos.x, cell_pos.y)] = exits
 						raw_x := x + int(cell_pos.x * TILE_COUNT)
 						raw_y := y + int(cell_pos.y * TILE_COUNT)
 						tile := tiles[tile_index(x, y)]

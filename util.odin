@@ -17,7 +17,12 @@ load_texture :: proc(filename: string) -> rl.Texture {
 }
 
 tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * CELL_WIDTH))
+	return int(x + (y * TILE_COUNT))
+}
+
+
+cell_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
+	return int(x + (y * CELL_COUNT))
 }
 
 global_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
