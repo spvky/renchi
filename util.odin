@@ -9,6 +9,10 @@ Vec3 :: [3]f32
 Cell_Position :: [2]i16
 Tile_Position :: [2]u16
 
+extend :: proc(v: Vec2,z: f32) -> Vec3 {
+	return Vec3{v.x,v.y,z}
+}
+
 load_texture :: proc(filename: string) -> rl.Texture {
 	when ODIN_OS == .JS {
 		return utils.load_texture(filename)

@@ -17,6 +17,7 @@ reset_map :: proc() {
 }
 
 draw_tilemap :: proc() {
+
 	draw_colliders()
 }
 
@@ -27,10 +28,28 @@ draw_colliders :: proc() {
 		c: Vec2 = collider.max
 		d: Vec2 = {collider.min.x, collider.max.y}
 
-		rl.DrawLineEx(a, b, 2, rl.RED)
-		rl.DrawLineEx(b, c, 2, rl.RED)
-		rl.DrawLineEx(c, d, 2, rl.RED)
-		rl.DrawLineEx(d, a, 2, rl.RED)
+		switch render_mode {
+		case .TwoD:
+			rl.DrawLineEx(a, b, 2, rl.RED)
+			rl.DrawLineEx(b, c, 2, rl.RED)
+			rl.DrawLineEx(c, d, 2, rl.RED)
+			rl.DrawLineEx(d, a, 2, rl.RED)
+		case .ThreeD:
+			rl.DrawLine3D(extend(a,-0.5), extend(b,-0.5), rl.RED)
+			rl.DrawLine3D(extend(b,-0.5), extend(c,-0.5), rl.RED)
+			rl.DrawLine3D(extend(c,-0.5), extend(d,-0.5), rl.RED)
+			rl.DrawLine3D(extend(d,-0.5), extend(a,-0.5), rl.RED)
+
+			rl.DrawLine3D(extend(a,0.5), extend(b,0.5), rl.RED)
+			rl.DrawLine3D(extend(b,0.5), extend(c,0.5), rl.RED)
+			rl.DrawLine3D(extend(c,0.5), extend(d,0.5), rl.RED)
+			rl.DrawLine3D(extend(d,0.5), extend(a,0.5), rl.RED)
+
+			rl.DrawLine3D(extend(a,0.5), extend(a,-0.5), rl.RED)
+			rl.DrawLine3D(extend(b,0.5), extend(b,-0.5), rl.RED)
+			rl.DrawLine3D(extend(c,0.5), extend(c,-0.5), rl.RED)
+			rl.DrawLine3D(extend(d,0.5), extend(d,-0.5), rl.RED)
+		}
 	}
 }
 

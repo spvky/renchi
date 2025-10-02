@@ -10,6 +10,11 @@ Game_State :: enum {
 	Gameplay,
 }
 
+Render_Mode :: enum {
+	TwoD,
+	ThreeD
+}
+
 World :: struct {
 	camera:       rl.Camera2D,
 	player:       Player,
@@ -47,6 +52,7 @@ tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 time: Time
 exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 game_state: Game_State
+render_mode: Render_Mode
 colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
 input_buffer: Input_Buffer

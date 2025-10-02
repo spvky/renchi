@@ -4,24 +4,51 @@ import rl "vendor:raylib"
 render_scene :: proc() {
 	rl.BeginTextureMode(screen_texture)
 	rl.ClearBackground({0, 12, 240, 255})
-	rl.BeginMode2D(world.camera)
+	
 	switch game_state {
 	case .Map:
 		draw_map()
 	case .Gameplay:
-		draw_tilemap()
-		draw_player()
+		switch render_mode {
+		case .TwoD:
+			rl.BeginMode2D(world.camera)
+			draw_tilemap()
+			draw_player()
+			rl.EndMode2D()
+		case .ThreeD:
+			// rl.BeginMode3D(world.3d_camera)
+			draw_tilemap()
+			draw_player()
+			// rl.EndMode3D()
+		}
 	}
-	rl.EndMode2D()
 	rl.EndTextureMode()
 }
 
 draw_to_screen :: proc() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.BLACK)
+	source: rl.Rectangle
+
+	switch render_mode {
+		case .TwoD:
+			source = rl.Rectangle{
+				x = 0, 
+				y = f32(WINDOW_HEIGHT - SCREEN_HEIGHT),
+				width = f32(SCREEN_WIDTH),
+				height = -f32(SCREEN_HEIGHT)
+			}
+		case .ThreeD:
+			source = rl.Rectangle {
+				x      = f32(SCREEN_WIDTH) / 2,
+				y      = f32(SCREEN_HEIGHT) / 2,
+				width  = f32(SCREEN_WIDTH),
+				height = -f32(SCREEN_HEIGHT),
+			}
+	}
 	rl.DrawTexturePro(
 		screen_texture.texture,
-		{0, f32(WINDOW_HEIGHT - SCREEN_HEIGHT), f32(SCREEN_WIDTH), -f32(SCREEN_HEIGHT)},
+		source,
 		{0, 0, f32(WINDOW_WIDTH), f32(WINDOW_HEIGHT)},
 		{0, 0},
 		0,
