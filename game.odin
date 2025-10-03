@@ -12,11 +12,13 @@ Game_State :: enum {
 
 Render_Mode :: enum {
 	TwoD,
-	ThreeD
+	ThreeD,
 }
 
 World :: struct {
 	camera:       rl.Camera2D,
+	camera3d:     rl.Camera3D,
+	offset:       Vec3,
 	player:       Player,
 	current_cell: Cell_Position,
 }
@@ -28,7 +30,12 @@ make_world :: proc() -> World {
 		acceleration = 275,
 		deceleration = 0.75,
 	}
-	return World{camera = rl.Camera2D{zoom = 1}, player = player}
+	return World {
+		camera = rl.Camera2D{zoom = 1},
+		camera3d = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 45, projection = .PERSPECTIVE},
+		offset = {91, 252, 0},
+		player = player,
+	}
 }
 
 CELL_COUNT :: 10
@@ -52,7 +59,7 @@ tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 time: Time
 exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 game_state: Game_State
-render_mode: Render_Mode
+render_mode := Render_Mode.ThreeD
 colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
 input_buffer: Input_Buffer

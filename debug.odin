@@ -32,9 +32,13 @@ map_screen_debug :: proc() {
 player_debug :: proc() {
 	player := world.player
 	debug_string := fmt.tprintf(
-		"Player:\n\tTranslation: [%.1f,%.1f]",
+		"Player:\n\tTranslation: [%.1f,%.1f]\n\tOffset: [%.1f,%.1f]\n\tCurrent Cell: [%v,%v]",
 		player.translation.x,
 		player.translation.y,
+		world.offset.x,
+		world.offset.y,
+		world.current_cell.x,
+		world.current_cell.y,
 	)
 	rl.DrawText(strings.clone_to_cstring(debug_string), 20, 100, 16, rl.WHITE)
 }
