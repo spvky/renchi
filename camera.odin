@@ -34,7 +34,7 @@ camera_follow :: proc() {
 		world.camera3d.target = l.lerp(world.camera3d.target, target_pos, frametime * 20)
 		world.camera3d.position = l.lerp(
 			world.camera3d.position,
-			target_pos + Vec3{0, 0, 700},
+			target_pos + Vec3{0, 0, 500},
 			frametime * 20,
 		)
 	}

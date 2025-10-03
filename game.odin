@@ -32,8 +32,8 @@ make_world :: proc() -> World {
 	}
 	return World {
 		camera = rl.Camera2D{zoom = 1},
-		camera3d = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 45, projection = .PERSPECTIVE},
-		offset = {91, 252, 0},
+		camera3d = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 90, projection = .PERSPECTIVE},
+		offset = {145, 300, 0},
 		player = player,
 	}
 }
