@@ -36,7 +36,7 @@ draw_colliders :: proc() {
 			rl.DrawLineEx(c, d, 2, rl.RED)
 			rl.DrawLineEx(d, a, 2, rl.RED)
 		case .ThreeD:
-			// rl.DrawCubeV(center, size, rl.GRAY)
+			rl.DrawCubeV(center, size, rl.GRAY)
 
 			// rl.DrawSphere(extend(a, -0.5), 1, rl.GRAY)
 			// rl.DrawSphere(extend(b, -0.5), 1, rl.GRAY)
@@ -46,18 +46,20 @@ draw_colliders :: proc() {
 			// rl.DrawSphere(extend(b, 0.5), 1, rl.GRAY)
 			// rl.DrawSphere(extend(c, 0.5), 1, rl.GRAY)
 			// rl.DrawSphere(extend(d, 0.5), 1, rl.GRAY)
-			rl.DrawLine3D(extend(a, -0.5), extend(b, -0.5), rl.RED)
-			rl.DrawLine3D(extend(b, -0.5), extend(c, -0.5), rl.RED)
-			rl.DrawLine3D(extend(c, -0.5), extend(d, -0.5), rl.RED)
-			rl.DrawLine3D(extend(d, -0.5), extend(a, -0.5), rl.RED)
-			rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
-			rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
-			rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
-			rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
-			rl.DrawLine3D(extend(a, 0.5), extend(a, -0.5), rl.RED)
-			rl.DrawLine3D(extend(b, 0.5), extend(b, -0.5), rl.RED)
-			rl.DrawLine3D(extend(c, 0.5), extend(c, -0.5), rl.RED)
-			rl.DrawLine3D(extend(d, 0.5), extend(d, -0.5), rl.RED)
+			if ODIN_DEBUG {
+				rl.DrawLine3D(extend(a, -0.5), extend(b, -0.5), rl.RED)
+				rl.DrawLine3D(extend(b, -0.5), extend(c, -0.5), rl.RED)
+				rl.DrawLine3D(extend(c, -0.5), extend(d, -0.5), rl.RED)
+				rl.DrawLine3D(extend(d, -0.5), extend(a, -0.5), rl.RED)
+				rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
+				rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
+				rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
+				rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
+				rl.DrawLine3D(extend(a, 0.5), extend(a, -0.5), rl.RED)
+				rl.DrawLine3D(extend(b, 0.5), extend(b, -0.5), rl.RED)
+				rl.DrawLine3D(extend(c, 0.5), extend(c, -0.5), rl.RED)
+				rl.DrawLine3D(extend(d, 0.5), extend(d, -0.5), rl.RED)
+			}
 		}
 	}
 }
@@ -84,6 +86,7 @@ place_tiles :: proc() {
 			}
 		}
 	}
+	log.info("Exit Map: %v", exit_map)
 }
 
 Wall_Chain :: struct {

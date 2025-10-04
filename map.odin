@@ -294,3 +294,57 @@ draw_map :: proc() {
 	draw_placed_rooms()
 	draw_map_cursor()
 }
+
+get_cell_exits :: proc(c: Cell_Position) -> bit_set[Direction] {
+	exits: bit_set[Direction]
+	if c.y > 0 {
+		if .South in exit_map[cell_index(c.x, c.y - 1)] {
+			exits = exits | {.North}
+		}
+	}
+	if c.x > 0 {
+		if .East in exit_map[cell_index(c.x - 1, c.y)] {
+			exits = exits | {.West}
+		}
+	}
+	if c.x < CELL_COUNT {
+		if .West in exit_map[cell_index(c.x + 1, c.y)] {
+			exits = exits | {.East}
+		}
+	}
+	if c.y < CELL_COUNT {
+		if .North in exit_map[cell_index(c.x, c.y + 1)] {
+			exits = exits | {.South}
+		}
+	}
+	return exits
+}
+
+limits_from_position :: proc(c: Cell_Position) -> (min, max: Vec2) {
+	exits := get_cell_exits(c)
+	cell_exits = exits
+	cell_size := f32(TILE_COUNT * TILE_SIZE)
+
+	current_position := Vec2 {
+		f32(world.current_cell.x) * cell_size,
+		f32(world.current_cell.y) * cell_size,
+	}
+
+	min, max = current_position, current_position
+
+	for v in exits {
+		if v == .North {
+			min.y -= cell_size
+		}
+		if v == .South {
+			max.y += cell_size
+		}
+		if v == .West {
+			min.x -= cell_size
+		}
+		if v == .East {
+			max.x += cell_size
+		}
+	}
+	return min, max
+}

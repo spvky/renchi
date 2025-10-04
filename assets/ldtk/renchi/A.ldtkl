@@ -242,7 +242,7 @@
 			"pxOffsetY": 0,
 			"visible": true,
 			"optionalRules": [],
-			"intGridCsv": [0,0,0,0],
+			"intGridCsv": [10,8,0,7],
 			"autoLayerTiles": [],
 			"seed": 3416141,
 			"overrideTilesetUid": null,

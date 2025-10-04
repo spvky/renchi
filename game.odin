@@ -23,6 +23,11 @@ World :: struct {
 	current_cell: Cell_Position,
 }
 
+Camera_Limits :: struct {
+	min: Vec2,
+	max: Vec2,
+}
+
 make_world :: proc() -> World {
 	player := Player {
 		translation  = {128, 0},
@@ -63,6 +68,8 @@ render_mode := Render_Mode.ThreeD
 colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
 input_buffer: Input_Buffer
+camera_limits: Camera_Limits
+cell_exits: bit_set[Direction]
 
 
 init :: proc() {
