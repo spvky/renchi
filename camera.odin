@@ -28,7 +28,6 @@ camera_follow :: proc() {
 	}
 
 	if game_state == .Gameplay {
-		// target_pos := extend(player.translation, 0) + world.offset
 		min, max := limits_from_position(world.current_cell)
 
 		camera_limits = Camera_Limits{min, max}
@@ -45,27 +44,56 @@ camera_follow :: proc() {
 	}
 }
 
-// move_camera :: proc() {
-// 	player := world.player
-// 	frametime := rl.GetFrameTime()
-// 	world.current_cell = Cell_Position {
-// 		i16(player.translation.x / (TILE_COUNT * TILE_SIZE)),
-// 		i16(player.translation.y / (TILE_COUNT * TILE_SIZE)),
-// 	}
-// 	if game_state == .Gameplay {
-// 		switch render_mode {
-// 		case .TwoD:
-// 			target_pos := Vec2 {
-// 				(f32(world.current_cell.x) * (TILE_COUNT * TILE_SIZE)) - 120,
-// 				(f32(world.current_cell.y) * (TILE_COUNT * TILE_SIZE)) - 8,
-// 			}
-// 			world.camera.target = l.lerp(world.camera.target, target_pos, frametime * 20)
-// 		case .ThreeD:
-// 			target_pos := Vec3 {
-// 				(f32(world.current_cell.x) * (TILE_COUNT * TILE_SIZE)) - 120,
-// 				(f32(world.current_cell.y) * (TILE_COUNT * TILE_SIZE)) - 8,
-// 				0,
-// 			}
-// 		}
-// 	}
-// }
+get_cell_exits :: proc(c: Cell_Position) -> bit_set[Direction] {
+	exits: bit_set[Direction]
+	if c.y > 0 {
+		if .South in exit_map[cell_index(c.x, c.y - 1)] {
+			exits = exits | {.North}
+		}
+	}
+	if c.x > 0 {
+		if .East in exit_map[cell_index(c.x - 1, c.y)] {
+			exits = exits | {.West}
+		}
+	}
+	if c.x < CELL_COUNT {
+		if .West in exit_map[cell_index(c.x + 1, c.y)] {
+			exits = exits | {.East}
+		}
+	}
+	if c.y < CELL_COUNT {
+		if .North in exit_map[cell_index(c.x, c.y + 1)] {
+			exits = exits | {.South}
+		}
+	}
+	return exits
+}
+
+limits_from_position :: proc(c: Cell_Position) -> (min, max: Vec2) {
+	exits := get_cell_exits(c)
+	cell_exits = exits
+	cell_size := f32(TILE_COUNT * TILE_SIZE)
+
+	current_position := Vec2 {
+		f32(world.current_cell.x) * cell_size,
+		f32(world.current_cell.y) * cell_size,
+	}
+
+	min, max = current_position, current_position
+
+	for v in exits {
+		if v == .North {
+			min.y -= cell_size
+		}
+		if v == .South {
+			max.y += cell_size
+		}
+		if v == .West {
+			min.x -= cell_size
+		}
+		if v == .East {
+			max.x += cell_size
+		}
+	}
+	return min, max
+}
