@@ -54,8 +54,6 @@ SCREEN_HEIGHT :: 432
 TICK_RATE :: 1.0 / 200.0
 
 world: World
-screen_texture: rl.RenderTexture
-map_screen_texture: rl.RenderTexture
 run: bool
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
@@ -79,7 +77,6 @@ init :: proc() {
 	log.info("Colliders Initialized")
 	colliders = make([dynamic]Collider, 0, 64)
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
-	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	init_render_textures()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
@@ -98,8 +95,6 @@ update :: proc() {
 	case .Gameplay:
 		playing()
 	}
-	render_scene()
-	// draw_to_screen()
 	render()
 	free_all(context.temp_allocator)
 }
@@ -129,7 +124,6 @@ playing :: proc() {
 }
 
 shutdown :: proc() {
-	rl.UnloadRenderTexture(screen_texture)
 	destroy_render_textures()
 	unload_ui_textures()
 	rl.CloseWindow()
