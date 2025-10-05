@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to player input and player character behaviour
+*/
 package main
 
 import "core:math"

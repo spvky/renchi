@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to the user interface
+*/
 package main
 
 import "core:math"

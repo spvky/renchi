@@ -1,3 +1,6 @@
+/*
+	Main entry point for the game
+*/
 package main
 
 import "core:c"
@@ -57,7 +60,6 @@ world: World
 run: bool
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
 rooms: [Room_Tag]Room
-map_screen_state: Map_Screen_State
 tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 time: Time
 exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
@@ -83,7 +85,6 @@ init :: proc() {
 	for rb in rigidbodies {
 		log.infof("Rigidbody Translation: %v", rb.translation)
 	}
-	map_screen_state = make_map_screen_state()
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
 }

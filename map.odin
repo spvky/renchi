@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to actually placing tiles on the map and viewing the map screen
+*/
 package main
 
 import "core:slice"
@@ -8,6 +11,10 @@ GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE 
 MAP_CELL_SIZE :: Vec2{25, 25}
 CELL_WIDTH :: 25
 MAP_WIDTH :: 250
+
+map_screen_state := Map_Screen_State {
+	selected_room = .D,
+}
 
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
@@ -49,10 +56,6 @@ Room_Tag :: enum {
 Map_Screen_State :: struct {
 	cursor:        Map_Screen_Cursor,
 	selected_room: Room_Tag,
-}
-
-make_map_screen_state :: proc() -> Map_Screen_State {
-	return Map_Screen_State{selected_room = .D}
 }
 
 Map_Screen_Cursor :: struct {

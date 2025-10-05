@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to player input
+*/
 package main
 
 import rl "vendor:raylib"

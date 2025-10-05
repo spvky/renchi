@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to filling the render textures and outputting them to screen
+*/
 package main
 import rl "vendor:raylib"
 

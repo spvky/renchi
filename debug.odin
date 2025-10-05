@@ -1,3 +1,6 @@
+/*
+	 Debug specific logic
+*/
 package main
 
 import "core:fmt"

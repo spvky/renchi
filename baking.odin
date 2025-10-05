@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to translating the created map into actual rooms in the game world
+*/
 package main
 
 import "core:log"

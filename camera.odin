@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to moving and rotating the camera
+*/
 package main
 
 import l "core:math/linalg"

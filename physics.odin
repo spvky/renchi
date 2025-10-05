@@ -1,3 +1,6 @@
+/*
+	Logic related to physics
+*/
 package main
 
 import l "core:math/linalg"

@@ -1,3 +1,6 @@
+/*
+	 Logic pertaining to loading assets on startup
+*/
 package main
 
 import "core:encoding/csv"
