@@ -80,6 +80,7 @@ init :: proc() {
 	colliders = make([dynamic]Collider, 0, 64)
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	screen_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
+	init_render_textures()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
 	for rb in rigidbodies {
@@ -98,7 +99,8 @@ update :: proc() {
 		playing()
 	}
 	render_scene()
-	draw_to_screen()
+	// draw_to_screen()
+	render()
 	free_all(context.temp_allocator)
 }
 
@@ -107,7 +109,6 @@ mapping :: proc() {
 }
 
 playing :: proc() {
-	// move_camera()
 	camera_follow()
 
 	if !time.started {
@@ -129,6 +130,7 @@ playing :: proc() {
 
 shutdown :: proc() {
 	rl.UnloadRenderTexture(screen_texture)
+	destroy_render_textures()
 	unload_ui_textures()
 	rl.CloseWindow()
 }
