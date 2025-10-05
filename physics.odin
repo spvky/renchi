@@ -3,8 +3,11 @@
 */
 package main
 
+import "core:log"
 import l "core:math/linalg"
 
+colliders: [dynamic]Collider
+rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {
 	translation: Vec2,
@@ -34,6 +37,13 @@ Collider :: struct {
 Collision_Data :: struct {
 	normal: Vec2,
 	mtv:    Vec2,
+}
+
+init_physics_collections :: proc() {
+	log.info("Rigidbodies Initialized")
+	rigidbodies = make([dynamic]Rigidbody, 0, 16)
+	log.info("Colliders Initialized")
+	colliders = make([dynamic]Collider, 0, 64)
 }
 
 physics_step :: proc() {

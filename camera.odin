@@ -6,6 +6,8 @@ package main
 import l "core:math/linalg"
 import rl "vendor:raylib"
 
+camera_limits: Camera_Limits
+
 camera_follow :: proc() {
 	player := world.player
 	frametime := rl.GetFrameTime()

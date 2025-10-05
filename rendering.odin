@@ -4,12 +4,13 @@
 package main
 import rl "vendor:raylib"
 
-gameplay_texture: rl.RenderTexture
-map_texture: rl.RenderTexture
 GAMEPLAY_SCREEN_WIDTH :: 768
 GAMEPLAY_SCREEN_HEIGHT :: 432
 MAP_SCREEN_WIDTH :: 768
 MAP_SCREEN_HEIGHT :: 432
+
+gameplay_texture: rl.RenderTexture
+map_texture: rl.RenderTexture
 
 init_render_textures :: proc() {
 	map_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
@@ -24,7 +25,7 @@ destroy_render_textures :: proc() {
 
 write_to_map_texture :: proc() {
 	rl.BeginTextureMode(map_texture)
-	rl.ClearBackground(rl.YELLOW)
+	rl.ClearBackground({0, 0, 0, 255})
 	draw_map()
 	rl.EndTextureMode()
 }

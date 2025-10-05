@@ -8,14 +8,24 @@ import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 
+CELL_COUNT :: 10
+TILE_COUNT :: 25
+TILE_SIZE :: 16
+
+WINDOW_WIDTH: i32 = 1920
+WINDOW_HEIGHT: i32 = 1080
+SCREEN_WIDTH :: 768
+SCREEN_HEIGHT :: 432
+TICK_RATE :: 1.0 / 200.0
+
+run: bool
+world: World
+game_state: Game_State
+time: Time
+
 Game_State :: enum {
 	Map,
 	Gameplay,
-}
-
-Render_Mode :: enum {
-	TwoD,
-	ThreeD,
 }
 
 World :: struct {
@@ -24,11 +34,6 @@ World :: struct {
 	offset:       Vec3,
 	player:       Player,
 	current_cell: Cell_Position,
-}
-
-Camera_Limits :: struct {
-	min: Vec2,
-	max: Vec2,
 }
 
 make_world :: proc() -> World {
@@ -46,40 +51,16 @@ make_world :: proc() -> World {
 	}
 }
 
-CELL_COUNT :: 10
-TILE_COUNT :: 25
-TILE_SIZE :: 16
-
-WINDOW_WIDTH: i32 = 1920
-WINDOW_HEIGHT: i32 = 1080
-SCREEN_WIDTH :: 768
-SCREEN_HEIGHT :: 432
-TICK_RATE :: 1.0 / 200.0
-
-world: World
-run: bool
-ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
-rooms: [Room_Tag]Room
-tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
-time: Time
-exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
-game_state: Game_State
-render_mode := Render_Mode.ThreeD
-colliders: [dynamic]Collider
-rigidbodies: [dynamic]Rigidbody
-input_buffer: Input_Buffer
-camera_limits: Camera_Limits
-cell_exits: bit_set[Direction]
-
+Camera_Limits :: struct {
+	min: Vec2,
+	max: Vec2,
+}
 
 init :: proc() {
 	run = true
-	log.info("Rigidbodies Initialized")
-	rigidbodies = make([dynamic]Rigidbody, 0, 16)
-	log.info("Colliders Initialized")
-	colliders = make([dynamic]Collider, 0, 64)
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()
+	init_physics_collections()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
 	for rb in rigidbodies {

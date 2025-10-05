@@ -31,38 +31,20 @@ draw_colliders :: proc() {
 		d: Vec2 = {collider.min.x, collider.max.y}
 		center := extend((a + b + c + d) / 4, 0)
 		size := Vec3{collider.max.x - collider.min.x, collider.max.y - collider.min.y, 1}
-
-		switch render_mode {
-		case .TwoD:
-			rl.DrawLineEx(a, b, 2, rl.RED)
-			rl.DrawLineEx(b, c, 2, rl.RED)
-			rl.DrawLineEx(c, d, 2, rl.RED)
-			rl.DrawLineEx(d, a, 2, rl.RED)
-		case .ThreeD:
-			rl.DrawCubeV(center, size, rl.GRAY)
-
-			// rl.DrawSphere(extend(a, -0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(b, -0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(c, -0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(d, -0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(a, 0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(b, 0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(c, 0.5), 1, rl.GRAY)
-			// rl.DrawSphere(extend(d, 0.5), 1, rl.GRAY)
-			if ODIN_DEBUG {
-				rl.DrawLine3D(extend(a, -0.5), extend(b, -0.5), rl.RED)
-				rl.DrawLine3D(extend(b, -0.5), extend(c, -0.5), rl.RED)
-				rl.DrawLine3D(extend(c, -0.5), extend(d, -0.5), rl.RED)
-				rl.DrawLine3D(extend(d, -0.5), extend(a, -0.5), rl.RED)
-				rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
-				rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
-				rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
-				rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
-				rl.DrawLine3D(extend(a, 0.5), extend(a, -0.5), rl.RED)
-				rl.DrawLine3D(extend(b, 0.5), extend(b, -0.5), rl.RED)
-				rl.DrawLine3D(extend(c, 0.5), extend(c, -0.5), rl.RED)
-				rl.DrawLine3D(extend(d, 0.5), extend(d, -0.5), rl.RED)
-			}
+		rl.DrawCubeV(center, size, rl.GRAY)
+		if ODIN_DEBUG {
+			rl.DrawLine3D(extend(a, -0.5), extend(b, -0.5), rl.RED)
+			rl.DrawLine3D(extend(b, -0.5), extend(c, -0.5), rl.RED)
+			rl.DrawLine3D(extend(c, -0.5), extend(d, -0.5), rl.RED)
+			rl.DrawLine3D(extend(d, -0.5), extend(a, -0.5), rl.RED)
+			rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
+			rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
+			rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
+			rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
+			rl.DrawLine3D(extend(a, 0.5), extend(a, -0.5), rl.RED)
+			rl.DrawLine3D(extend(b, 0.5), extend(b, -0.5), rl.RED)
+			rl.DrawLine3D(extend(c, 0.5), extend(c, -0.5), rl.RED)
+			rl.DrawLine3D(extend(d, 0.5), extend(d, -0.5), rl.RED)
 		}
 	}
 }

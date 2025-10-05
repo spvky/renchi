@@ -137,10 +137,5 @@ draw_player :: proc() {
 	case .Airborne:
 		color = rl.BLUE
 	}
-	switch render_mode {
-	case .TwoD:
-		rl.DrawCircleV(player.snapshot, 8, color)
-	case .ThreeD:
-		rl.DrawSphere(extend(player.snapshot, 0), 8, rl.RED)
-	}
+	rl.DrawSphere(extend(player.snapshot, 0), 8, rl.RED)
 }

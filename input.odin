@@ -5,6 +5,8 @@ package main
 
 import rl "vendor:raylib"
 
+input_buffer: Input_Buffer
+
 Input_Buffer :: struct {
 	actions: [Input_Action]Buffered_Input,
 }
