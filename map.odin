@@ -235,8 +235,9 @@ draw_map_grid :: proc() {
 draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
 	cursor_pos := vec_from_map_cell_position(cursor.position)
-	switch cursor.mode {
-	case .Select:
+	if cursor.mode == .Place && game_state == .Map {
+		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
+	} else {
 		rl.DrawTexturePro(
 			ui_texture_atlas[.Cursor],
 			{0, 0, 16, 16},
@@ -245,8 +246,6 @@ draw_map_cursor :: proc() {
 			0,
 			rl.WHITE,
 		)
-	case .Place:
-		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
 	}
 }
 
