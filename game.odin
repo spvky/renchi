@@ -8,9 +8,6 @@ import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 
-CELL_COUNT :: 10
-TILE_COUNT :: 25
-TILE_SIZE :: 16
 
 WINDOW_WIDTH: i32 = 1920
 WINDOW_HEIGHT: i32 = 1080

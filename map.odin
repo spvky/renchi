@@ -7,10 +7,14 @@ import "core:slice"
 import rl "vendor:raylib"
 
 MAP_SIZE: Vec2 : {250, 250}
-GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
+// GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
+GRID_OFFSET: Vec2 = {27, 27}
 MAP_CELL_SIZE :: Vec2{25, 25}
 CELL_WIDTH :: 25
+TILE_COUNT :: 25
 MAP_WIDTH :: 250
+CELL_COUNT :: 10
+TILE_SIZE :: 16
 
 rooms: [Room_Tag]Room
 tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile

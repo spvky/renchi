@@ -25,7 +25,7 @@ destroy_render_textures :: proc() {
 
 write_to_map_texture :: proc() {
 	rl.BeginTextureMode(map_texture)
-	rl.ClearBackground({0, 0, 0, 255})
+	rl.ClearBackground(rl.PINK)
 	draw_map()
 	rl.EndTextureMode()
 }
@@ -46,17 +46,19 @@ write_to_render_textures :: proc() {
 }
 
 draw_map_texture :: proc(alpha: u8) {
+	display_width := f32(WINDOW_WIDTH) / 2
 	source := rl.Rectangle {
 		x      = 0,
-		y      = f32(WINDOW_HEIGHT - MAP_SCREEN_HEIGHT),
-		width  = f32(MAP_SCREEN_WIDTH),
-		height = -f32(MAP_SCREEN_HEIGHT),
+		// y      = f32(WINDOW_HEIGHT - MAP_SCREEN_HEIGHT),
+		y      = 770,
+		width  = 310,
+		height = -310,
 	}
 	dest := rl.Rectangle {
-		x      = 0,
-		y      = 0,
-		width  = f32(WINDOW_WIDTH),
-		height = f32(WINDOW_HEIGHT),
+		x      = display_width / 2,
+		y      = (f32(WINDOW_HEIGHT) / 2) - display_width / 2,
+		width  = display_width,
+		height = display_width,
 	}
 	rl.DrawTexturePro(map_texture.texture, source, dest, {0, 0}, 0, {255, 255, 255, alpha})
 }

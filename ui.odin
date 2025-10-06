@@ -26,16 +26,16 @@ handle_map_screen_cursor :: proc() {
 	cursor := &map_screen_state.cursor
 	// Cursor Position
 	if rl.IsKeyPressed(.A) {
-		cursor.position.x = math.clamp(cursor.position.x - 1, 0, 15)
+		cursor.position.x = math.clamp(cursor.position.x - 1, 0, 9)
 	}
 	if rl.IsKeyPressed(.D) {
-		cursor.position.x = math.clamp(cursor.position.x + 1, 0, 15)
+		cursor.position.x = math.clamp(cursor.position.x + 1, 0, 9)
 	}
 	if rl.IsKeyPressed(.W) {
-		cursor.position.y = math.clamp(cursor.position.y - 1, 0, 15)
+		cursor.position.y = math.clamp(cursor.position.y - 1, 0, 9)
 	}
 	if rl.IsKeyPressed(.S) {
-		cursor.position.y = math.clamp(cursor.position.y + 1, 0, 15)
+		cursor.position.y = math.clamp(cursor.position.y + 1, 0, 9)
 	}
 	// Cursor Rotation
 	if rl.IsKeyPressed(.R) {
