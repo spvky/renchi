@@ -50,9 +50,9 @@ draw_map_texture :: proc(alpha: u8) {
 	source := rl.Rectangle {
 		x      = 0,
 		// y      = f32(WINDOW_HEIGHT - MAP_SCREEN_HEIGHT),
-		y      = 770,
-		width  = 310,
-		height = -310,
+		y      = 776,
+		width  = 304,
+		height = -304,
 	}
 	dest := rl.Rectangle {
 		x      = display_width / 2,

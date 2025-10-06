@@ -78,10 +78,6 @@ update :: proc() {
 	free_all(context.temp_allocator)
 }
 
-mapping :: proc() {
-	handle_map_screen_cursor()
-}
-
 playing :: proc() {
 	camera_follow()
 
