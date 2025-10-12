@@ -157,36 +157,101 @@ generate_collision :: proc() {
 	}
 }
 
-solve_water :: proc() {
-	x, y: int
-	for y < CELL_COUNT * TILE_COUNT {
-		x = 0
-		for x < CELL_COUNT * TILE_COUNT {
-			tile := tilemap[global_index(x, y)]
-			if tile == .Water {
-				start := Tile_Position{x, y}
-				wx, wy := x, y
-				falling := true
+calculate_water_path :: proc(start: Tile_Position) -> [dynamic]Water_Stream {
+	total_streams: int
+	streams := make([dynamic]Water_Stream, 0, 8, allocator = context.temp_allocator)
+	append(&streams, Water_Stream{start = start, direction = .South})
+	total_streams += 1
+	for has_unfinished_streams(streams[:]) {
+		stream_loop: for i in 0 ..< total_streams {
+			if !streams[i].finished {
+				current_stream := &streams[i]
+				x, y := start.x, start.y
+				#partial switch current_stream.direction {
+				case .South:
+					last_empty_y: u16
+					for y < CELL_COUNT * TILE_COUNT {
+						tile := tilemap[global_index(x, y)]
+						#partial switch tile {
+						case .Wall:
+							current_stream.finished = true
+							current_stream.end = Tile_Position{x, last_empty_y}
+							append_elems(
+								&streams,
+								Water_Stream{start = {x, last_empty_y}, direction = .East},
+								Water_Stream{start = {x, last_empty_y}, direction = .West},
+							)
+							continue stream_loop
+						case .Empty:
+							last_empty_y = y
+						}
+						y += 1
+					}
+				case .West:
+					last_empty_x: u16
+					for x >= 0 {
+						tile := tilemap[global_index(x, y)]
+						#partial switch tile {
+						case .Wall:
+							current_stream.finished = true
+							current_stream.end = Tile_Position{last_empty_x, y}
+							continue stream_loop
+						case .Empty:
+							last_empty_x = x
+							if tilemap[global_index(x, y + 1)] == .Empty {
+								current_stream.finished = true
+								current_stream.end = Tile_Position{x, y}
+								append(&streams, Water_Stream{start = {x, y}, direction = .South})
+							}
+						}
+						x -= 1
+					}
+				case .East:
+					last_empty_x: u16
+					for x < CELL_COUNT * TILE_COUNT {
+						tile := tilemap[global_index(x, y)]
+						#partial switch tile {
+						case .Wall:
+							current_stream.finished = true
+							current_stream.end = Tile_Position{last_empty_x, y}
+							continue stream_loop
+						case .Empty:
+							last_empty_x = x
+							if tilemap[global_index(x, y + 1)] == .Empty {
+								current_stream.finished = true
+								current_stream.end = Tile_Position{x, y}
+								append(&streams, Water_Stream{start = {x, y}, direction = .South})
+							}
+						}
+						x += 1
+					}
+				}
 			}
-			x += 1
 		}
-		y += 1
 	}
+	return streams
 }
 
-calculate_water_path :: proc(start: Tile_Position) -> Water_Path {
-	x, y := start.x, start.y
-	for y < CELL_COUNT * TILE_COUNT {
-
-		y += 1
+has_unfinished_streams :: proc(streams: []Water_Stream) -> bool {
+	for s in streams {
+		if !s.finished {
+			return true
+		}
 	}
-	drops := make([dynamic]Tile_Position, 0)
-
+	return false
 }
 
-Water_Path :: struct {
-	start:             Tile_Position,
-	ground_collisions: [dynamic]Tile_Position,
-	drops:             [dynamic]Tile_Position,
-	end_points:        [dynamic]Tile_Position,
+calculate_water_stream :: proc(start: Tile_Position, direction: Direction) {
+	// Continue in direction
+	// if direction is south:
+	// // create new streams heading east and west when you hit the ground
+	// if direction is east/west
+	// // when the tile below is empty, create a stream heading south
+}
+
+Water_Stream :: struct {
+	start:     Tile_Position,
+	end:       Tile_Position,
+	direction: Direction,
+	finished:  bool,
 }
