@@ -54,6 +54,9 @@ Camera_Limits :: struct {
 }
 
 init :: proc() {
+	if !ODIN_DEBUG {
+		rl.SetTraceLogLevel(.ERROR)
+	}
 	run = true
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()

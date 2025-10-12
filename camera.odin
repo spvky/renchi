@@ -38,7 +38,11 @@ camera_follow :: proc() {
 
 		cell_size := f32(TILE_COUNT * TILE_SIZE)
 		cell_offset := Vec3{cell_size / 2, cell_size / 2, 0}
-		raw_position := l.clamp(player.translation, camera_limits.min, camera_limits.max)
+		raw_position := l.clamp(
+			player.translation - Vec2{125, 0},
+			camera_limits.min,
+			camera_limits.max,
+		)
 		target_pos := extend(raw_position, 0) + world.offset + cell_offset
 		world.camera3d.target = l.lerp(world.camera3d.target, target_pos, frametime * 20)
 		world.camera3d.position = l.lerp(

@@ -45,6 +45,7 @@ Tile :: enum u8 {
 	Wall,
 	OneWay,
 	Door,
+	Water,
 }
 
 Direction :: enum u8 {

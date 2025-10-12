@@ -71,7 +71,6 @@ place_tiles :: proc() {
 			}
 		}
 	}
-	log.info("Exit Map: %v", exit_map)
 }
 
 Wall_Chain :: struct {
@@ -156,4 +155,38 @@ generate_collision :: proc() {
 	for chain in wall_chains {
 		log.debugf("%v", chain)
 	}
+}
+
+solve_water :: proc() {
+	x, y: int
+	for y < CELL_COUNT * TILE_COUNT {
+		x = 0
+		for x < CELL_COUNT * TILE_COUNT {
+			tile := tilemap[global_index(x, y)]
+			if tile == .Water {
+				start := Tile_Position{x, y}
+				wx, wy := x, y
+				falling := true
+			}
+			x += 1
+		}
+		y += 1
+	}
+}
+
+calculate_water_path :: proc(start: Tile_Position) -> Water_Path {
+	x, y := start.x, start.y
+	for y < CELL_COUNT * TILE_COUNT {
+
+		y += 1
+	}
+	drops := make([dynamic]Tile_Position, 0)
+
+}
+
+Water_Path :: struct {
+	start:             Tile_Position,
+	ground_collisions: [dynamic]Tile_Position,
+	drops:             [dynamic]Tile_Position,
+	end_points:        [dynamic]Tile_Position,
 }
