@@ -150,10 +150,12 @@ generate_collision :: proc() {
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
 
-	log.debugf("Collision Generation took %v ms", total_duration)
-	log.debugf("Generated %v wall chains", len(wall_chains))
-	for chain in wall_chains {
-		log.debugf("%v", chain)
+	if ODIN_DEBUG {
+		log.debugf("Collision Generation took %v ms", total_duration)
+		log.debugf("Generated %v wall chains", len(wall_chains))
+		for chain in wall_chains {
+			log.debugf("%v", chain)
+		}
 	}
 }
 
@@ -189,7 +191,7 @@ calculate_water_path :: proc(start: Tile_Position) -> [dynamic]Water_Stream {
 					}
 				case .West:
 					last_empty_x: u16
-					for x >= 0 {
+					for x > 0 {
 						tile := tilemap[global_index(x, y)]
 						#partial switch tile {
 						case .Wall:
