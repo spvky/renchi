@@ -240,10 +240,7 @@ resolve_water_stream :: proc(
 		for y < CELL_COUNT * TILE_COUNT && !stream.finished {
 			tile := tilemap[global_index(x, y)]
 			#partial switch tile {
-			case .Water:
-				stream.finished = true
-				stream.end = Tile_Position{x, last_empty_y}
-			case .Wall:
+			case .Wall, .Water:
 				stream.finished = true
 				stream.end = Tile_Position{x, last_empty_y}
 				if tilemap[global_index(x - 1, last_empty_y)] == .Empty {
