@@ -71,7 +71,7 @@
 				{ "value": 1, "identifier": "wall", "color": "#8B9BB4", "tile": null, "groupUid": 0 },
 				{ "value": 2, "identifier": "oneway", "color": "#E2E64B", "tile": null, "groupUid": 0 },
 				{ "value": 3, "identifier": "door", "color": "#FE5700", "tile": null, "groupUid": 0 },
-				{ "value": 4, "identifier": "water", "color": "#BE4A2F", "tile": null, "groupUid": 0 }
+				{ "value": 4, "identifier": "water", "color": "#02FFF8", "tile": null, "groupUid": 0 }
 			],
 			"intGridValuesGroups": [],
 			"autoRuleGroups": [],
@@ -143,7 +143,7 @@
 			"uiFilterTags": [],
 			"useAsyncRender": false,
 			"intGridValues": [
-				{ "value": 1, "identifier": "N", "color": "#A4E3FE", "tile": null, "groupUid": 0 },
+				{ "value": 1, "identifier": "N", "color": "#9A9A9A", "tile": null, "groupUid": 0 },
 				{ "value": 2, "identifier": "S", "color": "#E89683", "tile": null, "groupUid": 0 },
 				{ "value": 3, "identifier": "E", "color": "#BE4A2F", "tile": null, "groupUid": 0 },
 				{ "value": 4, "identifier": "W", "color": "#D77643", "tile": null, "groupUid": 0 },
@@ -155,8 +155,8 @@
 				{ "value": 10, "identifier": "EW", "color": "#63C74D", "tile": null, "groupUid": 0 },
 				{ "value": 11, "identifier": "NEW", "color": "#3E8948", "tile": null, "groupUid": 0 },
 				{ "value": 12, "identifier": "SEW", "color": "#124E89", "tile": null, "groupUid": 0 },
-				{ "value": 13, "identifier": "NSE", "color": "#0099DB", "tile": null, "groupUid": 0 },
-				{ "value": 14, "identifier": "NSW", "color": "#2CE8F5", "tile": null, "groupUid": 0 },
+				{ "value": 13, "identifier": "NSE", "color": "#363636", "tile": null, "groupUid": 0 },
+				{ "value": 14, "identifier": "NSW", "color": "#00621D", "tile": null, "groupUid": 0 },
 				{ "value": 15, "identifier": "All", "color": "#FFFFFF", "tile": null, "groupUid": 0 }
 			],
 			"intGridValuesGroups": [],
