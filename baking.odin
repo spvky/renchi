@@ -10,7 +10,7 @@ import rl "vendor:raylib"
 bake_map :: proc() {
 	place_tiles()
 	generate_collision()
-	bake_water()
+	bake_water(update_tilemap = true)
 }
 
 reset_map :: proc() {
@@ -22,6 +22,23 @@ reset_map :: proc() {
 
 draw_tilemap :: proc() {
 	draw_colliders()
+	draw_water()
+}
+
+draw_water :: proc() {
+	x, y: int
+	for y < CELL_COUNT * TILE_COUNT {
+		x = 0
+		for x < CELL_COUNT * TILE_COUNT {
+			if tilemap[global_index(x, y)] == .Water {
+				position := Vec3{f32(x) * TILE_SIZE, f32(y) * TILE_SIZE, 0}
+				offset := Vec3{8, 8, 0}
+				rl.DrawCubeV(position + offset, {16, 16, 16}, rl.BLUE)
+			}
+			x += 1
+		}
+		y += 1
+	}
 }
 
 draw_colliders :: proc() {
@@ -161,13 +178,13 @@ generate_collision :: proc() {
 }
 
 // For now to keep things seperated this will be a totally seperate baking step, ideally we would iterate the tilemap as few times as possible
-bake_water :: proc() {
+bake_water :: proc(update_tilemap: bool) {
 	streams := make([dynamic]Water_Stream, 0, 16)
 	for y in 0 ..< TILE_COUNT * CELL_COUNT {
 		for x in 0 ..< TILE_COUNT * CELL_COUNT {
 			tile := tilemap[global_index(x, y)]
 			if tile == .Water {
-				streams_from_tile := resolve_water_tile({u16(x), u16(y)})
+				streams_from_tile := resolve_water_tile({u16(x), u16(y)}, update_tilemap)
 				append_elems(&streams, ..streams_from_tile[:])
 			}
 		}
@@ -186,14 +203,14 @@ bake_water :: proc() {
 	}
 }
 
-resolve_water_tile :: proc(start: Tile_Position) -> [dynamic]Water_Stream {
+resolve_water_tile :: proc(start: Tile_Position, update_tilemap: bool) -> [dynamic]Water_Stream {
 	streams := make([dynamic]Water_Stream, 0, 8, allocator = context.temp_allocator)
 	append(&streams, Water_Stream{start = start, direction = .South})
 	should_continue := true
 	for should_continue {
 		for &stream in streams[:] {
 			if !stream.finished {
-				child_streams := resolve_water_stream(&stream)
+				child_streams := resolve_water_stream(&stream, update_tilemap)
 				append_elems(&streams, ..child_streams[:])
 			}
 		}
@@ -203,15 +220,29 @@ resolve_water_tile :: proc(start: Tile_Position) -> [dynamic]Water_Stream {
 	return streams
 }
 
-resolve_water_stream :: proc(stream: ^Water_Stream) -> [dynamic]Water_Stream {
+resolve_water_stream :: proc(
+	stream: ^Water_Stream,
+	update_tilemap: bool,
+) -> [dynamic]Water_Stream {
 	out_streams := make([dynamic]Water_Stream, 0, 2, allocator = context.temp_allocator)
 	x, y := stream.start.x, stream.start.y
 	#partial switch stream.direction {
 	case .South:
-		last_empty_y: u16
+		y += 1
+	case .East:
+		x += 1
+	case .West:
+		x -= 1
+	}
+	#partial switch stream.direction {
+	case .South:
+		last_empty_y: u16 = y
 		for y < CELL_COUNT * TILE_COUNT && !stream.finished {
 			tile := tilemap[global_index(x, y)]
 			#partial switch tile {
+			case .Water:
+				stream.finished = true
+				stream.end = Tile_Position{x, last_empty_y}
 			case .Wall:
 				stream.finished = true
 				stream.end = Tile_Position{x, last_empty_y}
@@ -229,6 +260,7 @@ resolve_water_stream :: proc(stream: ^Water_Stream) -> [dynamic]Water_Stream {
 				}
 			case .Empty:
 				last_empty_y = y
+				if update_tilemap {tilemap[global_index(x, y)] = .Water}
 			}
 			y += 1
 		}
@@ -237,11 +269,15 @@ resolve_water_stream :: proc(stream: ^Water_Stream) -> [dynamic]Water_Stream {
 		for x > 0 && !stream.finished {
 			tile := tilemap[global_index(x, y)]
 			#partial switch tile {
+			case .Water:
+				stream.finished = true
+				stream.end = Tile_Position{last_empty_x, y}
 			case .Wall:
 				stream.finished = true
 				stream.end = Tile_Position{last_empty_x, y}
 			case .Empty:
 				last_empty_x = x
+				if update_tilemap {tilemap[global_index(x, y)] = .Water}
 				if tilemap[global_index(x, y + 1)] == .Empty {
 					stream.finished = true
 					stream.end = Tile_Position{x, y}
@@ -255,11 +291,15 @@ resolve_water_stream :: proc(stream: ^Water_Stream) -> [dynamic]Water_Stream {
 		for x < CELL_COUNT * TILE_COUNT && !stream.finished {
 			tile := tilemap[global_index(x, y)]
 			#partial switch tile {
+			case .Water:
+				stream.finished = true
+				stream.end = Tile_Position{last_empty_x, y}
 			case .Wall:
 				stream.finished = true
 				stream.end = Tile_Position{last_empty_x, y}
 			case .Empty:
 				last_empty_x = x
+				if update_tilemap {tilemap[global_index(x, y)] = .Water}
 				if tilemap[global_index(x, y + 1)] == .Empty {
 					stream.finished = true
 					stream.end = Tile_Position{x, y}

@@ -22,7 +22,7 @@ tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 cell_exits: bit_set[Direction]
 exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 map_screen_state := Map_Screen_State {
-	selected_room = .D,
+	selected_room = .A,
 }
 
 Room :: struct {
