@@ -91,11 +91,13 @@ draw_textures_to_screen :: proc() {
 	}
 	draw_map_texture(map_alpha)
 	draw_buttons()
+	draw_toasts()
 }
 
 render :: proc() {
 	write_to_render_textures()
 	rl.BeginDrawing()
+	rl.ClearBackground(rl.WHITE)
 	draw_textures_to_screen()
 	rl.DrawCircle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 5, rl.WHITE)
 	if ODIN_DEBUG {
