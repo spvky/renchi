@@ -32,28 +32,23 @@ toasts: [dynamic]Toast
 
 EDITOR_FONT_SIZE :: 36
 BUTTON_MARGIN :: 5
+BUTTON_PADDING :: 4
 TOAST_LIFETIME: f32 : 5
 button_position: [2]i32
 
 Button :: struct {
 	text:     string,
-	callback: Button_Callback,
+	callback: proc(),
 }
 
-Button_Callback :: proc()
+// Button_Callback :: proc()
 
 init_ui :: proc() {
 	top_row_buttons = make([dynamic]Button, 0, 4)
-	append(
-		&top_row_buttons,
-		Button {
-			text = "Save",
-			callback = proc() {
-				// fmt.println("Game Saved")
-				append(&toasts, Toast{lifetime = 0})
-			},
-		},
-	)
+	append(&top_row_buttons, Button {
+		text = "Save",
+		callback = proc() {fmt.println("Game Saved")},
+	})
 	append(&top_row_buttons, Button {
 		text = "Quit",
 		callback = proc() {fmt.println("Quitting Game")},
@@ -72,12 +67,19 @@ draw_buttons :: proc() {
 	}
 }
 
-button :: proc(raw_text: string, callback: Button_Callback) {
+// Draws the given button, designed for buttons laid out in a row
+button :: proc(raw_text: string, callback: proc()) {
 	text := strings.clone_to_cstring(raw_text, allocator = context.temp_allocator)
 	width := rl.MeasureText(text, EDITOR_FONT_SIZE)
 	pressed, down := is_button_clicked(width)
 	color: rl.Color = down ? {50, 50, 50, 255} : {100, 100, 100, 255}
-	rl.DrawRectangle(button_position.x, button_position.y, width + 8, EDITOR_FONT_SIZE, color)
+	rl.DrawRectangle(
+		button_position.x,
+		button_position.y,
+		width + (BUTTON_PADDING * 2),
+		EDITOR_FONT_SIZE,
+		color,
+	)
 	rl.DrawText(text, button_position.x + 4, button_position.y, EDITOR_FONT_SIZE, rl.WHITE)
 	button_position.x += width + (BUTTON_MARGIN * 2)
 	if pressed {
@@ -139,7 +141,7 @@ handle_toast :: proc(toast: ^Toast) -> bool {
 
 	// Determine toast position
 	start := f32(WINDOW_HEIGHT)
-	end: f32
+	end: f32 = 200
 	lerp := math.lerp(start, end, t)
 	x: i32 = 1500
 	y := i32(lerp)
@@ -147,5 +149,5 @@ handle_toast :: proc(toast: ^Toast) -> bool {
 	rl.DrawRectangle(x, y, 90, 40, rl.GREEN)
 
 
-	return v == 1
+	return toast.lifetime >= TOAST_LIFETIME
 }
