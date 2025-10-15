@@ -61,6 +61,7 @@ init :: proc() {
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()
 	init_physics_collections()
+	init_ui()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
 	for rb in rigidbodies {
