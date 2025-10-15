@@ -65,7 +65,7 @@ button :: proc(raw_text: string, callback: Button_Callback) {
 	text := strings.clone_to_cstring(raw_text, allocator = context.temp_allocator)
 	width := rl.MeasureText(text, EDITOR_FONT_SIZE)
 	pressed, down := is_button_clicked(width)
-	color: rl.Color = down ? {0, 200, 0, 255} : rl.GREEN
+	color: rl.Color = down ? {50, 50, 50, 255} : {100, 100, 100, 255}
 	rl.DrawRectangle(button_position.x, button_position.y, width + 8, EDITOR_FONT_SIZE, color)
 	rl.DrawText(text, button_position.x + 4, button_position.y, EDITOR_FONT_SIZE, rl.WHITE)
 	button_position.x += width + (BUTTON_MARGIN * 2)
