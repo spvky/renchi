@@ -56,6 +56,7 @@ DEFAULT_BUTTON_STYLE :: Button_Style {
 	margin    = 5,
 }
 
+// Like flexbox but with no features
 Button_Layout_Mode :: enum {
 	Row,
 	Column,
@@ -74,8 +75,8 @@ make_button_container :: proc(
 	return Button_Container{position = position, buttons = button_list, style = style}
 }
 
-delete_button_row :: proc(row: Button_Container) {
-	delete(row.buttons)
+delete_button_container :: proc(container: Button_Container) {
+	delete(container.buttons)
 }
 
 init_ui :: proc() {
