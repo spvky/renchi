@@ -27,71 +27,77 @@ unload_ui_textures :: proc() {
 
 // Making some helper functions for editor ui
 
-top_row_buttons: [dynamic]Button
+// Row of buttons, contains a dynamic array of buttons
+top_row_buttons: Button_Row
 toasts: [dynamic]Toast
 
 EDITOR_FONT_SIZE :: 36
 BUTTON_MARGIN :: 5
 BUTTON_PADDING :: 4
 TOAST_LIFETIME: f32 : 5
-button_position: [2]i32
 
 Button :: struct {
 	text:     string,
 	callback: proc(),
 }
 
-// Button_Callback :: proc()
+Button_Row :: struct {
+	position: [2]i32,
+	buttons:  [dynamic]Button,
+}
+
+// Makes a button row, allocates with context.allocator
+make_button_row :: proc(position: [2]i32, buttons: ..Button) -> Button_Row {
+	initial_capacity := len(buttons)
+	button_list := make([dynamic]Button, 0, initial_capacity)
+	append_elems(&button_list, ..buttons)
+	return Button_Row{position = position, buttons = button_list}
+}
+
+delete_button_row :: proc(row: Button_Row) {
+	delete(row.buttons)
+}
 
 init_ui :: proc() {
-	top_row_buttons = make([dynamic]Button, 0, 4)
-	append(&top_row_buttons, Button {
+	top_row_buttons = make_button_row({0, 0}, Button {
 		text = "Save",
 		callback = proc() {fmt.println("Game Saved")},
-	})
-	append(&top_row_buttons, Button {
+	}, Button {
 		text = "Quit",
 		callback = proc() {fmt.println("Quitting Game")},
-	})
-	append(&top_row_buttons, Button {
+	}, Button {
 		text = "Play",
 		callback = proc() {fmt.println("Starting Game")},
 	})
-	toasts = make([dynamic]Toast)
 }
 
-draw_buttons :: proc() {
-	button_position = {0, 0}
-	for b in top_row_buttons {
-		button(b.text, b.callback)
+
+draw_button_row :: proc(row: Button_Row) {
+	position := row.position
+	for b in row.buttons {
+		handle_button(b, &position)
 	}
 }
 
-// Draws the given button, designed for buttons laid out in a row
-button :: proc(raw_text: string, callback: proc()) {
-	text := strings.clone_to_cstring(raw_text, allocator = context.temp_allocator)
+// Draws the given button, and detects if it is clicked
+handle_button :: proc(button: Button, position: ^[2]i32) {
+	text := strings.clone_to_cstring(button.text, allocator = context.temp_allocator)
 	width := rl.MeasureText(text, EDITOR_FONT_SIZE)
-	pressed, down := is_button_clicked(width)
+	pressed, down := is_button_clicked(width, position)
 	color: rl.Color = down ? {50, 50, 50, 255} : {100, 100, 100, 255}
-	rl.DrawRectangle(
-		button_position.x,
-		button_position.y,
-		width + (BUTTON_PADDING * 2),
-		EDITOR_FONT_SIZE,
-		color,
-	)
-	rl.DrawText(text, button_position.x + 4, button_position.y, EDITOR_FONT_SIZE, rl.WHITE)
-	button_position.x += width + (BUTTON_MARGIN * 2)
+	rl.DrawRectangle(position.x, position.y, width + (BUTTON_PADDING * 2), EDITOR_FONT_SIZE, color)
+	rl.DrawText(text, position.x + 4, position.y, EDITOR_FONT_SIZE, rl.WHITE)
+	position.x += width + (BUTTON_MARGIN * 2)
 	if pressed {
-		callback()
+		button.callback()
 	}
 }
 
-is_button_clicked :: proc(width: i32) -> (pressed: bool, down: bool) {
+is_button_clicked :: proc(width: i32, position: ^[2]i32) -> (pressed: bool, down: bool) {
 	mouse_pressed := rl.IsMouseButtonPressed(.LEFT)
 	mouse_down := rl.IsMouseButtonDown(.LEFT)
-	cursor_min: [2]i32 = {button_position.x, button_position.y}
-	cursor_max: [2]i32 = {button_position.x + width + 8, button_position.y + width}
+	cursor_min: [2]i32 = {position.x, position.y}
+	cursor_max: [2]i32 = {position.x + width + 8, position.y + width}
 	raw_cursor_pos := rl.GetMousePosition()
 	cursor_pos: [2]i32 = {i32(raw_cursor_pos.x), i32(raw_cursor_pos.y)}
 

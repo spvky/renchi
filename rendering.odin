@@ -84,14 +84,13 @@ draw_textures_to_screen :: proc() {
 	if game_state == .Map {
 		map_alpha = 255
 	} else {
-		map_alpha = 30
+		map_alpha = 0
 	}
 	if game_state == .Gameplay {
 		draw_gameplay_texture()
 	}
 	draw_map_texture(map_alpha)
-	draw_buttons()
-	draw_toasts()
+	draw_button_row(top_row_buttons)
 }
 
 render :: proc() {
@@ -99,8 +98,8 @@ render :: proc() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.WHITE)
 	draw_textures_to_screen()
-	rl.DrawCircle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 5, rl.WHITE)
 	if ODIN_DEBUG {
+		rl.DrawCircle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 5, rl.WHITE)
 		map_screen_debug()
 		player_debug()
 	}
