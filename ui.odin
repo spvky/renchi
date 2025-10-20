@@ -50,7 +50,7 @@ Button_Style :: struct {
 }
 
 DEFAULT_BUTTON_STYLE :: Button_Style {
-	mode      = .Column,
+	mode      = .Row,
 	font_size = 36,
 	padding   = 4,
 	margin    = 5,
@@ -81,18 +81,20 @@ delete_button_container :: proc(container: Button_Container) {
 
 init_ui :: proc() {
 	top_row_buttons = make_button_container({0, 0}, DEFAULT_BUTTON_STYLE, {
-		text = "Save",
-		callback = proc() {fmt.println("Game Saved")},
+		text = "Reset",
+		callback = proc() {
+			fmt.println("Reset")
+		},
 	}, {
-		text = "Quit",
-		callback = proc() {fmt.println("Quitting Game")},
+		text = "Really long button that will have the proper width and everything, isn't that neat",
+		callback = proc() {fmt.println("That's pretty long")},
 	}, {
 		text = "Play",
 		callback = proc() {fmt.println("Starting Game")},
 	})
 }
 
-draw_button_row :: proc(row: Button_Container) {
+draw_button_container :: proc(row: Button_Container) {
 	position := row.position
 	for b in row.buttons {
 		handle_button(b, &position, row.style)

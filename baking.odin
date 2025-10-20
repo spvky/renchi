@@ -4,6 +4,8 @@
 package main
 
 import "core:log"
+import "core:math"
+import "core:slice"
 import "core:time"
 import rl "vendor:raylib"
 
@@ -189,18 +191,56 @@ bake_water :: proc(update_tilemap: bool) {
 			}
 		}
 	}
+	volumes := generate_volumes(streams[:])
 	if ODIN_DEBUG {
 		log.debug("WATER STREAMS\n")
 		for s in streams {
 			log.debugf(
-				"--------\nstart: %v, end: %v\ndirection: %v\n--------",
+				"--------\nstart: %v, end: %v\ndirection: %v\n--------\n",
 				s.start,
 				s.end,
 				s.direction,
 			)
 		}
 		log.debug("--END STREAMS--\n")
+
+		log.debug("WATER VOLUMES\n")
+		for v in volumes {
+			log.debugf("-------------\n%v\n-------------------------\n", v)
+		}
+		log.debug("--END VOLUMES--\n")
 	}
+}
+
+generate_volumes :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
+	ranges := make([dynamic]Tile_Range, 0, 8, allocator = context.temp_allocator)
+	checked_heights := make([dynamic]u16, 0, 4, allocator = context.allocator)
+	volumes := make([dynamic]Water_Volume, 0, 4)
+	for s in streams {
+		if s.direction == .East || s.direction == .West {
+			append(&ranges, range_from_stream(s))
+		}
+	}
+
+	for a, i in ranges {
+		already_parsed := slice.contains(checked_heights[:], a.y)
+		if !already_parsed {
+			current := a
+			append(&checked_heights, a.y)
+			for b, j in ranges {
+				if i == j do continue
+				if range_overlap(a, b) {
+					current.min = math.min(a.min, b.min)
+					current.max = math.max(a.max, b.max)
+				}
+			}
+			append(
+				&volumes,
+				Water_Volume{min = {current.min, current.y - 2}, max = {current.max, current.y}},
+			)
+		}
+	}
+	return volumes
 }
 
 resolve_water_tile :: proc(start: Tile_Position, update_tilemap: bool) -> [dynamic]Water_Stream {
@@ -327,4 +367,27 @@ Water_Stream :: struct {
 	end:       Tile_Position,
 	direction: Direction,
 	finished:  bool,
+}
+
+Water_Volume :: struct {
+	min: Tile_Position,
+	max: Tile_Position,
+}
+
+Tile_Range :: struct {
+	min: u16,
+	max: u16,
+	y:   u16,
+}
+
+range_from_stream :: proc(s: Water_Stream) -> Tile_Range {
+	return Tile_Range {
+		min = math.min(s.start.x, s.end.x),
+		max = math.max(s.start.x, s.end.x),
+		y = s.start.y,
+	}
+}
+
+range_overlap :: proc(a, b: Tile_Range) -> bool {
+	return a.min <= b.max && b.min <= a.max && a.y == b.y
 }

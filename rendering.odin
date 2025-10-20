@@ -90,7 +90,7 @@ draw_textures_to_screen :: proc() {
 		draw_gameplay_texture()
 	}
 	draw_map_texture(map_alpha)
-	draw_button_row(top_row_buttons)
+	draw_button_container(top_row_buttons)
 }
 
 render :: proc() {
