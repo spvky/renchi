@@ -48,7 +48,6 @@ draw_map_texture :: proc(alpha: u8) {
 	display_width := f32(WINDOW_WIDTH) / 2
 	source := rl.Rectangle {
 		x      = 0,
-		// y      = f32(WINDOW_HEIGHT - MAP_SCREEN_HEIGHT),
 		y      = 776,
 		width  = 304,
 		height = -304,
@@ -89,7 +88,7 @@ draw_textures_to_screen :: proc() {
 		draw_gameplay_texture()
 	}
 	draw_map_texture(map_alpha)
-	draw_button_container(top_row_buttons)
+	// draw_button_container(top_row_buttons)
 }
 
 render :: proc() {

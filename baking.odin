@@ -32,12 +32,11 @@ draw_tilemap :: proc() {
 
 draw_water_volumes :: proc() {
 	for v in volumes {
-		max := Vec3{f32(v.max.x) * TILE_SIZE, f32(v.max.y) * TILE_SIZE, 0}
-		min := Vec3{f32(v.min.y) * TILE_SIZE, f32(v.min.y) * TILE_SIZE, 0}
-		offset := Vec3{16, 16, 0}
-		center := ((max + min) / 2) + offset
-		// extents := max - min
-		extents := Vec3{16, 16, 1}
+		max := Vec3{f32(v.max.x + 1), f32(v.max.y + 1), 0} * TILE_SIZE
+		min := Vec3{f32(v.min.x), f32(v.min.y), 0} * TILE_SIZE
+		center := ((max + min) / 2)
+		extents := max - min
+		extents.z = 1
 		rl.DrawCubeV(center, extents, rl.BLUE)
 	}
 }
