@@ -44,9 +44,9 @@ camera_follow :: proc() {
 			camera_limits.max,
 		)
 		target_pos := extend(raw_position, 0) + world.offset + cell_offset
-		world.camera3d.target = l.lerp(world.camera3d.target, target_pos, frametime * 20)
-		world.camera3d.position = l.lerp(
-			world.camera3d.position,
+		world.camera.target = l.lerp(world.camera.target, target_pos, frametime * 20)
+		world.camera.position = l.lerp(
+			world.camera.position,
 			target_pos + Vec3{0, 0, 500},
 			frametime * 20,
 		)

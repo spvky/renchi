@@ -26,8 +26,7 @@ Game_State :: enum {
 }
 
 World :: struct {
-	camera:       rl.Camera2D,
-	camera3d:     rl.Camera3D,
+	camera:     rl.Camera3D,
 	offset:       Vec3,
 	player:       Player,
 	current_cell: Cell_Position,
@@ -41,8 +40,7 @@ make_world :: proc() -> World {
 		deceleration = 0.75,
 	}
 	return World {
-		camera = rl.Camera2D{zoom = 1},
-		camera3d = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 90, projection = .PERSPECTIVE},
+		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 1000, projection = .ORTHOGRAPHIC},
 		offset = {145, 300, 0},
 		player = player,
 	}
