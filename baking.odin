@@ -9,6 +9,8 @@ import "core:slice"
 import "core:time"
 import rl "vendor:raylib"
 
+volumes: [dynamic]Water_Volume
+
 bake_map :: proc() {
 	place_tiles()
 	generate_collision()
@@ -24,7 +26,20 @@ reset_map :: proc() {
 
 draw_tilemap :: proc() {
 	draw_colliders()
-	draw_water()
+	// draw_water()
+	draw_water_volumes()
+}
+
+draw_water_volumes :: proc() {
+	for v in volumes {
+		max := Vec3{f32(v.max.x) * TILE_SIZE, f32(v.max.y) * TILE_SIZE, 0}
+		min := Vec3{f32(v.min.y) * TILE_SIZE, f32(v.min.y) * TILE_SIZE, 0}
+		offset := Vec3{16, 16, 0}
+		center := ((max + min) / 2) + offset
+		// extents := max - min
+		extents := Vec3{16, 16, 1}
+		rl.DrawCubeV(center, extents, rl.BLUE)
+	}
 }
 
 draw_water :: proc() {
@@ -191,7 +206,7 @@ bake_water :: proc(update_tilemap: bool) {
 			}
 		}
 	}
-	volumes := generate_volumes(streams[:])
+	volumes = generate_volumes(streams[:])
 	if ODIN_DEBUG {
 		log.debug("WATER STREAMS\n")
 		for s in streams {
