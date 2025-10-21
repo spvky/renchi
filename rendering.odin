@@ -14,7 +14,6 @@ map_texture: rl.RenderTexture
 
 init_render_textures :: proc() {
 	map_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
-	// gameplay_texture = rl.LoadRenderTexture(GAMEPLAY_SCREEN_WIDTH, GAMEPLAY_SCREEN_HEIGHT)
 	gameplay_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 }
 
