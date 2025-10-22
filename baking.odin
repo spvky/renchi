@@ -248,9 +248,49 @@ generate_volumes :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
 					current.max = math.max(a.max, b.max)
 				}
 			}
+			left_height, right_height: u16
+			if current.min > 1 {
+				for k in 0 ..< 5 {
+					if tilemap[global_index(current.min - 1, current.y - u16(i + 1))] != .Empty {
+						left_height += 1
+					} else {
+						log.infof(
+							"Breaking left wall for [%v,%v : %v] at %v\n",
+							current.min,
+							current.max,
+							current.y,
+							left_height,
+						)
+						break
+					}
+				}
+			} else {
+				left_height = 3
+			}
+			if current.min < TILE_COUNT * CELL_COUNT {
+				for k in 0 ..< 4 {
+					if tilemap[global_index(current.min + 1, current.y - u16(i + 1))] != .Empty {
+						right_height += 1
+					} else {
+						log.infof(
+							"Breaking right wall for [%v,%v : %v] at %v\n",
+							current.min,
+							current.max,
+							current.y,
+							right_height,
+						)
+						break
+					}
+				}
+			} else {
+				right_height = 3
+			}
 			append(
 				&volumes,
-				Water_Volume{min = {current.min, current.y - 2}, max = {current.max, current.y}},
+				Water_Volume {
+					min = {current.min, current.y - (1 + math.min(left_height, right_height))},
+					max = {current.max, current.y},
+				},
 			)
 		}
 	}
