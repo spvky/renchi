@@ -26,7 +26,7 @@ reset_map :: proc() {
 
 draw_tilemap :: proc() {
 	draw_colliders()
-	// draw_water()
+	draw_water()
 	draw_water_volumes()
 }
 
@@ -37,7 +37,7 @@ draw_water_volumes :: proc() {
 		center := ((max + min) / 2)
 		extents := max - min
 		extents.z = 1
-		rl.DrawCubeV(center, extents, rl.BLUE)
+		rl.DrawCubeV(center, extents, {0,50,150,255})
 	}
 }
 

@@ -154,6 +154,7 @@ parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
 room_tag_as_filepath :: proc(tag: Room_Tag, map_type: enum {
 		Main,
 		Exits,
+		Entity
 	}) -> string {
 	return fmt.tprintf("assets/ldtk/renchi/simplified/%v/%v.csv", tag, map_type)
 }
