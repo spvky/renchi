@@ -6,7 +6,6 @@ package main
 import "core:fmt"
 import "core:math"
 import "core:strings"
-import "core:text/i18n"
 import rl "vendor:raylib"
 
 ui_texture_atlas: [Ui_Texture_Tag]rl.Texture

@@ -25,6 +25,26 @@ map_screen_state := Map_Screen_State {
 	selected_room = .A,
 }
 
+Map_Screen_State :: struct {
+	cursor:        Map_Screen_Cursor,
+	selected_room: Room_Tag,
+}
+
+Map_Screen_Cursor :: struct {
+	position:           Cell_Position,
+	rotation:           Direction,
+	target_rotation:    f32,
+	displayed_rotation: f32,
+	target_position: Vec2,
+	displayed_position: Vec2,
+	mode:               Map_Screen_Cursor_Mode,
+}
+
+Map_Screen_Cursor_Mode :: enum {
+	Place,
+	Select,
+}
+
 Room :: struct {
 	cells:      map[Cell_Position]Cell,
 	width:      u8,
@@ -61,24 +81,6 @@ Room_Tag :: enum {
 	B,
 	C,
 	D,
-}
-
-Map_Screen_State :: struct {
-	cursor:        Map_Screen_Cursor,
-	selected_room: Room_Tag,
-}
-
-Map_Screen_Cursor :: struct {
-	position:           Cell_Position,
-	rotation:           Direction,
-	target_rotation:    f32,
-	displayed_rotation: f32,
-	mode:               Map_Screen_Cursor_Mode,
-}
-
-Map_Screen_Cursor_Mode :: enum {
-	Place,
-	Select,
 }
 
 rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {
@@ -235,7 +237,7 @@ draw_map_grid :: proc() {
 
 draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
-	cursor_pos := vec_from_map_cell_position(cursor.position)
+	cursor_pos := cursor.displayed_position
 	if cursor.mode == .Place && game_state == .Map {
 		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
 	} else {
@@ -322,6 +324,7 @@ handle_map_screen_cursor :: proc() {
 	if rl.IsKeyPressed(.S) {
 		cursor.position.y = math.clamp(cursor.position.y + 1, 0, 9)
 	}
+	cursor.target_position = vec_from_map_cell_position(cursor.position)
 	// Cursor Rotation
 	if rl.IsKeyPressed(.R) {
 		cursor.target_rotation += 90
@@ -341,6 +344,12 @@ handle_map_screen_cursor :: proc() {
 		cursor.displayed_rotation,
 		cursor.target_rotation,
 		rl.GetFrameTime() * 10,
+
+	)
+	cursor.displayed_position = math.lerp(
+		cursor.displayed_position,
+		cursor.target_position,
+		rl.GetFrameTime() * 20,
 	)
 
 	// Room Placement
