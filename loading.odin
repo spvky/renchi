@@ -22,6 +22,7 @@ load_rooms :: proc() -> [Room_Tag]Room {
 read_room :: proc(tag: Room_Tag) -> Room {
 	cells := make(map[Cell_Position]Cell, 8)
 	write_cell_tile_data(&cells, tag)
+	write_cell_entity_data(&cells, tag)
 	write_cell_exit_data(&cells, tag)
 	room := Room {
 		cells = cells,
@@ -71,6 +72,53 @@ write_cell_tile_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 					}
 					cell := &cells[position]
 					cell.tiles[tile_index(x, y)] = value
+				}
+			}
+		}
+	}
+}
+
+write_cell_entity_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
+	filename := room_tag_as_filepath(tag, .Main)
+	r: csv.Reader
+	r.trim_leading_space = true
+	defer csv.reader_destroy(&r)
+
+
+	data, ok := os.read_entire_file(filename)
+	if ok {
+		csv.reader_init_with_string(&r, string(data))
+	} else {
+		log.errorf("Unable to open file: %v", filename)
+	}
+	defer delete(data)
+
+	records, err := csv.read_all(&r)
+	if err != nil do log.errorf("Failed to parse CSV file for %v\nErr: %v", filename, err)
+
+	defer {
+		for rec in records {
+			delete(rec)
+		}
+		delete(records)
+	}
+
+	for r, i in records {
+		for f, j in r {
+			cx: i16 = i16(j) / TILE_COUNT
+			cy: i16 = i16(i) / TILE_COUNT
+			position := Cell_Position{cx, cy}
+			x := i16(j) - (cx * TILE_COUNT)
+			y := i16(i) - (cy * TILE_COUNT)
+			if field, field_ok := strconv.parse_uint(f); field_ok {
+				value := Entity_Tag(field)
+				if value != .Empty {
+					exists := position in cells
+					if !exists {
+						cells[position] = Cell{}
+					}
+					cell := &cells[position]
+					cell.entities[tile_index(x, y)] = value
 				}
 			}
 		}
@@ -154,7 +202,7 @@ parse_room_stats :: proc(room: ^Room, tag: Room_Tag) {
 room_tag_as_filepath :: proc(tag: Room_Tag, map_type: enum {
 		Main,
 		Exits,
-		Entity
+		Room_Entity,
 	}) -> string {
 	return fmt.tprintf("assets/ldtk/renchi/simplified/%v/%v.csv", tag, map_type)
 }

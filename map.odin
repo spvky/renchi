@@ -8,7 +8,6 @@ import "core:slice"
 import rl "vendor:raylib"
 
 MAP_SIZE: Vec2 : {250, 250}
-// GRID_OFFSET: Vec2 = {f32(SCREEN_WIDTH) / 2, f32(SCREEN_HEIGHT) / 2} - (MAP_SIZE / 2)
 GRID_OFFSET: Vec2 = {27, 27}
 MAP_CELL_SIZE :: Vec2{25, 25}
 CELL_WIDTH :: 25
@@ -35,7 +34,7 @@ Map_Screen_Cursor :: struct {
 	rotation:           Direction,
 	target_rotation:    f32,
 	displayed_rotation: f32,
-	target_position: Vec2,
+	target_position:    Vec2,
 	displayed_position: Vec2,
 	mode:               Map_Screen_Cursor_Mode,
 }
@@ -56,8 +55,9 @@ Room :: struct {
 }
 
 Cell :: struct {
-	tiles: [TILE_COUNT * TILE_COUNT]Tile,
-	exits: bit_set[Direction],
+	tiles:    [TILE_COUNT * TILE_COUNT]Tile,
+	entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
+	exits:    bit_set[Direction],
 }
 
 Tile :: enum u8 {
@@ -344,7 +344,6 @@ handle_map_screen_cursor :: proc() {
 		cursor.displayed_rotation,
 		cursor.target_rotation,
 		rl.GetFrameTime() * 10,
-
 	)
 	cursor.displayed_position = math.lerp(
 		cursor.displayed_position,
