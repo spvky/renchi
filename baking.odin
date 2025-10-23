@@ -84,11 +84,11 @@ draw_colliders :: proc() {
 }
 
 place_tiles :: proc() {
-	tiles_added: int
+	tiles_added, entities_added: int
 	for room, _ in rooms {
 		if room.placed {
 			for position, cell in room.cells {
-				tiles, exits := rotate_cell(cell.tiles, cell.exits, room.rotation)
+				tiles, entities, exits := rotate_cell(cell.tiles, cell.entities, cell.exits, room.rotation)
 				for y in 0 ..< TILE_COUNT {
 					for x in 0 ..< TILE_COUNT {
 						cell_pos := cell_global_position(position, room.position, room.rotation)
@@ -96,9 +96,15 @@ place_tiles :: proc() {
 						raw_x := x + int(cell_pos.x * TILE_COUNT)
 						raw_y := y + int(cell_pos.y * TILE_COUNT)
 						tile := tiles[tile_index(x, y)]
+						entity := entities[tile_index(x, y)]
 						if tile != .Empty {
 							tilemap[global_index(raw_x, raw_y)] = tile
 							tiles_added += 1
+						}
+						if entity != .None{
+							initial_entity_map[global_index(raw_x, raw_y)] = entity
+							entities_added += 1
+
 						}
 					}
 				}

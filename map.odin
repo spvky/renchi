@@ -188,25 +188,31 @@ positions_from_rotation :: proc(
 
 rotate_cell :: proc(
 	in_tiles: [TILE_COUNT * TILE_COUNT]Tile,
+	in_entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
 	in_exits: bit_set[Direction],
 	rotation: Direction,
 ) -> (
 	out_tiles: [TILE_COUNT * TILE_COUNT]Tile,
+	out_entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
 	out_exits: bit_set[Direction],
 ) {
 	if rotation == .North {
-		return in_tiles, in_exits
+		return in_tiles, in_entities, in_exits
 	}
 	for x in 0 ..< TILE_COUNT {
 		for y in 0 ..< TILE_COUNT {
 			#partial switch rotation {
 			case .East:
 				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, (TILE_COUNT - 1) - x)]
+				out_entities[tile_index(x, y)] = in_entities[tile_index(y, (TILE_COUNT - 1) - x)]
 			case .South:
 				out_tiles[tile_index(x, y)] =
 					in_tiles[tile_index((TILE_COUNT - 1) - x, (TILE_COUNT - 1) - y)]
+				out_entities[tile_index(x, y)] =
+					in_entities[tile_index((TILE_COUNT - 1) - x, (TILE_COUNT - 1) - y)]
 			case .West:
 				out_tiles[tile_index(x, y)] = in_tiles[tile_index((TILE_COUNT - 1) - y, x)]
+				out_entities[tile_index(x, y)] = in_entities[tile_index((TILE_COUNT - 1) - y, x)]
 			}
 		}
 	}
