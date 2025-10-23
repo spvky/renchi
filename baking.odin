@@ -15,6 +15,7 @@ bake_map :: proc() {
 	place_tiles()
 	generate_collision()
 	bake_water(update_tilemap = true)
+	bake_entities()
 }
 
 reset_map :: proc() {
@@ -450,4 +451,7 @@ range_from_stream :: proc(s: Water_Stream) -> Tile_Range {
 
 range_overlap :: proc(a, b: Tile_Range) -> bool {
 	return a.min <= b.max && b.min <= a.max && a.y == b.y
+}
+
+bake_entities :: proc() {
 }
