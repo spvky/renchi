@@ -38,6 +38,7 @@ make_world :: proc() -> World {
 		radius       = 8,
 		acceleration = 275,
 		deceleration = 0.75,
+		facing = 1
 	}
 	return World {
 		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 1000, projection = .ORTHOGRAPHIC},

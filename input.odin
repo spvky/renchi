@@ -54,14 +54,18 @@ is_action_buffered :: proc(action: Input_Action) -> bool {
 
 poll_input :: proc() {
 	delta: f32
+	facing := world.player.facing
 	if rl.IsKeyDown(.A) {
 		delta -= 1
+		facing = -1
 	}
 	if rl.IsKeyDown(.D) {
 		delta += 1
+		facing = 1
 	}
 
 	world.player.move_delta = delta
+	world.player.facing = facing
 	update_buffer()
 	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
 }

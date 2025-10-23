@@ -112,7 +112,7 @@ write_cell_entity_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 			y := i16(i) - (cy * TILE_COUNT)
 			if field, field_ok := strconv.parse_uint(f); field_ok {
 				value := Entity_Tag(field)
-				if value != .Empty {
+				if value != .None {
 					exists := position in cells
 					if !exists {
 						cells[position] = Cell{}

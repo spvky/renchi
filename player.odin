@@ -46,6 +46,7 @@ Player :: struct {
 	radius:       f32,
 	acceleration: f32,
 	deceleration: f32,
+	facing: f32,
 }
 
 Player_State :: enum {
@@ -137,5 +138,7 @@ draw_player :: proc() {
 	case .Airborne:
 		color = rl.BLUE
 	}
-	rl.DrawSphere(extend(player.snapshot, 0), 8, rl.RED)
+	player_pos := extend(player.snapshot, 0)
+	rl.DrawSphere(player_pos, 8, rl.RED)
+	rl.DrawCubeV(player_pos + {12 * player.facing, 0, 0}, {24,16,1}, {120,0,0,100})
 }
