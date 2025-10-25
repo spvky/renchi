@@ -16,6 +16,7 @@ load_rooms :: proc() -> [Room_Tag]Room {
 		.B = read_room(.B),
 		.C = read_room(.C),
 		.D = read_room(.D),
+		.E = read_room(.E),
 	}
 }
 

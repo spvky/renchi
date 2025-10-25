@@ -26,7 +26,7 @@ Game_State :: enum {
 }
 
 World :: struct {
-	camera:     rl.Camera3D,
+	camera:       rl.Camera3D,
 	offset:       Vec3,
 	player:       Player,
 	current_cell: Cell_Position,
@@ -38,7 +38,7 @@ make_world :: proc() -> World {
 		radius       = 8,
 		acceleration = 275,
 		deceleration = 0.75,
-		facing = 1
+		facing       = 1,
 	}
 	return World {
 		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 1000, projection = .ORTHOGRAPHIC},
@@ -60,6 +60,7 @@ init :: proc() {
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()
 	init_physics_collections()
+	init_entity_collections()
 	init_ui()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
@@ -104,6 +105,8 @@ playing :: proc() {
 shutdown :: proc() {
 	destroy_render_textures()
 	unload_ui_textures()
+	delete_entity_collections()
+	delete_physics_collections()
 	rl.CloseWindow()
 }
 

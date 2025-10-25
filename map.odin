@@ -21,7 +21,7 @@ tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 cell_exits: bit_set[Direction]
 exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 map_screen_state := Map_Screen_State {
-	selected_room = .A,
+	selected_room = .E,
 }
 
 Map_Screen_State :: struct {
@@ -81,6 +81,7 @@ Room_Tag :: enum {
 	B,
 	C,
 	D,
+	E,
 }
 
 rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {

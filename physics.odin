@@ -11,8 +11,8 @@ rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {
 	translation: Vec2,
-	velocity:    Vec2,
 	snapshot:    Vec2,
+	velocity:    Vec2,
 	shape:       Collision_Shape,
 }
 
@@ -44,6 +44,16 @@ init_physics_collections :: proc() {
 	rigidbodies = make([dynamic]Rigidbody, 0, 16)
 	log.info("Colliders Initialized")
 	colliders = make([dynamic]Collider, 0, 64)
+}
+
+clear_physics_collectsions :: proc() {
+	clear(&rigidbodies)
+	clear(&colliders)
+}
+
+delete_physics_collections :: proc() {
+	delete(rigidbodies)
+	delete(colliders)
 }
 
 physics_step :: proc() {

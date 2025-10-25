@@ -5,8 +5,8 @@ package main
 
 import intr "base:intrinsics"
 import "core:strings"
-import rl "vendor:raylib"
 import "utils"
+import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 Vec3 :: [3]f32
@@ -35,6 +35,10 @@ cell_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 
 global_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
 	return int(x + (y * MAP_WIDTH))
+}
+
+position_from_tile :: proc(x, y: $T) -> Vec2 where intr.type_is_integer(T) {
+	return Vec2{f32(x) * TILE_SIZE, f32(y) * TILE_SIZE} + Vec2{8, 8}
 }
 
 cell_global_position :: proc(
