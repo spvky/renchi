@@ -364,18 +364,85 @@ resolve_water_tile :: proc(start: Tile_Position, update_tilemap: bool) -> [dynam
 	return streams
 }
 
-resolve_water_stream_new :: proc(start: Tile_Position, direction: Direction) {
+resolve_water_stream_new :: proc(start: Tile_Position, direction: Direction) -> Water_Path {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
 	append(&segments, Water_Path_Segment{start = start, direction = direction})
-	still_going := true
-	for still_going {
-		for s in segments {
-			if !s.finished {
+
+	// Bit set for easy checks if a direction is horizontal
+	horizontal: bit_set[Direction] = {.East, .West}
+	// Bit set for easy checks if water can pass through a tile
+	water_passthrough: bit_set[Tile] = {.Empty}
+
+	// Outer loop that is manually broken because we will be adding to a collection while iterating it
+	for {
+		for &s in segments {
+			pos: [2]int = {int(start.x), int(start.y)}
+			shift := shift_from_direction(direction)
+			for !s.finished {
+				pos += shift
+				tile := tilemap[global_index(pos.x, pos.y)]
+				switch tile {
+				case .Empty:
+					s.length += 1
+					if s.direction in horizontal {
+						// Check if the segment should end and spawn another heading down
+						if tilemap[global_index(pos.x, pos.y + 1)] in water_passthrough {
+							s.finished = true
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x), u16(pos.y + 1)},
+									direction = .South,
+								},
+							)
+						}
+					}
+				case .Wall, .Door, .Water:
+					s.finished = true
+					if !(s.direction in horizontal) {
+						if tilemap[global_index(pos.x - 1, pos.y - 1)] in water_passthrough {
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x - 1), u16(pos.y - 1)},
+									direction = .West,
+								},
+							)
+						}
+						if tilemap[global_index(pos.x + 1, pos.y)] in water_passthrough {
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x + 1), u16(pos.y - 1)},
+									direction = .East,
+								},
+							)
+						}
+						// check collision on the left and right and make segments in the clear directions
+					}
+					break
+				case .OneWay:
+				}
 			}
 		}
+		if unfinished_segments(segments[:]) == 0 do break
 	}
-	// TODO: Rework streams, i think it's a little more complicated than it needs to be and theres a bug I'm having a hard time tracking down
+	return Water_Path{segments = segments}
+}
 
+shift_from_direction :: proc(d: Direction) -> [2]int {
+	shift: [2]int
+	switch d {
+	case .North:
+		shift = {0, -1}
+	case .South:
+		shift = {0, 1}
+	case .East:
+		shift = {1, 0}
+	case .West:
+		shift = {-1, 0}
+	}
+	return shift
 }
 
 resolve_water_stream :: proc(
@@ -510,6 +577,14 @@ Water_Path_Segment :: struct {
 	length:    int,
 	direction: Direction,
 	finished:  bool,
+}
+
+unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
+	count: int
+	for s in segments {
+		if !s.finished do count += 1
+	}
+	return count
 }
 
 Water_Path :: struct {

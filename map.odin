@@ -7,6 +7,7 @@ import "core:math"
 import "core:slice"
 import rl "vendor:raylib"
 
+TILES_PER_CELL :: 625
 MAP_SIZE: Vec2 : {250, 250}
 GRID_OFFSET: Vec2 = {27, 27}
 MAP_CELL_SIZE :: Vec2{25, 25}
