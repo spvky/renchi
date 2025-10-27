@@ -18,7 +18,7 @@ bake_map :: proc(t: ^Tilemap) {
 	log.debug("Finished placing tiles")
 	generate_collision(t^)
 	log.debug("Finished generating collision")
-	// bake_water(t^)
+	bake_water(t^)
 	log.debug("Finished baking water")
 	// bake_entities()
 }
@@ -251,7 +251,10 @@ bake_water :: proc(t: Tilemap) {
 
 resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
-	append(&segments, Water_Path_Segment{start = start, direction = direction})
+	append(
+		&segments,
+		Water_Path_Segment{start = start, direction = direction, finished = false, length = 0},
+	)
 
 	// Bit set for easy checks if a direction is horizontal
 	horizontal: bit_set[Direction] = {.East, .West}
@@ -259,11 +262,11 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 	water_passthrough: bit_set[Tile] = {.Empty}
 
 	// Outer loop that is manually broken because we will be adding to a collection while iterating it
-	for {
+	for unfinished_segments(segments[:]) == 0 {
 		for &s in segments {
 			pos: [2]int = {int(start.x), int(start.y)}
 			shift := shift_from_direction(direction)
-			for !s.finished {
+			if !s.finished {
 				pos += shift
 				tile := get_static_tile(t, pos.x, pos.y)
 				switch tile {
@@ -305,12 +308,11 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 							)
 						}
 					}
-					break
+					continue
 				case .OneWay:
 				}
 			}
 		}
-		if unfinished_segments(segments[:]) == 0 do break
 	}
 	return Water_Path{segments = segments}
 }
@@ -340,7 +342,9 @@ Water_Path_Segment :: struct {
 unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
 	count: int
 	for s in segments {
-		if !s.finished do count += 1
+		if !s.finished {
+			count += 1
+		}
 	}
 	return count
 }
