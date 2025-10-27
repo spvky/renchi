@@ -34,15 +34,15 @@ World :: struct {
 
 make_world :: proc() -> World {
 	player := Player {
-		translation  = {128, 0},
-		radius       = 8,
+		translation  = {12.5, 0},
+		radius       = 0.5,
 		acceleration = 275,
 		deceleration = 0.75,
 		facing       = 1,
 	}
 	return World {
-		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 1000, projection = .ORTHOGRAPHIC},
-		offset = {145, 300, 0},
+		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 60, projection = .ORTHOGRAPHIC},
+		offset = {8, 18, 0},
 		player = player,
 	}
 }
@@ -59,9 +59,9 @@ init :: proc() {
 	run = true
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()
+	init_tilemap(&current_tilemap, 10, 10)
 	init_physics_collections()
 	init_entity_collections()
-	init_ui()
 	world = make_world()
 	log.infof("Rigidbodies Length: %v", len(rigidbodies))
 	for rb in rigidbodies {
@@ -107,6 +107,7 @@ shutdown :: proc() {
 	unload_ui_textures()
 	delete_entity_collections()
 	delete_physics_collections()
+	delete_tilemap(current_tilemap)
 	rl.CloseWindow()
 }
 

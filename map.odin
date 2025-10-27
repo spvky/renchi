@@ -7,20 +7,19 @@ import "core:math"
 import "core:slice"
 import rl "vendor:raylib"
 
-TILES_PER_CELL :: 625
-MAP_SIZE: Vec2 : {250, 250}
+// Cell Dimensions
+CD :: 25
+//Tiles Per Cell
+TPC :: 625
+
+// For the map UI
 GRID_OFFSET: Vec2 = {27, 27}
-MAP_CELL_SIZE :: Vec2{25, 25}
-CELL_WIDTH :: 25
-TILE_COUNT :: 25
-MAP_WIDTH :: 250
-CELL_COUNT :: 10
-TILE_SIZE :: 16
+MAP_SIZE: Vec2 : {250, 250}
 
 rooms: [Room_Tag]Room
-tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
-cell_exits: bit_set[Direction]
-exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
+// Gonna deprecate
+// tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
+// exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
 map_screen_state := Map_Screen_State {
 	selected_room = .E,
 }
@@ -56,8 +55,8 @@ Room :: struct {
 }
 
 Cell :: struct {
-	tiles:    [TILE_COUNT * TILE_COUNT]Tile,
-	entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
+	tiles:    [TPC]Tile,
+	entities: [TPC]Entity_Tag,
 	exits:    bit_set[Direction],
 }
 
@@ -125,7 +124,7 @@ rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {
 	return new_dir
 }
 
-can_place :: proc(positions: []Cell_Position) -> bool {
+can_place :: proc(t: Tilemap, positions: []Cell_Position) -> bool {
 	can_place := true
 	placed_positions := make([dynamic]Cell_Position, 0, 64, allocator = context.temp_allocator)
 	for room, tag in rooms {
@@ -140,7 +139,7 @@ can_place :: proc(positions: []Cell_Position) -> bool {
 		if slice.contains(placed_positions[:], pos) {
 			can_place = false
 		}
-		if pos.x < 0 || pos.x >= CELL_COUNT || pos.y < 0 || pos.y >= CELL_COUNT {
+		if pos.x < 0 || int(pos.x) >= t.width || pos.y < 0 || int(pos.y) >= t.height {
 			can_place = false
 		}
 	}
@@ -189,32 +188,31 @@ positions_from_rotation :: proc(
 }
 
 rotate_cell :: proc(
-	in_tiles: [TILE_COUNT * TILE_COUNT]Tile,
-	in_entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
+	in_tiles: [TPC]Tile,
+	in_entities: [TPC]Entity_Tag,
 	in_exits: bit_set[Direction],
 	rotation: Direction,
 ) -> (
-	out_tiles: [TILE_COUNT * TILE_COUNT]Tile,
-	out_entities: [TILE_COUNT * TILE_COUNT]Entity_Tag,
+	out_tiles: [TPC]Tile,
+	out_entities: [TPC]Entity_Tag,
 	out_exits: bit_set[Direction],
 ) {
 	if rotation == .North {
 		return in_tiles, in_entities, in_exits
 	}
-	for x in 0 ..< TILE_COUNT {
-		for y in 0 ..< TILE_COUNT {
+	for x in 0 ..< CD {
+		for y in 0 ..< CD {
 			#partial switch rotation {
 			case .East:
-				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, (TILE_COUNT - 1) - x)]
-				out_entities[tile_index(x, y)] = in_entities[tile_index(y, (TILE_COUNT - 1) - x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index(y, (CD - 1) - x)]
+				out_entities[tile_index(x, y)] = in_entities[tile_index(y, (CD - 1) - x)]
 			case .South:
-				out_tiles[tile_index(x, y)] =
-					in_tiles[tile_index((TILE_COUNT - 1) - x, (TILE_COUNT - 1) - y)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index((CD - 1) - x, (CD - 1) - y)]
 				out_entities[tile_index(x, y)] =
-					in_entities[tile_index((TILE_COUNT - 1) - x, (TILE_COUNT - 1) - y)]
+					in_entities[tile_index((CD - 1) - x, (CD - 1) - y)]
 			case .West:
-				out_tiles[tile_index(x, y)] = in_tiles[tile_index((TILE_COUNT - 1) - y, x)]
-				out_entities[tile_index(x, y)] = in_entities[tile_index((TILE_COUNT - 1) - y, x)]
+				out_tiles[tile_index(x, y)] = in_tiles[tile_index((CD - 1) - y, x)]
+				out_entities[tile_index(x, y)] = in_entities[tile_index((CD - 1) - y, x)]
 			}
 		}
 	}
@@ -232,14 +230,17 @@ select_next_valid_tag :: proc() {
 	}
 }
 
-draw_map_grid :: proc() {
+draw_map_grid :: proc(tilemap: Tilemap) {
 	grid_color := rl.Color{255, 255, 255, 125}
 	line_color := rl.Color{0, 0, 0, 25}
 	rl.DrawRectangleV(GRID_OFFSET, MAP_SIZE, grid_color)
-	for i in 1 ..< CELL_COUNT {
-		i_f32 := f32(i) * TILE_COUNT
-		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
+	for i in 1 ..< tilemap.width {
+		i_f32 := f32(i) * CD
 		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
+	}
+	for i in 1 ..< tilemap.height {
+		i_f32 := f32(i) * CD
+		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
 	}
 }
 
@@ -274,20 +275,15 @@ draw_placed_rooms :: proc() {
 
 draw_room :: proc(room: Room, position: Vec2, rotation: f32) {
 	for pos, cell in room.cells {
-		cell_position := Vec2{f32(pos.x * TILE_COUNT), f32(pos.y * TILE_COUNT)}
+		cell_position := Vec2{f32(pos.x * CD), f32(pos.y * CD)}
 		draw_cell(cell, position, cell_position, rotation)
 	}
 }
 
 draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
-	rl.DrawRectanglePro(
-		{origin.x, origin.y, TILE_COUNT, TILE_COUNT},
-		-position + (f32(TILE_COUNT) / 2),
-		rotation,
-		rl.BLUE,
-	)
-	for x in 0 ..< TILE_COUNT {
-		for y in 0 ..< TILE_COUNT {
+	rl.DrawRectanglePro({origin.x, origin.y, CD, CD}, -position + (f32(CD) / 2), rotation, rl.BLUE)
+	for x in 0 ..< CD {
+		for y in 0 ..< CD {
 			tile := cell.tiles[tile_index(x, y)]
 			tile_color: rl.Color
 			#partial switch tile {
@@ -311,26 +307,26 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 	}
 }
 
-draw_map :: proc() {
-	draw_map_grid()
+draw_map :: proc(t: Tilemap) {
+	draw_map_grid(t)
 	draw_placed_rooms()
 	draw_map_cursor()
 }
 
-handle_map_screen_cursor :: proc() {
+handle_map_screen_cursor :: proc(t: ^Tilemap) {
 	cursor := &map_screen_state.cursor
 	// Cursor Position
 	if rl.IsKeyPressed(.A) {
-		cursor.position.x = math.clamp(cursor.position.x - 1, 0, 9)
+		cursor.position.x = math.clamp(cursor.position.x - 1, 0, i16(t.width - 1))
 	}
 	if rl.IsKeyPressed(.D) {
-		cursor.position.x = math.clamp(cursor.position.x + 1, 0, 9)
+		cursor.position.x = math.clamp(cursor.position.x + 1, 0, i16(t.width - 1))
 	}
 	if rl.IsKeyPressed(.W) {
-		cursor.position.y = math.clamp(cursor.position.y - 1, 0, 9)
+		cursor.position.y = math.clamp(cursor.position.y - 1, 0, i16(t.height - 1))
 	}
 	if rl.IsKeyPressed(.S) {
-		cursor.position.y = math.clamp(cursor.position.y + 1, 0, 9)
+		cursor.position.y = math.clamp(cursor.position.y + 1, 0, i16(t.height - 1))
 	}
 	cursor.target_position = vec_from_map_cell_position(cursor.position)
 	// Cursor Rotation
@@ -365,22 +361,22 @@ handle_map_screen_cursor :: proc() {
 		position := cursor.position
 		rotation := cursor.rotation
 		placement_positions := positions_from_rotation(tag, position, rotation)
-		if can_place(placement_positions[:]) {
+		if can_place(t^, placement_positions[:]) {
 			place_room(tag, position, rotation)
 		}
 	}
 
 	if rl.IsKeyPressed(.ENTER) {
-		bake_map()
+		bake_map(t)
 		game_state = .Gameplay
 	}
 
 	if rl.IsKeyPressed(.BACKSPACE) {
-		reset_map()
+		reset_map(t)
 		game_state = .Map
 	}
 }
 
 mapping :: proc() {
-	handle_map_screen_cursor()
+	handle_map_screen_cursor(&current_tilemap)
 }

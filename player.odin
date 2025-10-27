@@ -8,13 +8,13 @@ import l "core:math/linalg"
 import rl "vendor:raylib"
 
 // How far can the player jump horizontally (in pixels)
-MAX_JUMP_DISTANCE: f32 : TILE_SIZE * 3
+MAX_JUMP_DISTANCE: f32 : 3
 // How long to reach jump peak (in seconds)
 TIME_TO_PEAK: f32 : 0.35
 // How long to reach height we jumped from (in seconds)
 TIME_TO_DESCENT: f32 : 0.2
 // How many pixels high can we jump
-JUMP_HEIGHT: f32 : TILE_SIZE * 2
+JUMP_HEIGHT: f32 : 2
 
 max_speed := calculate_max_speed()
 jump_speed := calulate_jump_speed()
@@ -46,7 +46,7 @@ Player :: struct {
 	radius:       f32,
 	acceleration: f32,
 	deceleration: f32,
-	facing: f32,
+	facing:       f32,
 }
 
 Player_State :: enum {
@@ -97,7 +97,7 @@ player_movement :: proc() {
 
 player_platform_collision :: proc() {
 	player := &world.player
-	player_feet := player.translation + Vec2{0, 8}
+	player_feet := player.translation + Vec2{0, 0.55}
 	foot_collision: bool
 	for collider in colliders {
 		nearest_point := collider_nearest_point(collider, player.translation)
@@ -117,7 +117,7 @@ player_platform_collision :: proc() {
 				player.velocity.y = 0
 			}
 		}
-		if l.distance(nearest_point, player_feet) < 1.5 {
+		if l.distance(nearest_point, player_feet) < 0.06 {
 			foot_collision = true
 		}
 	}
@@ -139,6 +139,6 @@ draw_player :: proc() {
 		color = rl.BLUE
 	}
 	player_pos := extend(player.snapshot, 0)
-	rl.DrawSphere(player_pos, 8, rl.RED)
-	rl.DrawCubeV(player_pos + {12 * player.facing, 0, 0}, {24,16,1}, {120,0,0,100})
+	rl.DrawSphere(player_pos, player.radius, rl.RED)
+	rl.DrawCubeV(player_pos + {2 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
 }

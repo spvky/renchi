@@ -1,6 +1,5 @@
 package main
 
-initial_entity_map: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Entity_Tag
 entities: [dynamic]Entity
 
 Entity_Tag :: enum u8 {

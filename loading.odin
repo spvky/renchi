@@ -59,11 +59,11 @@ write_cell_tile_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 
 	for r, i in records {
 		for f, j in r {
-			cx: i16 = i16(j) / TILE_COUNT
-			cy: i16 = i16(i) / TILE_COUNT
+			cx: i16 = i16(j) / CD
+			cy: i16 = i16(i) / CD
 			position := Cell_Position{cx, cy}
-			x := i16(j) - (cx * TILE_COUNT)
-			y := i16(i) - (cy * TILE_COUNT)
+			x := i16(j) - (cx * CD)
+			y := i16(i) - (cy * CD)
 			if field, field_ok := strconv.parse_uint(f); field_ok {
 				value := Tile(field)
 				if value != .Empty {
@@ -106,11 +106,11 @@ write_cell_entity_data :: proc(cells: ^map[Cell_Position]Cell, tag: Room_Tag) {
 
 	for r, i in records {
 		for f, j in r {
-			cx: i16 = i16(j) / TILE_COUNT
-			cy: i16 = i16(i) / TILE_COUNT
+			cx: i16 = i16(j) / CD
+			cy: i16 = i16(i) / CD
 			position := Cell_Position{cx, cy}
-			x := i16(j) - (cx * TILE_COUNT)
-			y := i16(i) - (cy * TILE_COUNT)
+			x := i16(j) - (cx * CD)
+			y := i16(i) - (cy * CD)
 			if field, field_ok := strconv.parse_uint(f); field_ok {
 				value := Entity_Tag(field)
 				if value != .None {

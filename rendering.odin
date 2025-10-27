@@ -25,7 +25,7 @@ destroy_render_textures :: proc() {
 write_to_map_texture :: proc() {
 	rl.BeginTextureMode(map_texture)
 	rl.ClearBackground(rl.PINK)
-	draw_map()
+	draw_map(current_tilemap)
 	rl.EndTextureMode()
 }
 

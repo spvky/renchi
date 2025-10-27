@@ -10,6 +10,7 @@ import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 Vec3 :: [3]f32
+V_ONE :: Vec3{1, 1, 1}
 Cell_Position :: [2]i16
 Tile_Position :: [2]u16
 
@@ -25,20 +26,7 @@ load_texture :: proc(filename: string) -> rl.Texture {
 }
 
 tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * TILE_COUNT))
-}
-
-
-cell_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * CELL_COUNT))
-}
-
-global_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * MAP_WIDTH))
-}
-
-position_from_tile :: proc(x, y: $T) -> Vec2 where intr.type_is_integer(T) {
-	return Vec2{f32(x) * TILE_SIZE, f32(y) * TILE_SIZE} + Vec2{8, 8}
+	return int(x + (y * CD))
 }
 
 cell_global_position :: proc(
@@ -64,11 +52,7 @@ cell_global_position :: proc(
 }
 
 vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
-	return(
-		Vec2{12.5, 12.5} +
-		Vec2{f32(position.x) * TILE_COUNT, f32(position.y) * TILE_COUNT} +
-		GRID_OFFSET \
-	)
+	return Vec2{12.5, 12.5} + Vec2{f32(position.x) * CD, f32(position.y) * CD} + GRID_OFFSET
 }
 
 float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {

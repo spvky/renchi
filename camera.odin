@@ -7,6 +7,7 @@ import l "core:math/linalg"
 import rl "vendor:raylib"
 
 camera_limits: Camera_Limits
+camera_exits: bit_set[Direction]
 
 camera_follow :: proc() {
 	player := world.player
@@ -25,18 +26,24 @@ camera_follow :: proc() {
 		if rl.IsKeyDown(.RIGHT) {
 			world.offset.x += 25 * frametime
 		}
+		if rl.IsKeyDown(.ONE) {
+			world.camera.fovy -= 100 * frametime
+		}
+		if rl.IsKeyDown(.TWO) {
+			world.camera.fovy += 100 * frametime
+		}
 	}
 
 	world.current_cell = Cell_Position {
-		i16(player.translation.x / (TILE_COUNT * TILE_SIZE)),
-		i16(player.translation.y / (TILE_COUNT * TILE_SIZE)),
+		i16(player.translation.x / CD),
+		i16(player.translation.y / CD),
 	}
 
 	if game_state == .Gameplay {
-		set_cell_exits(world.current_cell)
+		// set_camera_exits(world.current_cell)
 		set_camera_limits_from_position(world.current_cell)
 
-		cell_size := f32(TILE_COUNT * TILE_SIZE)
+		cell_size := f32(CD)
 		cell_offset := Vec3{cell_size / 2, cell_size / 2, 0}
 		raw_position := l.clamp(
 			player.translation - Vec2{125, 0},
@@ -53,12 +60,12 @@ camera_follow :: proc() {
 	}
 }
 
-set_cell_exits :: proc(c: Cell_Position) {
-	cell_exits = exit_map[cell_index(c.x, c.y)]
-}
+// set_camera_exits :: proc(t: Tilemap, c: Cell_Position) {
+// 	cell_exits = get_cell_exits(t, c)
+// }
 
 set_camera_limits_from_position :: proc(c: Cell_Position) {
-	cell_size := f32(TILE_COUNT * TILE_SIZE)
+	cell_size := f32(CD)
 
 	current_position := Vec2 {
 		f32(world.current_cell.x) * cell_size,
@@ -67,7 +74,7 @@ set_camera_limits_from_position :: proc(c: Cell_Position) {
 
 	limit_min, limit_max := current_position, current_position
 
-	for v in cell_exits {
+	for v in camera_exits {
 		if v == .North {
 			limit_min.y -= cell_size
 		}
