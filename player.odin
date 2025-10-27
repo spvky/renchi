@@ -140,5 +140,5 @@ draw_player :: proc() {
 	}
 	player_pos := extend(player.snapshot, 0)
 	rl.DrawSphere(player_pos, player.radius, rl.RED)
-	rl.DrawCubeV(player_pos + {2 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
+	rl.DrawCubeV(player_pos + {0.75 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
 }

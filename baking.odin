@@ -42,34 +42,43 @@ draw_tilemap :: proc(t: Tilemap) {
 draw_water_paths :: proc(t: Tilemap) {
 	for p in t.water_paths {
 		for s in p.segments {
-			start := Vec2{f32(s.start.x), f32(s.start.y)}
-			end: Vec2
-			center: Vec2
-			extents := Vec3{0, 0, 1}
-
-			switch s.direction {
-			case .North:
-				end = start + (Vec2{0, -1} * f32(s.length + 1))
-				center = (start + end) / 2
-				extents.x = 1
-				extents.y = f32(s.length + 1)
-			case .South:
-				end = start + (Vec2{0, 1} * f32(s.length + 1))
-				center = (start + end) / 2
-				extents.x = 1
-				extents.y = f32(s.length + 1)
+			start := Vec3{f32(s.start.x), f32(s.start.y), 0}
+			end: Vec3
+			#partial switch s.direction {
 			case .East:
-				end = start + (Vec2{1, 0} * f32(s.length + 1))
-				center = (start + end) / 2
-				extents.y = 1
-				extents.x = f32(s.length + 1)
+				end = start + Vec3{f32(s.length), 0, 0}
 			case .West:
-				end = start + (Vec2{-1, 0} * f32(s.length + 1))
-				center = (start + end) / 2
-				extents.y = 1
-				extents.x = f32(s.length + 1)
+				end = start - Vec3{f32(s.length), 0, 0}
+			case .South:
+				end = start + Vec3{0, f32(s.length), 0}
 			}
-			rl.DrawCubeV(extend(center, 0), extents, rl.BLUE)
+			rl.DrawLine3D(start, end, rl.BLUE)
+			// center: Vec2
+			// extents := Vec3{0, 0, 1}
+
+			// switch s.direction {
+			// case .North:
+			// 	end = start + (Vec2{0, -1} * f32(s.length + 1))
+			// 	center = (start + end) / 2
+			// 	extents.x = 1
+			// 	extents.y = f32(s.length + 1)
+			// case .South:
+			// 	end = start + (Vec2{0, 1} * f32(s.length + 1))
+			// 	center = (start + end) / 2
+			// 	extents.x = 1
+			// 	extents.y = f32(s.length + 1)
+			// case .East:
+			// 	end = start + (Vec2{1, 0} * f32(s.length + 1))
+			// 	center = (start + end) / 2
+			// 	extents.y = 1
+			// 	extents.x = f32(s.length + 1)
+			// case .West:
+			// 	end = start + (Vec2{-1, 0} * f32(s.length + 1))
+			// 	center = (start + end) / 2
+			// 	extents.y = 1
+			// 	extents.x = f32(s.length + 1)
+			// }
+			// rl.DrawCubeV(extend(center, 0), extents, rl.BLUE)
 		}
 	}
 }
@@ -82,43 +91,6 @@ draw_water_volumes :: proc() {
 		extents := max - min
 		extents.z = 1
 		rl.DrawCubeV(center, extents, {0, 50, 150, 255})
-	}
-}
-
-// draw_water_paths :: proc() {
-// 	for s in streams {
-// 		start := position_from_tile(s.start.x, s.start.y)
-// 		end := position_from_tile(s.end.x, s.end.y)
-// 		center := (start + end) / 2
-// 		width, height: f32
-// 		color: rl.Color
-// 		switch s.direction {
-// 		case .North, .South:
-// 			width = 16
-// 			height = math.abs(start.y - end.y)
-// 			color = rl.PINK
-// 		case .East, .West:
-// 			height = 16
-// 			width = math.abs(start.x - end.x)
-// 			color = rl.YELLOW
-// 		}
-// 		rl.DrawCubeV(extend(center, 0), {width / 2, height / 2, 1}, color)
-// 	}
-// }
-
-draw_water :: proc(t: Tilemap) {
-	map_height, map_width := get_tilemap_dimensions(t)
-	x, y: int
-	for y < map_height {
-		x = 0
-		for x < map_width {
-			if get_static_tile(t, x, y) == .Water {
-				position := Vec3{f32(x), f32(y), 0}
-				rl.DrawCubeV(position, V_ONE, rl.BLUE)
-			}
-			x += 1
-		}
-		y += 1
 	}
 }
 
@@ -290,7 +262,7 @@ bake_water :: proc(t: ^Tilemap) {
 
 resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
-	append(&segments, Water_Path_Segment{start = start, direction = direction})
+	append(&segments, Water_Path_Segment{start = start, direction = direction, level = 0})
 
 	solving := true
 	// Outer loop that is manually broken because we will be adding to a collection while iterating it
@@ -317,14 +289,6 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 					s.length += 1
 					if is_horizontal(s.direction) { 	// Is the stream travelling East/West
 						tile_below := get_static_tile(t, pos.x, pos.y + 1)
-						// log.debugf(
-						// 	"\nTravelling %v\n\ttile below at [%v, %v] = %v\n\t passable = %v\n",
-						// 	s.direction,
-						// 	pos.x,
-						// 	pos.y + 1,
-						// 	tile_below,
-						// 	water_passthrough(tile_below),
-						// )
 						if water_passthrough(tile_below) { 	// Did the stream enter empty space with another passable tile beneath it ?
 							log.debug("We're falling")
 							s.finished = true
@@ -333,6 +297,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 								Water_Path_Segment {
 									start = {u16(pos.x), u16(pos.y + 1)},
 									direction = .South,
+									level = s.level + 1,
 								},
 							)
 						} else {
@@ -355,21 +320,16 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 						right_pos := [2]int{pos.x + 1, pos.y - 1}
 						left_tile := get_static_tile(t, left_pos.x, left_pos.y)
 						right_tile := get_static_tile(t, right_pos.x, right_pos.y)
-						// if water_passthrough(left_tile) {
-						// 	log.debugf(
-						// 		"Left pos: [%v,%v] is clear: %v",
-						// 		left_pos.x,
-						// 		left_pos.y,
-						// 		left_tile,
-						// 	)
-						// 	append(
-						// 		&segments,
-						// 		Water_Path_Segment {
-						// 			start = {u16(left_pos.x), u16(left_pos.y)},
-						// 			direction = .West,
-						// 		},
-						// 	)
-						// }
+						if water_passthrough(left_tile) {
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(left_pos.x), u16(left_pos.y)},
+									direction = .West,
+									level = s.level + 1,
+								},
+							)
+						}
 						if water_passthrough(right_tile) {
 							log.debugf(
 								"Right pos: [%v,%v] is clear: %v",
@@ -382,6 +342,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 								Water_Path_Segment {
 									start = {u16(right_pos.x), u16(right_pos.y)},
 									direction = .East,
+									level = s.level + 1,
 								},
 							)
 						}
@@ -414,6 +375,7 @@ Water_Path_Segment :: struct {
 	start:     Tile_Position,
 	length:    int,
 	direction: Direction,
+	level:     int,
 	finished:  bool,
 }
 
