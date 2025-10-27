@@ -1,6 +1,7 @@
 package main
 
 import "base:intrinsics"
+import "core:log"
 
 // Tile_Size should just = 1 in 3d
 current_tilemap: Tilemap
@@ -83,7 +84,10 @@ set_cell_exits :: #force_inline proc(
 }
 
 //Returns the width and height of the given tilemap, in tiles
-get_tilemap_dimensions :: proc(t: Tilemap) -> (width, height: int) {
+get_tilemap_dimensions :: proc(t: Tilemap, quiet: bool = true) -> (width, height: int) {
 	width, height = CD * t.width, CD * t.height
+	if !quiet {
+		log.debugf("Getting Tilemap Dimensions: %v x %v\n", width, height)
+	}
 	return
 }

@@ -14,6 +14,16 @@ V_ONE :: Vec3{1, 1, 1}
 Cell_Position :: [2]i16
 Tile_Position :: [2]u16
 
+// Is the passed direction horizontal
+is_horizontal :: proc(d: Direction) -> bool {
+	return d in bit_set[Direction]{.East, .West}
+}
+
+// Can water pass through the given tile
+water_passthrough :: proc(t: Tile) -> bool {
+	return t in bit_set[Tile]{.Empty}
+}
+
 extend :: proc(v: Vec2, z: f32) -> Vec3 {
 	return Vec3{v.x, v.y, z}
 }

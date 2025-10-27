@@ -9,7 +9,6 @@ import "core:slice"
 import "core:time"
 import rl "vendor:raylib"
 
-// streams: [dynamic]Water_Stream
 volumes: [dynamic]Water_Volume
 paths: [dynamic]Water_Path
 
@@ -162,6 +161,9 @@ place_tiles :: proc(t: ^Tilemap) {
 						entity := entities[tile_index(x, y)]
 						if tile != .Empty {
 							set_static_tile(t, raw_x, raw_y, tile)
+							if tile == .Water {
+								log.debugf("Placing Water at [%v, %v]", raw_x, raw_y)
+							}
 							tiles_added += 1
 						}
 						if entity != .None {
@@ -272,51 +274,59 @@ generate_collision :: proc(t: Tilemap) {
 
 // For now to keep things seperated this will be a totally seperate baking step, ideally we would iterate the tilemap as few times as possible
 bake_water :: proc(t: ^Tilemap) {
-	map_height, map_width := get_tilemap_dimensions(t^)
+	map_width, map_height := get_tilemap_dimensions(t^, false)
 	paths = make([dynamic]Water_Path, 0, 16)
 	for y in 0 ..< map_height {
 		for x in 0 ..< map_width {
 			tile := get_static_tile(t^, x, y)
 			if tile == .Water {
-				path := resolve_water_path(t, {u16(x), u16(y)}, .South)
+				path := resolve_water_path(t^, {u16(x), u16(y)}, .South)
 				append(&t.water_paths, path)
 			}
-		}
-	}
-	if ODIN_DEBUG {
-		for p in paths {
-			log.debugf("%v\n", p)
 		}
 	}
 }
 
 
-resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
+resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
-	append(
-		&segments,
-		Water_Path_Segment{start = start, direction = direction, finished = false, length = 0},
-	)
+	append(&segments, Water_Path_Segment{start = start, direction = direction})
 
-	// Bit set for easy checks if a direction is horizontal
-	horizontal: bit_set[Direction] = {.East, .West}
-	// Bit set for easy checks if water can pass through a tile
-	water_passthrough: bit_set[Tile] = {.Empty}
-
+	solving := true
 	// Outer loop that is manually broken because we will be adding to a collection while iterating it
-	for unfinished_segments(segments[:]) != 0 {
-		for &s in segments {
-			pos: [2]int = {int(start.x), int(start.y)}
-			shift := shift_from_direction(direction)
+	for solving { 	// Loop 1
+		for &s, i in segments { 	// Loop 2
+			pos: [2]int = {int(s.start.x), int(s.start.y)}
+			shift := shift_from_direction(s.direction)
+			if s.direction == .East {
+				log.debugf("East stream starting pos: %v", pos)
+			}
 			for !s.finished {
+				if s.direction == .East {
+					log.debugf("East stream pre-shift: %v", pos)
+				}
 				pos += shift
-				tile := get_static_tile(t^, pos.x, pos.y)
-				switch tile {
-				case .Empty:
+				if s.direction == .East {
+					log.debugf("East stream post-shift: %v", pos)
+				}
+				current_tile := get_static_tile(t, pos.x, pos.y)
+				if s.direction == .East {
+					log.debugf("East Stream current tile: %v", current_tile)
+				}
+				if water_passthrough(current_tile) { 	// If water can pass through the current tile
 					s.length += 1
-					if s.direction in horizontal {
-						// Check if the segment should end and spawn another heading down
-						if get_static_tile(t^, pos.x, pos.y + 1) in water_passthrough {
+					if is_horizontal(s.direction) { 	// Is the stream travelling East/West
+						tile_below := get_static_tile(t, pos.x, pos.y + 1)
+						// log.debugf(
+						// 	"\nTravelling %v\n\ttile below at [%v, %v] = %v\n\t passable = %v\n",
+						// 	s.direction,
+						// 	pos.x,
+						// 	pos.y + 1,
+						// 	tile_below,
+						// 	water_passthrough(tile_below),
+						// )
+						if water_passthrough(tile_below) { 	// Did the stream enter empty space with another passable tile beneath it ?
+							log.debug("We're falling")
 							s.finished = true
 							append(
 								&segments,
@@ -325,36 +335,62 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 									direction = .South,
 								},
 							)
+						} else {
+							if s.direction == .East {
+								log.debugf("East stream continuing at [%v, %v]", pos.x, pos.y)
+							}
 						}
 					}
-				case .Wall, .Door, .Water:
+				} else { 	// If water cannot pass through the current tile
 					s.finished = true
-					// Check collision on the left and right and make segments in the clear directions
-					if !(s.direction in horizontal) {
-						if get_static_tile(t^, pos.x - 1, pos.y - 1) in water_passthrough {
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x - 1), u16(pos.y - 1)},
-									direction = .West,
-								},
+					if s.direction == .South {
+						log.debugf(
+							"South stream hit impassable at [%v, %v], splitting",
+							pos.x,
+							pos.y,
+						)
+					}
+					if !is_horizontal(s.direction) {
+						left_pos := [2]int{pos.x - 1, pos.y - 1}
+						right_pos := [2]int{pos.x + 1, pos.y - 1}
+						left_tile := get_static_tile(t, left_pos.x, left_pos.y)
+						right_tile := get_static_tile(t, right_pos.x, right_pos.y)
+						// if water_passthrough(left_tile) {
+						// 	log.debugf(
+						// 		"Left pos: [%v,%v] is clear: %v",
+						// 		left_pos.x,
+						// 		left_pos.y,
+						// 		left_tile,
+						// 	)
+						// 	append(
+						// 		&segments,
+						// 		Water_Path_Segment {
+						// 			start = {u16(left_pos.x), u16(left_pos.y)},
+						// 			direction = .West,
+						// 		},
+						// 	)
+						// }
+						if water_passthrough(right_tile) {
+							log.debugf(
+								"Right pos: [%v,%v] is clear: %v",
+								right_pos.x,
+								right_pos.y,
+								right_tile,
 							)
-						}
-						if get_static_tile(t^, pos.x + 1, pos.y) in water_passthrough {
 							append(
 								&segments,
 								Water_Path_Segment {
-									start = {u16(pos.x + 1), u16(pos.y - 1)},
+									start = {u16(right_pos.x), u16(right_pos.y)},
 									direction = .East,
 								},
 							)
 						}
 					}
-					continue
-				case .OneWay:
 				}
 			}
 		}
+		unfinished := unfinished_segments(segments[:])
+		solving = unfinished > 0
 	}
 	return Water_Path{segments = segments}
 }
@@ -716,3 +752,77 @@ Tile_Range :: struct {
 // 	}
 // 	return volumes
 // }
+
+resolve_water_path_old :: proc(
+	t: ^Tilemap,
+	start: Tile_Position,
+	direction: Direction,
+) -> Water_Path {
+	segments := make([dynamic]Water_Path_Segment, 0, 8)
+	append(
+		&segments,
+		Water_Path_Segment{start = start, direction = direction, finished = false, length = 0},
+	)
+
+	// Bit set for easy checks if a direction is horizontal
+	horizontal: bit_set[Direction] = {.East, .West}
+	// Bit set for easy checks if water can pass through a tile
+	water_passthrough: bit_set[Tile] = {.Empty}
+
+	solving: bool
+	// Outer loop that is manually broken because we will be adding to a collection while iterating it
+	for solving { 	// Loop 1
+		for &s, i in segments { 	// Loop 2
+			pos: [2]int = {int(start.x), int(start.y)}
+			shift := shift_from_direction(direction)
+			log.debugf("Segment [%v]: %v", i, s)
+			if !s.finished {
+				pos += shift
+				tile := get_static_tile(t^, pos.x, pos.y)
+				switch tile {
+				case .Empty:
+					s.length += 1
+					if s.direction in horizontal {
+						empty_below := get_static_tile(t^, pos.x, pos.y + 1) in water_passthrough
+						// Check if the segment should end and spawn another heading down
+						if empty_below {
+							s.finished = true
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x), u16(pos.y + 1)},
+									direction = .South,
+								},
+							)
+						}
+					}
+				case .Wall, .Door, .Water, .OneWay:
+					s.finished = true
+					// Check collision on the left and right and make segments in the clear directions
+					if !(s.direction in horizontal) {
+						if get_static_tile(t^, pos.x - 1, pos.y - 1) in water_passthrough {
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x - 1), u16(pos.y - 1)},
+									direction = .West,
+								},
+							)
+						}
+						if get_static_tile(t^, pos.x + 1, pos.y) in water_passthrough {
+							append(
+								&segments,
+								Water_Path_Segment {
+									start = {u16(pos.x + 1), u16(pos.y - 1)},
+									direction = .East,
+								},
+							)
+						}
+					}
+				}
+			}
+		}
+		solving = unfinished_segments(segments[:]) == 0
+	}
+	return Water_Path{segments = segments}
+}
