@@ -59,7 +59,7 @@ init :: proc() {
 	run = true
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	init_render_textures()
-	init_tilemap(&current_tilemap, 10, 10)
+	init_tilemap(&current_tilemap, 5, 8)
 	init_physics_collections()
 	init_entity_collections()
 	world = make_world()

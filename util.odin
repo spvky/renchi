@@ -51,8 +51,9 @@ cell_global_position :: proc(
 	return final_pos
 }
 
-vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
-	return Vec2{12.5, 12.5} + Vec2{f32(position.x) * CD, f32(position.y) * CD} + GRID_OFFSET
+vec_from_map_cell_position :: proc(t: Tilemap, position: Cell_Position) -> Vec2 {
+	grid_offset := get_tilemap_grid_offset(t)
+	return Vec2{12.5, 12.5} + Vec2{f32(position.x) * CD, f32(position.y) * CD} + grid_offset
 }
 
 float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {

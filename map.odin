@@ -14,7 +14,6 @@ TPC :: 625
 
 // For the map UI
 GRID_OFFSET: Vec2 = {27, 27}
-MAP_SIZE: Vec2 : {250, 250}
 
 rooms: [Room_Tag]Room
 // Gonna deprecate
@@ -230,17 +229,27 @@ select_next_valid_tag :: proc() {
 	}
 }
 
-draw_map_grid :: proc(tilemap: Tilemap) {
+get_tilemap_grid_offset :: proc(t: Tilemap) -> Vec2 {
+	base := Vec2{27, 27}
+	x_diff := f32(10 - t.width) * 12.5
+	y_diff := f32(10 - t.height) * 12.5
+	return base + Vec2{x_diff, y_diff}
+}
+
+draw_map_grid :: proc(t: Tilemap) {
+	map_width, map_height := get_tilemap_dimensions(t)
 	grid_color := rl.Color{255, 255, 255, 125}
 	line_color := rl.Color{0, 0, 0, 25}
-	rl.DrawRectangleV(GRID_OFFSET, MAP_SIZE, grid_color)
-	for i in 1 ..< tilemap.width {
+	map_size := Vec2{f32(map_width), f32(map_height)}
+	grid_offset := get_tilemap_grid_offset(t)
+	rl.DrawRectangleV(grid_offset, map_size, grid_color)
+	for i in 1 ..< t.width {
 		i_f32 := f32(i) * CD
-		rl.DrawRectangleV(GRID_OFFSET - Vec2{1, 0} + Vec2{i_f32, 0}, {2, MAP_SIZE.y}, line_color)
+		rl.DrawRectangleV(grid_offset - Vec2{1, 0} + Vec2{i_f32, 0}, {2, map_size.y}, line_color)
 	}
-	for i in 1 ..< tilemap.height {
+	for i in 1 ..< t.height {
 		i_f32 := f32(i) * CD
-		rl.DrawRectangleV(GRID_OFFSET - Vec2{0, 1} + Vec2{0, i_f32}, {MAP_SIZE.x, 2}, line_color)
+		rl.DrawRectangleV(grid_offset - Vec2{0, 1} + Vec2{0, i_f32}, {map_size.x, 2}, line_color)
 	}
 }
 
@@ -261,12 +270,12 @@ draw_map_cursor :: proc() {
 	}
 }
 
-draw_placed_rooms :: proc() {
+draw_placed_rooms :: proc(t: Tilemap) {
 	for room, _ in rooms {
 		if room.placed {
 			draw_room(
 				room,
-				vec_from_map_cell_position(room.position),
+				vec_from_map_cell_position(t, room.position),
 				float_rotation_from_room_rotation(room.rotation),
 			)
 		}
@@ -309,7 +318,7 @@ draw_cell :: proc(cell: Cell, origin: Vec2, position: Vec2, rotation: f32) {
 
 draw_map :: proc(t: Tilemap) {
 	draw_map_grid(t)
-	draw_placed_rooms()
+	draw_placed_rooms(t)
 	draw_map_cursor()
 }
 
@@ -328,7 +337,7 @@ handle_map_screen_cursor :: proc(t: ^Tilemap) {
 	if rl.IsKeyPressed(.S) {
 		cursor.position.y = math.clamp(cursor.position.y + 1, 0, i16(t.height - 1))
 	}
-	cursor.target_position = vec_from_map_cell_position(cursor.position)
+	cursor.target_position = vec_from_map_cell_position(t^, cursor.position)
 	// Cursor Rotation
 	if rl.IsKeyPressed(.R) {
 		cursor.target_rotation += 90
