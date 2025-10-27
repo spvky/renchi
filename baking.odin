@@ -18,7 +18,7 @@ bake_map :: proc(t: ^Tilemap) {
 	log.debug("Finished placing tiles")
 	generate_collision(t^)
 	log.debug("Finished generating collision")
-	bake_water(t^)
+	bake_water(t)
 	log.debug("Finished baking water")
 	// bake_entities()
 }
@@ -32,11 +32,47 @@ reset_map :: proc(tilemap: ^Tilemap) {
 	}
 }
 
-draw_tilemap :: proc() {
+draw_tilemap :: proc(t: Tilemap) {
 	draw_colliders()
+	draw_water_paths(t)
 	// draw_water()
 	// draw_water_streams()
 	// draw_water_volumes()
+}
+
+draw_water_paths :: proc(t: Tilemap) {
+	for p in t.water_paths {
+		for s in p.segments {
+			start := Vec2{f32(s.start.x), f32(s.start.y)}
+			end: Vec2
+			center: Vec2
+			extents := Vec3{0, 0, 1}
+
+			switch s.direction {
+			case .North:
+				end = start + (Vec2{0, -1} * f32(s.length + 1))
+				center = (start + end) / 2
+				extents.x = 1
+				extents.y = f32(s.length + 1)
+			case .South:
+				end = start + (Vec2{0, 1} * f32(s.length + 1))
+				center = (start + end) / 2
+				extents.x = 1
+				extents.y = f32(s.length + 1)
+			case .East:
+				end = start + (Vec2{1, 0} * f32(s.length + 1))
+				center = (start + end) / 2
+				extents.y = 1
+				extents.x = f32(s.length + 1)
+			case .West:
+				end = start + (Vec2{-1, 0} * f32(s.length + 1))
+				center = (start + end) / 2
+				extents.y = 1
+				extents.x = f32(s.length + 1)
+			}
+			rl.DrawCubeV(extend(center, 0), extents, rl.BLUE)
+		}
+	}
 }
 
 draw_water_volumes :: proc() {
@@ -129,8 +165,6 @@ place_tiles :: proc(t: ^Tilemap) {
 							tiles_added += 1
 						}
 						if entity != .None {
-
-
 							set_entity_tile(t, raw_x, raw_y, entity)
 							entities_added += 1
 						}
@@ -213,10 +247,13 @@ generate_collision :: proc(t: Tilemap) {
 		}
 	}
 
+	half := Vec2{0.5, 0.5}
 	for chain in wall_chains {
+		min := Vec2{f32(chain.start), f32(chain.y_start)} - half
+		max := Vec2{f32(chain.end + 1), f32(chain.y_end + 1)} - half
 		collider := Collider {
-			min = {f32(chain.start), f32(chain.y_start)},
-			max = {f32(chain.end + 1), f32(chain.y_end + 1)},
+			min = min,
+			max = max,
 		}
 		append(&colliders, collider)
 	}
@@ -234,22 +271,27 @@ generate_collision :: proc(t: Tilemap) {
 }
 
 // For now to keep things seperated this will be a totally seperate baking step, ideally we would iterate the tilemap as few times as possible
-bake_water :: proc(t: Tilemap) {
-	map_height, map_width := get_tilemap_dimensions(t)
+bake_water :: proc(t: ^Tilemap) {
+	map_height, map_width := get_tilemap_dimensions(t^)
 	paths = make([dynamic]Water_Path, 0, 16)
 	for y in 0 ..< map_height {
 		for x in 0 ..< map_width {
-			tile := get_static_tile(t, x, y)
+			tile := get_static_tile(t^, x, y)
 			if tile == .Water {
 				path := resolve_water_path(t, {u16(x), u16(y)}, .South)
-				append(&paths, path)
+				append(&t.water_paths, path)
 			}
+		}
+	}
+	if ODIN_DEBUG {
+		for p in paths {
+			log.debugf("%v\n", p)
 		}
 	}
 }
 
 
-resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
+resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
 	append(
 		&segments,
@@ -262,19 +304,19 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 	water_passthrough: bit_set[Tile] = {.Empty}
 
 	// Outer loop that is manually broken because we will be adding to a collection while iterating it
-	for unfinished_segments(segments[:]) == 0 {
+	for unfinished_segments(segments[:]) != 0 {
 		for &s in segments {
 			pos: [2]int = {int(start.x), int(start.y)}
 			shift := shift_from_direction(direction)
-			if !s.finished {
+			for !s.finished {
 				pos += shift
-				tile := get_static_tile(t, pos.x, pos.y)
+				tile := get_static_tile(t^, pos.x, pos.y)
 				switch tile {
 				case .Empty:
 					s.length += 1
 					if s.direction in horizontal {
 						// Check if the segment should end and spawn another heading down
-						if get_static_tile(t, pos.x, pos.y + 1) in water_passthrough {
+						if get_static_tile(t^, pos.x, pos.y + 1) in water_passthrough {
 							s.finished = true
 							append(
 								&segments,
@@ -289,7 +331,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 					s.finished = true
 					// Check collision on the left and right and make segments in the clear directions
 					if !(s.direction in horizontal) {
-						if get_static_tile(t, pos.x - 1, pos.y - 1) in water_passthrough {
+						if get_static_tile(t^, pos.x - 1, pos.y - 1) in water_passthrough {
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -298,7 +340,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 								},
 							)
 						}
-						if get_static_tile(t, pos.x + 1, pos.y) in water_passthrough {
+						if get_static_tile(t^, pos.x + 1, pos.y) in water_passthrough {
 							append(
 								&segments,
 								Water_Path_Segment {

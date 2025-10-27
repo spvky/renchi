@@ -33,7 +33,7 @@ write_to_gameplay_texture :: proc() {
 	rl.BeginTextureMode(gameplay_texture)
 	rl.ClearBackground(rl.GREEN)
 	rl.BeginMode3D(world.camera)
-	draw_tilemap()
+	draw_tilemap(current_tilemap)
 	draw_player()
 	rl.EndMode3D()
 	rl.EndTextureMode()

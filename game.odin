@@ -34,7 +34,7 @@ World :: struct {
 
 make_world :: proc() -> World {
 	player := Player {
-		translation  = {12.5, 0},
+		translation  = {12, 0},
 		radius       = 0.5,
 		acceleration = 275,
 		deceleration = 0.75,

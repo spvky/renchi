@@ -11,19 +11,26 @@ Tilemap :: struct {
 	collision_tiles: [dynamic]Tile,
 	entity_tiles:    [dynamic]Entity_Tag,
 	exit_map:        [dynamic]bit_set[Direction],
+	water_paths:     [dynamic]Water_Path,
 }
 
 init_tilemap :: proc(t: ^Tilemap, width, height: int) {
 	collision_tiles := make([dynamic]Tile, width * height * TPC)
 	entity_tiles := make([dynamic]Entity_Tag, width * height * TPC)
 	exit_map := make([dynamic]bit_set[Direction], width * height)
+	water_paths := make([dynamic]Water_Path, 0, 16)
 	t.width, t.height = width, height
-	t.entity_tiles, t.collision_tiles, t.exit_map = entity_tiles, collision_tiles, exit_map
+	t.collision_tiles = collision_tiles
+	t.entity_tiles = entity_tiles
+	t.exit_map = exit_map
+	t.water_paths = water_paths
 }
 
 delete_tilemap :: proc(t: Tilemap) {
 	delete(t.collision_tiles)
 	delete(t.entity_tiles)
+	delete(t.exit_map)
+	delete(t.water_paths)
 }
 
 get_static_tile :: #force_inline proc(
