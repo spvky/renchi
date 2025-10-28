@@ -278,6 +278,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 						tile_below := get_static_tile(t, pos.x, pos.y + 1)
 						if water_passthrough(tile_below) { 	// Did the stream enter empty space with another passable tile beneath it ?
 							s.finished = true
+							s.end = s.start + {u16(s.length * shift.x), u16(s.length * shift.y)}
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -290,6 +291,7 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 					}
 				} else { 	// If water cannot pass through the current tile
 					s.finished = true
+					s.end = s.start + {u16(s.length * shift.x), u16(s.length * shift.y)}
 					if !is_horizontal(s.direction) {
 						left_pos := [2]int{pos.x - 1, pos.y - 1}
 						right_pos := [2]int{pos.x + 1, pos.y - 1}
@@ -356,6 +358,7 @@ Water_Path :: struct {
 
 Water_Path_Segment :: struct {
 	start:     Tile_Position,
+	end:       Tile_Position,
 	length:    int,
 	direction: Direction,
 	level:     int,
@@ -373,78 +376,78 @@ Tile_Range :: struct {
 	y:   u16,
 }
 
-// generate_volumes_old :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
-// 	ranges := make([dynamic]Tile_Range, 0, 8, allocator = context.temp_allocator)
-// 	checked_heights := make([dynamic]u16, 0, 4, allocator = context.allocator)
-// 	volumes := make([dynamic]Water_Volume, 0, 4)
-// 	for s in streams {
-// 		if (s.direction == .East || s.direction == .West) &&
-// 		   (s.reason == .Water || s.reason == .Wall) {
+generate_volumes_old :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
+	ranges := make([dynamic]Tile_Range, 0, 8, allocator = context.temp_allocator)
+	checked_heights := make([dynamic]u16, 0, 4, allocator = context.allocator)
+	volumes := make([dynamic]Water_Volume, 0, 4)
+	for s in streams {
+		if (s.direction == .East || s.direction == .West) &&
+		   (s.reason == .Water || s.reason == .Wall) {
 
-// 			append(&ranges, range_from_stream(s))
-// 		}
-// 	}
+			append(&ranges, range_from_stream(s))
+		}
+	}
 
-// 	if ODIN_DEBUG {
-// 		log.debugf("Ranges: %v\n", ranges)
-// 	}
-// 	for a, i in ranges {
-// 		already_parsed := slice.contains(checked_heights[:], a.y)
-// 		if !already_parsed {
-// 			current := a
-// 			append(&checked_heights, a.y)
-// 			for b, j in ranges {
-// 				if i == j do continue
-// 				if range_overlap(a, b) {
-// 					current.min = math.min(a.min, b.min)
-// 					current.max = math.max(a.max, b.max)
-// 				}
-// 			}
-// 			left_height, right_height: u16
-// 			if current.min > 1 {
-// 				for k in 0 ..< 5 {
-// 					if tilemap[global_index(current.min - 1, current.y - u16(i + 1))] != .Empty {
-// 						left_height += 1
-// 					} else {
-// 						log.infof(
-// 							"Breaking left wall for [%v,%v : %v] at %v\n",
-// 							current.min,
-// 							current.max,
-// 							current.y,
-// 							left_height,
-// 						)
-// 						break
-// 					}
-// 				}
-// 			} else {
-// 				left_height = 1
-// 			}
-// 			if current.max < TILE_COUNT * CELL_COUNT {
-// 				for k in 0 ..< 4 {
-// 					if tilemap[global_index(current.max + 1, current.y - u16(i + 1))] != .Empty {
-// 						right_height += 1
-// 					} else {
-// 						log.infof(
-// 							"Breaking right wall for [%v,%v : %v] at %v\n",
-// 							current.min,
-// 							current.max,
-// 							current.y,
-// 							right_height,
-// 						)
-// 						break
-// 					}
-// 				}
-// 			} else {
-// 				right_height = 1
-// 			}
-// 			append(
-// 				&volumes,
-// 				Water_Volume {
-// 					min = {current.min, current.y - (1 + math.min(left_height, right_height))},
-// 					max = {current.max, current.y},
-// 				},
-// 			)
-// 		}
-// 	}
-// 	return volumes
-// }
+	if ODIN_DEBUG {
+		log.debugf("Ranges: %v\n", ranges)
+	}
+	for a, i in ranges {
+		already_parsed := slice.contains(checked_heights[:], a.y)
+		if !already_parsed {
+			current := a
+			append(&checked_heights, a.y)
+			for b, j in ranges {
+				if i == j do continue
+				if range_overlap(a, b) {
+					current.min = math.min(a.min, b.min)
+					current.max = math.max(a.max, b.max)
+				}
+			}
+			left_height, right_height: u16
+			if current.min > 1 {
+				for k in 0 ..< 5 {
+					if tilemap[global_index(current.min - 1, current.y - u16(i + 1))] != .Empty {
+						left_height += 1
+					} else {
+						log.infof(
+							"Breaking left wall for [%v,%v : %v] at %v\n",
+							current.min,
+							current.max,
+							current.y,
+							left_height,
+						)
+						break
+					}
+				}
+			} else {
+				left_height = 1
+			}
+			if current.max < TILE_COUNT * CELL_COUNT {
+				for k in 0 ..< 4 {
+					if tilemap[global_index(current.max + 1, current.y - u16(i + 1))] != .Empty {
+						right_height += 1
+					} else {
+						log.infof(
+							"Breaking right wall for [%v,%v : %v] at %v\n",
+							current.min,
+							current.max,
+							current.y,
+							right_height,
+						)
+						break
+					}
+				}
+			} else {
+				right_height = 1
+			}
+			append(
+				&volumes,
+				Water_Volume {
+					min = {current.min, current.y - (1 + math.min(left_height, right_height))},
+					max = {current.max, current.y},
+				},
+			)
+		}
+	}
+	return volumes
+}
