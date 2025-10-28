@@ -190,9 +190,7 @@ generate_collision :: proc(t: Tilemap) {
 		}
 		y += 1
 	}
-
 	// Loop through our chains of joined wall tiles vertically to combine 1 length chains
-
 	// TODO: If the perf needs it, rework to group chains of all identical width/positions so we don't get a bunch of 2 length colliders stacked on top of each other
 	for y in 0 ..< map_height {
 		for x in 0 ..< map_width {
@@ -257,6 +255,7 @@ bake_water :: proc(t: ^Tilemap) {
 			}
 		}
 	}
+	log.debugf("Paths: %v", t.water_paths)
 }
 
 
@@ -270,27 +269,14 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 		for &s, i in segments { 	// Loop 2
 			pos: [2]int = {int(s.start.x), int(s.start.y)}
 			shift := shift_from_direction(s.direction)
-			if s.direction == .East {
-				log.debugf("East stream starting pos: %v", pos)
-			}
 			for !s.finished {
-				if s.direction == .East {
-					log.debugf("East stream pre-shift: %v", pos)
-				}
 				pos += shift
-				if s.direction == .East {
-					log.debugf("East stream post-shift: %v", pos)
-				}
 				current_tile := get_static_tile(t, pos.x, pos.y)
-				if s.direction == .East {
-					log.debugf("East Stream current tile: %v", current_tile)
-				}
 				if water_passthrough(current_tile) { 	// If water can pass through the current tile
 					s.length += 1
 					if is_horizontal(s.direction) { 	// Is the stream travelling East/West
 						tile_below := get_static_tile(t, pos.x, pos.y + 1)
 						if water_passthrough(tile_below) { 	// Did the stream enter empty space with another passable tile beneath it ?
-							log.debug("We're falling")
 							s.finished = true
 							append(
 								&segments,
@@ -300,21 +286,10 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 									level = s.level + 1,
 								},
 							)
-						} else {
-							if s.direction == .East {
-								log.debugf("East stream continuing at [%v, %v]", pos.x, pos.y)
-							}
 						}
 					}
 				} else { 	// If water cannot pass through the current tile
 					s.finished = true
-					if s.direction == .South {
-						log.debugf(
-							"South stream hit impassable at [%v, %v], splitting",
-							pos.x,
-							pos.y,
-						)
-					}
 					if !is_horizontal(s.direction) {
 						left_pos := [2]int{pos.x - 1, pos.y - 1}
 						right_pos := [2]int{pos.x + 1, pos.y - 1}
@@ -331,12 +306,6 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 							)
 						}
 						if water_passthrough(right_tile) {
-							log.debugf(
-								"Right pos: [%v,%v] is clear: %v",
-								right_pos.x,
-								right_pos.y,
-								right_tile,
-							)
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -371,14 +340,6 @@ shift_from_direction :: proc(d: Direction) -> [2]int {
 	return shift
 }
 
-Water_Path_Segment :: struct {
-	start:     Tile_Position,
-	length:    int,
-	direction: Direction,
-	level:     int,
-	finished:  bool,
-}
-
 unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
 	count: int
 	for s in segments {
@@ -393,6 +354,14 @@ Water_Path :: struct {
 	segments: [dynamic]Water_Path_Segment,
 }
 
+Water_Path_Segment :: struct {
+	start:     Tile_Position,
+	length:    int,
+	direction: Direction,
+	level:     int,
+	finished:  bool,
+}
+
 Water_Volume :: struct {
 	min: Tile_Position,
 	max: Tile_Position,
@@ -403,241 +372,6 @@ Tile_Range :: struct {
 	max: u16,
 	y:   u16,
 }
-
-// range_from_stream :: proc(s: Water_Stream) -> Tile_Range {
-// 	return Tile_Range {
-// 		min = math.min(s.start.x, s.end.x),
-// 		max = math.max(s.start.x, s.end.x),
-// 		y = s.start.y,
-// 	}
-// }
-
-// range_overlap :: proc(a, b: Tile_Range) -> bool {
-// 	return a.min <= b.max && b.min <= a.max && a.y == b.y
-// }
-
-// bake_entities :: proc() {
-// 	// Bake entities from the bottom up to calculate starting position based on physics rules
-// 	for y := (TILE_COUNT * CELL_COUNT) - 1; y > 0; y -= 1 {
-// 		for x in 0 ..< TILE_COUNT * CELL_COUNT {
-// 			entity := initial_entity_map[global_index(x, y)]
-// 			switch entity {
-// 			case .None:
-// 				continue
-// 			case .Box:
-// 				resolve_box({u16(x), u16(y)})
-// 			}
-// 		}
-// 	}
-// }
-
-// resolve_box :: proc(starting_pos: Tile_Position) {
-// 	x, y := int(starting_pos.x), int(starting_pos.y)
-
-// 	last_empty_y := y
-// 	for y < TILE_COUNT * CELL_COUNT {
-// 		tile := tilemap[global_index(x, y)]
-// 		entity := initial_entity_map[global_index(x, y)]
-// 		if tile == .Wall || entity == .Box {
-// 			initial_entity_map[global_index(starting_pos.x, starting_pos.y)] = .None
-// 			initial_entity_map[global_index(x, last_empty_y)] = .Box
-// 			break
-// 		} else {
-// 			last_empty_y = y
-// 		}
-// 		y += 1
-// 	}
-// }
-
-/////// OLD water logic
-// bake_water_old :: proc(t: ^Tilemap, update_tilemap: bool) {
-// 	map_height, map_width := get_tilemap_dimensions(t)
-// 	streams = make([dynamic]Water_Stream, 0, 16)
-// 	for y in 0 ..< map_height {
-// 		for x in 0 ..< map_width {
-// 			tile := tilemap[global_index(x, y)]
-// 			if tile == .Water {
-// 				streams_from_tile := resolve_water_tile(t, {u16(x), u16(y)}, update_tilemap)
-// 				append_elems(&streams, ..streams_from_tile[:])
-// 			}
-// 		}
-// 	}
-// 	log.debug("Finished resolvings streams")
-// 	volumes = generate_volumes(streams[:])
-// 	if ODIN_DEBUG {
-// 		log.debug("WATER STREAMS\n")
-// 		for s in streams {
-// 			log.debugf(
-// 				"--------\nstart: %v, end: %v\ndirection: %v\n--------\n",
-// 				s.start,
-// 				s.end,
-// 				s.direction,
-// 			)
-// 		}
-// 		log.debug("--END STREAMS--\n")
-
-// 		log.debug("WATER VOLUMES\n")
-// 		for v in volumes {
-// 			log.debugf("-------------\n%v\n-------------------------\n", v)
-// 		}
-// 		log.debug("--END VOLUMES--\n")
-// 	}
-// }
-
-// resolve_water_tile_old :: proc(
-// 	t: ^Tilemap,
-// 	start: Tile_Position,
-// 	update_tilemap: bool,
-// ) -> [dynamic]Water_Stream {
-// 	streams := make([dynamic]Water_Stream, 0, 8, allocator = context.temp_allocator)
-// 	append(&streams, Water_Stream{start = start, direction = .South})
-// 	should_continue := true
-// 	iterations: int
-// 	for should_continue {
-// 		for &stream in streams[:] {
-// 			if !stream.finished {
-// 				if iterations > 50 {
-// 					log.debug("Hit 50 iterations on a stream, breaking")
-// 					should_continue = false
-// 				}
-// 				child_streams := resolve_water_stream(&stream, update_tilemap)
-// 				append_elems(&streams, ..child_streams[:])
-// 			}
-// 			iterations += 1
-// 		}
-// 		unfinished := unfinished_streams(streams[:])
-// 		should_continue = unfinished > 0
-// 	}
-// 	return streams
-// }
-
-
-// resolve_water_stream_old :: proc(
-// 	stream: ^Water_Stream,
-// 	update_tilemap: bool,
-// ) -> [dynamic]Water_Stream {
-// 	out_streams := make([dynamic]Water_Stream, 0, 2, allocator = context.temp_allocator)
-// 	x, y := stream.start.x, stream.start.y
-// 	#partial switch stream.direction {
-// 	case .South:
-// 		y += 1
-// 	case .East:
-// 		x += 1
-// 	case .West:
-// 		x -= 1
-// 	}
-// 	iterations: int
-// 	#partial switch stream.direction {
-// 	case .South:
-// 		last_empty_y: u16 = y
-// 		for y < CELL_COUNT * TILE_COUNT && !stream.finished && iterations < 50 {
-// 			tile := tilemap[global_index(x, y)]
-// 			#partial switch tile {
-// 			case .Water:
-// 				stream.finished = true
-// 				stream.reason = .Water
-// 				stream.end = Tile_Position{x, last_empty_y}
-// 			case .Wall:
-// 				stream.finished = true
-// 				stream.reason = .WallDrop
-// 				stream.end = Tile_Position{x, last_empty_y}
-// 				if tilemap[global_index(x - 1, last_empty_y)] == .Empty {
-// 					append(
-// 						&out_streams,
-// 						Water_Stream{start = {x, last_empty_y}, direction = .West},
-// 					)
-// 				}
-// 				if tilemap[global_index(x + 1, last_empty_y)] == .Empty {
-// 					append(
-// 						&out_streams,
-// 						Water_Stream{start = {x, last_empty_y}, direction = .East},
-// 					)
-// 				}
-// 			case .Empty:
-// 				last_empty_y = y
-// 				if update_tilemap {tilemap[global_index(x, y)] = .Water}
-// 			}
-// 			y += 1
-// 			iterations += 1
-// 		}
-// 	case .West:
-// 		last_empty_x: u16
-// 		for x > 0 && !stream.finished && iterations < 50 {
-// 			tile := tilemap[global_index(x, y)]
-// 			#partial switch tile {
-// 			// case .Water:
-// 			// 	stream.finished = true
-// 			// 	stream.reason = .Water
-// 			// 	stream.end = Tile_Position{last_empty_x, y}
-// 			case .Wall:
-// 				stream.finished = true
-// 				stream.reason = .Wall
-// 				stream.end = Tile_Position{last_empty_x, y}
-// 			case .Empty, .Water:
-// 				last_empty_x = x
-// 				if update_tilemap {tilemap[global_index(x, y)] = .Water}
-// 				if tilemap[global_index(x, y + 1)] == .Empty {
-// 					stream.finished = true
-// 					stream.reason = .Drop
-// 					stream.end = Tile_Position{x, y}
-// 					append(&out_streams, Water_Stream{start = {x, y}, direction = .South})
-// 				}
-// 			}
-// 			x -= 1
-// 			iterations += 1
-// 		}
-// 	case .East:
-// 		last_empty_x: u16
-// 		for x < CELL_COUNT * TILE_COUNT && !stream.finished && iterations < 50 {
-// 			tile := tilemap[global_index(x, y)]
-// 			#partial switch tile {
-// 			// case .Water:
-// 			// 	stream.finished = true
-// 			// 	stream.reason = .Water
-// 			// 	stream.end = Tile_Position{last_empty_x, y}
-// 			case .Wall:
-// 				stream.finished = true
-// 				stream.reason = .Wall
-// 				stream.end = Tile_Position{last_empty_x, y}
-// 			case .Empty, .Water:
-// 				last_empty_x = x
-// 				if update_tilemap {tilemap[global_index(x, y)] = .Water}
-// 				if tilemap[global_index(x, y + 1)] == .Empty {
-// 					stream.finished = true
-// 					stream.reason = .Drop
-// 					stream.end = Tile_Position{x, y}
-// 					append(&out_streams, Water_Stream{start = {x, y}, direction = .South})
-// 				}
-// 			}
-// 			x += 1
-// 			iterations += 1
-// 		}
-// 	}
-// 	return out_streams
-// }
-
-// unfinished_streams :: proc(streams: []Water_Stream) -> int {
-// 	count: int
-// 	for s in streams {
-// 		if !s.finished {
-// 			count += 1
-// 		}
-// 	}
-// 	return count
-// }
-
-// Water_Stream :: struct {
-// 	start:     Tile_Position,
-// 	end:       Tile_Position,
-// 	direction: Direction,
-// 	finished:  bool,
-// 	reason:    enum {
-// 		Wall,
-// 		Water,
-// 		Drop,
-// 		WallDrop,
-// 	},
-// }
 
 // generate_volumes_old :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
 // 	ranges := make([dynamic]Tile_Range, 0, 8, allocator = context.temp_allocator)
@@ -714,77 +448,3 @@ Tile_Range :: struct {
 // 	}
 // 	return volumes
 // }
-
-resolve_water_path_old :: proc(
-	t: ^Tilemap,
-	start: Tile_Position,
-	direction: Direction,
-) -> Water_Path {
-	segments := make([dynamic]Water_Path_Segment, 0, 8)
-	append(
-		&segments,
-		Water_Path_Segment{start = start, direction = direction, finished = false, length = 0},
-	)
-
-	// Bit set for easy checks if a direction is horizontal
-	horizontal: bit_set[Direction] = {.East, .West}
-	// Bit set for easy checks if water can pass through a tile
-	water_passthrough: bit_set[Tile] = {.Empty}
-
-	solving: bool
-	// Outer loop that is manually broken because we will be adding to a collection while iterating it
-	for solving { 	// Loop 1
-		for &s, i in segments { 	// Loop 2
-			pos: [2]int = {int(start.x), int(start.y)}
-			shift := shift_from_direction(direction)
-			log.debugf("Segment [%v]: %v", i, s)
-			if !s.finished {
-				pos += shift
-				tile := get_static_tile(t^, pos.x, pos.y)
-				switch tile {
-				case .Empty:
-					s.length += 1
-					if s.direction in horizontal {
-						empty_below := get_static_tile(t^, pos.x, pos.y + 1) in water_passthrough
-						// Check if the segment should end and spawn another heading down
-						if empty_below {
-							s.finished = true
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x), u16(pos.y + 1)},
-									direction = .South,
-								},
-							)
-						}
-					}
-				case .Wall, .Door, .Water, .OneWay:
-					s.finished = true
-					// Check collision on the left and right and make segments in the clear directions
-					if !(s.direction in horizontal) {
-						if get_static_tile(t^, pos.x - 1, pos.y - 1) in water_passthrough {
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x - 1), u16(pos.y - 1)},
-									direction = .West,
-								},
-							)
-						}
-						if get_static_tile(t^, pos.x + 1, pos.y) in water_passthrough {
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x + 1), u16(pos.y - 1)},
-									direction = .East,
-								},
-							)
-						}
-					}
-				}
-			}
-		}
-		solving = unfinished_segments(segments[:]) == 0
-	}
-	return Water_Path{segments = segments}
-}
