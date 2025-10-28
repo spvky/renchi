@@ -1,7 +1,7 @@
 package main
 
 import "core:testing"
-import "core:fmt"
+import "core:log"
 
 SIMPLE_CELL :: [625]u8 {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -80,6 +80,6 @@ water_bake_test :: proc(tst: ^testing.T) {
 
 	bake_water(&t)
 	
-	fmt.printfln("Paths: %v", t.water_paths)
+	log.info("Paths: %v", t.water_paths)
 	testing.expectf(tst,len(t.water_paths[0].segments) == 0, "Test failed: %v", t.water_paths)
 }
