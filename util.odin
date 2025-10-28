@@ -10,8 +10,19 @@ import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 Vec3 :: [3]f32
+V_ONE :: Vec3{1, 1, 1}
 Cell_Position :: [2]i16
 Tile_Position :: [2]u16
+
+// Is the passed direction horizontal
+is_horizontal :: proc(d: Direction) -> bool {
+	return d in bit_set[Direction]{.East, .West}
+}
+
+// Can water pass through the given tile
+water_passthrough :: proc(t: Tile) -> bool {
+	return t in bit_set[Tile]{.Empty}
+}
 
 extend :: proc(v: Vec2, z: f32) -> Vec3 {
 	return Vec3{v.x, v.y, z}
@@ -25,20 +36,7 @@ load_texture :: proc(filename: string) -> rl.Texture {
 }
 
 tile_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * TILE_COUNT))
-}
-
-
-cell_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * CELL_COUNT))
-}
-
-global_index :: proc(x, y: $T) -> int where intr.type_is_integer(T) {
-	return int(x + (y * MAP_WIDTH))
-}
-
-position_from_tile :: proc(x, y: $T) -> Vec2 where intr.type_is_integer(T) {
-	return Vec2{f32(x) * TILE_SIZE, f32(y) * TILE_SIZE} + Vec2{8, 8}
+	return int(x + (y * CD))
 }
 
 cell_global_position :: proc(
@@ -63,12 +61,9 @@ cell_global_position :: proc(
 	return final_pos
 }
 
-vec_from_map_cell_position :: proc(position: Cell_Position) -> Vec2 {
-	return(
-		Vec2{12.5, 12.5} +
-		Vec2{f32(position.x) * TILE_COUNT, f32(position.y) * TILE_COUNT} +
-		GRID_OFFSET \
-	)
+vec_from_map_cell_position :: proc(t: Tilemap, position: Cell_Position) -> Vec2 {
+	grid_offset := get_tilemap_grid_offset(t)
+	return Vec2{12.5, 12.5} + Vec2{f32(position.x) * CD, f32(position.y) * CD} + grid_offset
 }
 
 float_rotation_from_room_rotation :: proc(rotation: Direction) -> f32 {

@@ -25,7 +25,7 @@ destroy_render_textures :: proc() {
 write_to_map_texture :: proc() {
 	rl.BeginTextureMode(map_texture)
 	rl.ClearBackground(rl.PINK)
-	draw_map()
+	draw_map(current_tilemap)
 	rl.EndTextureMode()
 }
 
@@ -33,8 +33,9 @@ write_to_gameplay_texture :: proc() {
 	rl.BeginTextureMode(gameplay_texture)
 	rl.ClearBackground(rl.GREEN)
 	rl.BeginMode3D(world.camera)
-	draw_tilemap()
+	draw_tilemap(current_tilemap)
 	draw_player()
+	rl.DrawCubeV({12, 12, 0}, V_ONE, rl.YELLOW)
 	rl.EndMode3D()
 	rl.EndTextureMode()
 }
