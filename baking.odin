@@ -9,8 +9,25 @@ import "core:slice"
 import "core:time"
 import rl "vendor:raylib"
 
-volumes: [dynamic]Water_Volume
-paths: [dynamic]Water_Path
+Wall_Chain :: struct {
+	y_start: int,
+	y_end:   int,
+	start:   int,
+	end:     int,
+}
+
+Water_Path :: struct {
+	segments: [dynamic]Water_Path_Segment,
+}
+
+Water_Path_Segment :: struct {
+	start:     Tile_Position,
+	end:       Tile_Position,
+	length:    int,
+	direction: Direction,
+	level:     int,
+	finished:  bool,
+}
 
 bake_map :: proc(t: ^Tilemap) {
 	place_tiles(t)
@@ -19,7 +36,6 @@ bake_map :: proc(t: ^Tilemap) {
 	log.debug("Finished generating collision")
 	bake_water(t)
 	log.debug("Finished baking water")
-	// bake_entities()
 }
 
 reset_map :: proc(tilemap: ^Tilemap) {
@@ -34,9 +50,6 @@ reset_map :: proc(tilemap: ^Tilemap) {
 draw_tilemap :: proc(t: Tilemap) {
 	draw_colliders()
 	draw_water_paths(t)
-	// draw_water()
-	// draw_water_streams()
-	// draw_water_volumes()
 }
 
 draw_water_paths :: proc(t: Tilemap) {
@@ -53,44 +66,7 @@ draw_water_paths :: proc(t: Tilemap) {
 				end = start + Vec3{0, f32(s.length), 0}
 			}
 			rl.DrawLine3D(start, end, rl.BLUE)
-			// center: Vec2
-			// extents := Vec3{0, 0, 1}
-
-			// switch s.direction {
-			// case .North:
-			// 	end = start + (Vec2{0, -1} * f32(s.length + 1))
-			// 	center = (start + end) / 2
-			// 	extents.x = 1
-			// 	extents.y = f32(s.length + 1)
-			// case .South:
-			// 	end = start + (Vec2{0, 1} * f32(s.length + 1))
-			// 	center = (start + end) / 2
-			// 	extents.x = 1
-			// 	extents.y = f32(s.length + 1)
-			// case .East:
-			// 	end = start + (Vec2{1, 0} * f32(s.length + 1))
-			// 	center = (start + end) / 2
-			// 	extents.y = 1
-			// 	extents.x = f32(s.length + 1)
-			// case .West:
-			// 	end = start + (Vec2{-1, 0} * f32(s.length + 1))
-			// 	center = (start + end) / 2
-			// 	extents.y = 1
-			// 	extents.x = f32(s.length + 1)
-			// }
-			// rl.DrawCubeV(extend(center, 0), extents, rl.BLUE)
 		}
-	}
-}
-
-draw_water_volumes :: proc() {
-	for v in volumes {
-		max := Vec3{f32(v.max.x + 1), f32(v.max.y + 1), 0}
-		min := Vec3{f32(v.min.x), f32(v.min.y), 0}
-		center := ((max + min) / 2)
-		extents := max - min
-		extents.z = 1
-		rl.DrawCubeV(center, extents, {0, 50, 150, 255})
 	}
 }
 
@@ -133,9 +109,6 @@ place_tiles :: proc(t: ^Tilemap) {
 						entity := entities[tile_index(x, y)]
 						if tile != .Empty {
 							set_static_tile(t, raw_x, raw_y, tile)
-							if tile == .Water {
-								log.debugf("Placing Water at [%v, %v]", raw_x, raw_y)
-							}
 							tiles_added += 1
 						}
 						if entity != .None {
@@ -147,13 +120,6 @@ place_tiles :: proc(t: ^Tilemap) {
 			}
 		}
 	}
-}
-
-Wall_Chain :: struct {
-	y_start: int,
-	y_end:   int,
-	start:   int,
-	end:     int,
 }
 
 generate_collision :: proc(t: Tilemap) {
@@ -235,17 +201,12 @@ generate_collision :: proc(t: Tilemap) {
 
 	if ODIN_DEBUG {
 		log.debugf("Collision Generation took %v ms", total_duration)
-		// log.debugf("Generated %v wall chains", len(wall_chains))
-		// for chain in wall_chains {
-		// 	log.debugf("%v", chain)
-		// }
 	}
 }
 
 // For now to keep things seperated this will be a totally seperate baking step, ideally we would iterate the tilemap as few times as possible
 bake_water :: proc(t: ^Tilemap) {
 	map_width, map_height := get_tilemap_dimensions(t^, false)
-	paths = make([dynamic]Water_Path, 0, 16)
 	for y in 0 ..< map_height {
 		for x in 0 ..< map_width {
 			tile := get_static_tile(t^, x, y)
@@ -255,7 +216,9 @@ bake_water :: proc(t: ^Tilemap) {
 			}
 		}
 	}
-	log.debugf("Paths: %v", t.water_paths)
+	if ODIN_DEBUG {
+		log.debugf("Paths: %v", t.water_paths)
+	}
 }
 
 
@@ -350,104 +313,4 @@ unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
 		}
 	}
 	return count
-}
-
-Water_Path :: struct {
-	segments: [dynamic]Water_Path_Segment,
-}
-
-Water_Path_Segment :: struct {
-	start:     Tile_Position,
-	end:       Tile_Position,
-	length:    int,
-	direction: Direction,
-	level:     int,
-	finished:  bool,
-}
-
-Water_Volume :: struct {
-	min: Tile_Position,
-	max: Tile_Position,
-}
-
-Tile_Range :: struct {
-	min: u16,
-	max: u16,
-	y:   u16,
-}
-
-generate_volumes_old :: proc(streams: []Water_Stream) -> [dynamic]Water_Volume {
-	ranges := make([dynamic]Tile_Range, 0, 8, allocator = context.temp_allocator)
-	checked_heights := make([dynamic]u16, 0, 4, allocator = context.allocator)
-	volumes := make([dynamic]Water_Volume, 0, 4)
-	for s in streams {
-		if (s.direction == .East || s.direction == .West) &&
-		   (s.reason == .Water || s.reason == .Wall) {
-
-			append(&ranges, range_from_stream(s))
-		}
-	}
-
-	if ODIN_DEBUG {
-		log.debugf("Ranges: %v\n", ranges)
-	}
-	for a, i in ranges {
-		already_parsed := slice.contains(checked_heights[:], a.y)
-		if !already_parsed {
-			current := a
-			append(&checked_heights, a.y)
-			for b, j in ranges {
-				if i == j do continue
-				if range_overlap(a, b) {
-					current.min = math.min(a.min, b.min)
-					current.max = math.max(a.max, b.max)
-				}
-			}
-			left_height, right_height: u16
-			if current.min > 1 {
-				for k in 0 ..< 5 {
-					if tilemap[global_index(current.min - 1, current.y - u16(i + 1))] != .Empty {
-						left_height += 1
-					} else {
-						log.infof(
-							"Breaking left wall for [%v,%v : %v] at %v\n",
-							current.min,
-							current.max,
-							current.y,
-							left_height,
-						)
-						break
-					}
-				}
-			} else {
-				left_height = 1
-			}
-			if current.max < TILE_COUNT * CELL_COUNT {
-				for k in 0 ..< 4 {
-					if tilemap[global_index(current.max + 1, current.y - u16(i + 1))] != .Empty {
-						right_height += 1
-					} else {
-						log.infof(
-							"Breaking right wall for [%v,%v : %v] at %v\n",
-							current.min,
-							current.max,
-							current.y,
-							right_height,
-						)
-						break
-					}
-				}
-			} else {
-				right_height = 1
-			}
-			append(
-				&volumes,
-				Water_Volume {
-					min = {current.min, current.y - (1 + math.min(left_height, right_height))},
-					max = {current.max, current.y},
-				},
-			)
-		}
-	}
-	return volumes
 }
