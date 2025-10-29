@@ -310,26 +310,30 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 			append(&checked_segments, i)
 			s1_range := range_from_water_path_segment(s1)
 			volume_range := Tile_Range{-1, -1, -1, .X}
+			streams_in_volume := 1
 			if s1_range.orientation == .X {
 				for s2, j in segments {
 					if !slice.contains(checked_segments[:], j) {
 						s2_range := range_from_water_path_segment(s2)
 						log.warnf("About to check overlap for:\n[%v] - %v\n[%v] - %v", i, s1_range, j, s2_range)
 						if overlap(s1_range, s2_range) {
+							streams_in_volume += 1
 							append(&checked_segments, j)
 							log.warnf("Found Segment overlap for [%v,%v]", i,j)
 							volume_range.cross = s1_range.cross
-							volume_range.min = math.min(s1_range.min, s2_range.min)
-							volume_range.max = math.max(s1_range.max, s2_range.max)
+							volume_range.min = math.min(math.min(s1_range.min, s2_range.min), volume_range.min)
+							volume_range.max = math.max(math.max(s1_range.max, s2_range.max), volume_range.max)
 						}
 					}
 				}
 			}
 			if volume_range.cross != -1 {
+				// Can use streams in volume here to set max height
 				// Find height of the walls and use that to find the max height
+				max_height := streams_in_volume * 2
 				left_height, right_height: int
 				climbing := true
-				for left_height <= 4 && climbing{
+				for left_height <= max_height && climbing{
 					tile := get_static_tile(t^, volume_range.min - 1, volume_range.cross - left_height)
 					log.debugf("CLimbing Left Side for range: %v\n Wall Pos is [%v,%v] -- %v\n Left Height = %v", volume_range, volume_range.min - 1, volume_range.cross - left_height, tile, left_height)
 					if !water_passthrough(tile) {
@@ -339,7 +343,7 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 					}
 				}
 				climbing = true
-				for right_height <= 4 && climbing{
+				for right_height <= max_height && climbing{
 					tile := get_static_tile(t^, volume_range.max + 1, volume_range.cross - left_height)
 					log.debugf("CLimbing right Side for range: %v\n Wall Pos is [%v,%v] -- %v\n right Height = %v", volume_range, volume_range.min - 1, volume_range.cross - right_height, tile, right_height)
 					if !water_passthrough(tile) {
