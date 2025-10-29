@@ -29,6 +29,14 @@ Water_Path_Segment :: struct {
 	finished:  bool,
 }
 
+Water_Volume :: struct {
+	top:    int,
+	bottom: int,
+	left:   int,
+	right:  int,
+}
+
+
 bake_map :: proc(t: ^Tilemap) {
 	place_tiles(t)
 	log.debug("Finished placing tiles")
@@ -288,6 +296,57 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 		solving = unfinished > 0
 	}
 	return Water_Path{segments = segments}
+}
+
+generate_water_volumes :: proc(t: ^Tilemap) {
+	segments := get_all_water_segments(t)
+
+	checked_segments := make([dynamic]int, 0, 16)
+
+	for s1, i in segments {
+		if !slice.contains(checked_segments[:], i) {
+			s1_range := range_from_water_path_segment(s1)
+			volume_range := Tile_Range{-1, -1, -1}
+			append(&checked_segments, i)
+			for s2, j in segments {
+				if !slice.contains(checked_segments[:], j) {
+					append(&checked_segments, j)
+					s2_range := range_from_water_path_segment(s2)
+					if overlap(s1_range, s2_range) {
+						volume_range.cross = s1_range.cross
+						volume_range.min = math.min(s1_range.min, s2_range.min)
+						volume_range.max = math.max(s1_range.max, s2_range.max)
+					}
+				}
+			}
+			if volume_range.cross != -1 {
+				// Find height of the walls and use that to find the max height
+			}
+		}
+	}
+}
+
+range_from_water_path_segment :: proc(s: Water_Path_Segment) -> Tile_Range {
+	same_column := s.start.x == s.end.x
+	range: Tile_Range
+	if same_column {
+		range.min = int(math.min(s.start.y, s.end.y))
+		range.max = int(math.max(s.start.y, s.end.y))
+		range.cross = int(s.start.x)
+	} else {
+		range.min = int(math.min(s.start.x, s.end.x))
+		range.max = int(math.max(s.start.x, s.end.x))
+		range.cross = int(s.start.y)
+	}
+	return range
+}
+
+get_all_water_segments :: proc(t: ^Tilemap) -> [dynamic]Water_Path_Segment {
+	segments := make([dynamic]Water_Path_Segment, 0, 16, allocator = context.temp_allocator)
+	for p in t.water_paths {
+		append_elems(&segments, ..p.segments[:])
+	}
+	return segments
 }
 
 shift_from_direction :: proc(d: Direction) -> [2]int {

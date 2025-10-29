@@ -13,6 +13,7 @@ Tilemap :: struct {
 	entity_tiles:    [dynamic]Entity_Tag,
 	exit_map:        [dynamic]bit_set[Direction],
 	water_paths:     [dynamic]Water_Path,
+	water_volumes:   [dynamic]Water_Volume,
 }
 
 init_tilemap :: proc(t: ^Tilemap, width, height: int) {
@@ -20,11 +21,13 @@ init_tilemap :: proc(t: ^Tilemap, width, height: int) {
 	entity_tiles := make([dynamic]Entity_Tag, width * height * TPC)
 	exit_map := make([dynamic]bit_set[Direction], width * height)
 	water_paths := make([dynamic]Water_Path, 0, 16)
+	water_volumes := make([dynamic]Water_Volume, 0, 4)
 	t.width, t.height = width, height
 	t.collision_tiles = collision_tiles
 	t.entity_tiles = entity_tiles
 	t.exit_map = exit_map
 	t.water_paths = water_paths
+	t.water_volumes = water_volumes
 }
 
 delete_tilemap :: proc(t: Tilemap) {
@@ -90,4 +93,14 @@ get_tilemap_dimensions :: proc(t: Tilemap, quiet: bool = true) -> (width, height
 		log.debugf("Getting Tilemap Dimensions: %v x %v\n", width, height)
 	}
 	return
+}
+
+Tile_Range :: struct {
+	min:   int,
+	max:   int,
+	cross: int,
+}
+
+overlap :: proc(r1, r2: Tile_Range) -> bool {
+	return r1.min <= r2.max && r2.min <= r1.max && r1.cross == r2.cross
 }
