@@ -219,18 +219,20 @@ bake_water :: proc(t: ^Tilemap) {
 		for x in 0 ..< map_width {
 			tile := get_static_tile(t^, x, y)
 			if tile == .Water {
-				path := resolve_water_path(t^, {u16(x), u16(y)}, .South)
-				append(&t.water_paths, path)
+				resolve_water_path(t, {u16(x), u16(y)}, .South)
 			}
 		}
 	}
+	generate_water_volumes(t)
+	log.warnf("Volumes: %v", t.water_volumes)
 	if ODIN_DEBUG {
 		log.debugf("Paths: %v", t.water_paths)
 	}
 }
 
 
-resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Direction) -> Water_Path {
+// Resolves a water path and adds it to the current tilemap
+resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Direction) {
 	segments := make([dynamic]Water_Path_Segment, 0, 8)
 	append(&segments, Water_Path_Segment{start = start, direction = direction, level = 0})
 
@@ -242,11 +244,11 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 			shift := shift_from_direction(s.direction)
 			for !s.finished {
 				pos += shift
-				current_tile := get_static_tile(t, pos.x, pos.y)
+				current_tile := get_static_tile(t^, pos.x, pos.y)
 				if water_passthrough(current_tile) { 	// If water can pass through the current tile
 					s.length += 1
 					if is_horizontal(s.direction) { 	// Is the stream travelling East/West
-						tile_below := get_static_tile(t, pos.x, pos.y + 1)
+						tile_below := get_static_tile(t^, pos.x, pos.y + 1)
 						if water_passthrough(tile_below) { 	// Did the stream enter empty space with another passable tile beneath it ?
 							s.finished = true
 							s.end = s.start + {u16(s.length * shift.x), u16(s.length * shift.y)}
@@ -266,8 +268,8 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 					if !is_horizontal(s.direction) {
 						left_pos := [2]int{pos.x - 1, pos.y - 1}
 						right_pos := [2]int{pos.x + 1, pos.y - 1}
-						left_tile := get_static_tile(t, left_pos.x, left_pos.y)
-						right_tile := get_static_tile(t, right_pos.x, right_pos.y)
+						left_tile := get_static_tile(t^, left_pos.x, left_pos.y)
+						right_tile := get_static_tile(t^, right_pos.x, right_pos.y)
 						if water_passthrough(left_tile) {
 							append(
 								&segments,
@@ -295,32 +297,59 @@ resolve_water_path :: proc(t: Tilemap, start: Tile_Position, direction: Directio
 		unfinished := unfinished_segments(segments[:])
 		solving = unfinished > 0
 	}
-	return Water_Path{segments = segments}
+	append(&t.water_paths, Water_Path{segments = segments})
 }
 
 generate_water_volumes :: proc(t: ^Tilemap) {
 	segments := get_all_water_segments(t)
-
+	log.warnf("Segments found for volume gen: %v", len(segments))
 	checked_segments := make([dynamic]int, 0, 16)
 
 	for s1, i in segments {
 		if !slice.contains(checked_segments[:], i) {
-			s1_range := range_from_water_path_segment(s1)
-			volume_range := Tile_Range{-1, -1, -1}
 			append(&checked_segments, i)
-			for s2, j in segments {
-				if !slice.contains(checked_segments[:], j) {
-					append(&checked_segments, j)
-					s2_range := range_from_water_path_segment(s2)
-					if overlap(s1_range, s2_range) {
-						volume_range.cross = s1_range.cross
-						volume_range.min = math.min(s1_range.min, s2_range.min)
-						volume_range.max = math.max(s1_range.max, s2_range.max)
+			s1_range := range_from_water_path_segment(s1)
+			volume_range := Tile_Range{-1, -1, -1, .X}
+			if s1_range.orientation == .X {
+				for s2, j in segments {
+					if !slice.contains(checked_segments[:], j) {
+						s2_range := range_from_water_path_segment(s2)
+						log.warnf("About to check overlap for:\n[%v] - %v\n[%v] - %v", i, s1_range, j, s2_range)
+						if overlap(s1_range, s2_range) {
+							append(&checked_segments, j)
+							log.warnf("Found Segment overlap for [%v,%v]", i,j)
+							volume_range.cross = s1_range.cross
+							volume_range.min = math.min(s1_range.min, s2_range.min)
+							volume_range.max = math.max(s1_range.max, s2_range.max)
+						}
 					}
 				}
 			}
 			if volume_range.cross != -1 {
 				// Find height of the walls and use that to find the max height
+				left_height, right_height: int
+				climbing := true
+				for left_height <= 4 && climbing{
+					tile := get_static_tile(t^, volume_range.min - 1, volume_range.cross - left_height)
+					log.debugf("CLimbing Left Side for range: %v\n Wall Pos is [%v,%v] -- %v\n Left Height = %v", volume_range, volume_range.min - 1, volume_range.cross - left_height, tile, left_height)
+					if !water_passthrough(tile) {
+						left_height += 1
+					} else {
+						climbing = false
+					}
+				}
+				climbing = true
+				for right_height <= 4 && climbing{
+					tile := get_static_tile(t^, volume_range.max + 1, volume_range.cross - left_height)
+					log.debugf("CLimbing right Side for range: %v\n Wall Pos is [%v,%v] -- %v\n right Height = %v", volume_range, volume_range.min - 1, volume_range.cross - right_height, tile, right_height)
+					if !water_passthrough(tile) {
+						right_height += 1
+					} else {
+						climbing = false
+					}
+				}
+				volume := Water_Volume {left = volume_range.min, right = volume_range.max, bottom = volume_range.cross, top =volume_range.cross + math.min(left_height, right_height)}
+				append(&t.water_volumes, volume)
 			}
 		}
 	}
@@ -333,10 +362,12 @@ range_from_water_path_segment :: proc(s: Water_Path_Segment) -> Tile_Range {
 		range.min = int(math.min(s.start.y, s.end.y))
 		range.max = int(math.max(s.start.y, s.end.y))
 		range.cross = int(s.start.x)
+		range.orientation = .Y
 	} else {
 		range.min = int(math.min(s.start.x, s.end.x))
 		range.max = int(math.max(s.start.x, s.end.x))
 		range.cross = int(s.start.y)
+		range.orientation = .X
 	}
 	return range
 }

@@ -99,6 +99,7 @@ Tile_Range :: struct {
 	min:   int,
 	max:   int,
 	cross: int,
+	orientation: enum{X,Y}
 }
 
 overlap :: proc(r1, r2: Tile_Range) -> bool {
