@@ -47,7 +47,6 @@ bake_map :: proc(t: ^Tilemap) {
 }
 
 reset_map :: proc(tilemap: ^Tilemap) {
-
 	clear(&tilemap.collision_tiles)
 	clear(&tilemap.entity_tiles)
 	for &room, _ in rooms {
@@ -239,6 +238,7 @@ bake_water :: proc(t: ^Tilemap) {
 		}
 	}
 	generate_water_volumes(t)
+	log.warnf("Paths: %v", t.water_paths)
 	log.warnf("Volumes: %v", t.water_volumes)
 }
 
@@ -282,7 +282,7 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 						right_pos := [2]int{pos.x + 1, pos.y - 1}
 						left_tile := get_static_tile(t^, left_pos.x, left_pos.y)
 						right_tile := get_static_tile(t^, right_pos.x, right_pos.y)
-						if water_passthrough(left_tile) {
+						// if water_passthrough(left_tile) {
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -291,8 +291,8 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 									level = s.level + 1,
 								},
 							)
-						}
-						if water_passthrough(right_tile) {
+						// }
+						// if water_passthrough(right_tile) {
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -301,7 +301,7 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 									level = s.level + 1,
 								},
 							)
-						}
+						// }
 					}
 				}
 			}
@@ -406,18 +406,18 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 }
 
 range_from_water_path_segment :: proc(s: Water_Path_Segment) -> Tile_Range {
-	same_column := s.start.x == s.end.x
+	horizontal := is_horizontal(s.direction)
 	range: Tile_Range
-	if same_column {
-		range.min = int(math.min(s.start.y, s.end.y))
-		range.max = int(math.max(s.start.y, s.end.y))
-		range.cross = int(s.start.x)
-		range.orientation = .Y
-	} else {
+	if horizontal {
 		range.min = int(math.min(s.start.x, s.end.x))
 		range.max = int(math.max(s.start.x, s.end.x))
 		range.cross = int(s.start.y)
 		range.orientation = .X
+	} else {
+		range.min = int(math.min(s.start.y, s.end.y))
+		range.max = int(math.max(s.start.y, s.end.y))
+		range.cross = int(s.start.x)
+		range.orientation = .Y
 	}
 	return range
 }
