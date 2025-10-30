@@ -5,7 +5,6 @@ package main
 
 import intr "base:intrinsics"
 import "core:strings"
-import "utils"
 import rl "vendor:raylib"
 
 Vec2 :: [2]f32

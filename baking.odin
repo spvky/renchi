@@ -180,9 +180,9 @@ generate_collision :: proc(t: Tilemap) {
 	}
 	// Loop through our chains of joined wall tiles vertically to combine 1 length chains
 	// TODO: If the perf needs it, rework to group chains of all identical width/positions so we don't get a bunch of 2 length colliders stacked on top of each other
-	for y in 0 ..< map_height {
-		for x in 0 ..< map_width {
-			position := Tile_Position{u16(x), u16(y)}
+	for ry in 0 ..< map_height {
+		for rx in 0 ..< map_width {
+			position := Tile_Position{u16(rx), u16(ry)}
 			if _, column_exists := column_segments[position]; column_exists {
 				chain := Wall_Chain {
 					start   = int(position.x),
@@ -251,7 +251,7 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 	solving := true
 	// Outer loop that is manually broken because we will be adding to a collection while iterating it
 	for solving { 	// Loop 1
-		for &s, i in segments { 	// Loop 2
+		for &s in segments { 	// Loop 2
 			pos: [2]int = {int(s.start.x), int(s.start.y)}
 			shift := shift_from_direction(s.direction)
 			for !s.finished {
@@ -278,11 +278,6 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 					s.finished = true
 					s.end = s.start + {u16(s.length * shift.x), u16(s.length * shift.y)}
 					if !is_horizontal(s.direction) {
-						left_pos := [2]int{pos.x - 1, pos.y - 1}
-						right_pos := [2]int{pos.x + 1, pos.y - 1}
-						left_tile := get_static_tile(t^, left_pos.x, left_pos.y)
-						right_tile := get_static_tile(t^, right_pos.x, right_pos.y)
-						// if water_passthrough(left_tile) {
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -291,8 +286,6 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 									level = s.level + 1,
 								},
 							)
-						// }
-						// if water_passthrough(right_tile) {
 							append(
 								&segments,
 								Water_Path_Segment {
@@ -301,7 +294,6 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 									level = s.level + 1,
 								},
 							)
-						// }
 					}
 				}
 			}
