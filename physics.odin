@@ -123,10 +123,10 @@ rigidbody_platform_collision :: proc() {
 	foot_collision: bool
 	for collider in colliders {
 		nearest_point := collider_nearest_point(collider, rb.translation)
-		if l.distance(nearest_point, rb.translation) < rb.radius {
+		// if l.distance(nearest_point, rb.translation) < rb.radius {
 			collision_vector := rb.translation - nearest_point
 			collision_normal := l.normalize0(collision_vector)
-			pen_depth := rb.radius - l.length(collision_vector)
+			// pen_depth := rb.radius - l.length(collision_vector)
 			mtv := collision_normal * pen_depth
 
 			rb.translation += mtv
@@ -138,7 +138,7 @@ rigidbody_platform_collision :: proc() {
 			if y_dot > 0.7 {
 				rb.velocity.y = 0
 			}
-		}
+		// }
 		if l.distance(nearest_point, rb_feet) < 0.06 {
 			foot_collision = true
 		}
