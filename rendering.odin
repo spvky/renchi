@@ -34,6 +34,7 @@ write_to_gameplay_texture :: proc() {
 	rl.ClearBackground(rl.GREEN)
 	rl.BeginMode3D(world.camera)
 	draw_player()
+	draw_entities()
 	draw_tilemap(current_tilemap)
 	rl.DrawCubeV({12, 12, 0}, V_ONE, rl.YELLOW)
 	rl.EndMode3D()

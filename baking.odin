@@ -446,3 +446,37 @@ unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
 	}
 	return count
 }
+
+bake_entities :: proc(t: ^Tilemap) {
+	map_height, map_width := get_tilemap_dimensions(t^)
+
+	y: int = map_width - 1
+	for ;y > 0; y-=1 {
+		for x in 0..<map_width {
+			tag := get_entity_tile(t^, x,y)
+			switch tag {
+				case .Box:
+					resolve_box(t, x,y)
+				case .None:
+			}
+
+		}
+	}
+}
+
+resolve_box :: proc(t: ^Tilemap, start_x,start_y: int) {
+	x, y := start_x, start_y
+	falling := true
+	
+	for {
+		tile := get_static_tile(t^, x, y)
+		entity := get_entity_tile(t^, x, y)
+
+		if tile == .Empty && entity == .None {
+			y += 1
+		} else {
+			make_entity({f32(x), f32(y - 1)}, .Box)
+			return
+		}
+	}
+}

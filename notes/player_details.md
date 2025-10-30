@@ -6,5 +6,5 @@ re-play la-mulana
 - Room tiles
 - Double jump
 - Wall jump
-- Dash
+- Run
 - Giants bracelet
