@@ -38,12 +38,21 @@ Water_Volume :: struct {
 
 
 bake_map :: proc(t: ^Tilemap) {
+	m_width, m_height := get_tilemap_dimensions(t^)
 	place_tiles(t)
 	log.debug("Finished placing tiles")
 	generate_collision(t^)
 	log.debug("Finished generating collision")
 	bake_water(t)
 	log.debug("Finished baking water")
+	bake_entities(t)
+	log.debugf("Entities baked: %v", len(entities))
+	for e in entities {
+		log.debugf("Entity: %v", e)
+	}
+	for rb in rigidbodies {
+		log.debugf("Rigidbody: %v", rb)
+	}
 }
 
 reset_map :: proc(tilemap: ^Tilemap) {
@@ -278,22 +287,22 @@ resolve_water_path :: proc(t: ^Tilemap, start: Tile_Position, direction: Directi
 					s.finished = true
 					s.end = s.start + {u16(s.length * shift.x), u16(s.length * shift.y)}
 					if !is_horizontal(s.direction) {
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x), u16(pos.y - 1)},
-									direction = .West,
-									level = s.level + 1,
-								},
-							)
-							append(
-								&segments,
-								Water_Path_Segment {
-									start = {u16(pos.x), u16(pos.y - 1)},
-									direction = .East,
-									level = s.level + 1,
-								},
-							)
+						append(
+							&segments,
+							Water_Path_Segment {
+								start = {u16(pos.x), u16(pos.y - 1)},
+								direction = .West,
+								level = s.level + 1,
+							},
+						)
+						append(
+							&segments,
+							Water_Path_Segment {
+								start = {u16(pos.x), u16(pos.y - 1)},
+								direction = .East,
+								level = s.level + 1,
+							},
+						)
 					}
 				}
 			}
@@ -318,7 +327,7 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 				for s2, j in segments {
 					if !slice.contains(checked_segments[:], j) {
 						s2_range := range_from_water_path_segment(s2)
-						if overlap(s1_range, s2_range) {
+						if tile_overlap(s1_range, s2_range) {
 							streams_in_volume += 1
 							append(&checked_segments, j)
 							volume_range.cross = s1_range.cross
@@ -448,33 +457,37 @@ unfinished_segments :: proc(segments: []Water_Path_Segment) -> int {
 }
 
 bake_entities :: proc(t: ^Tilemap) {
-	map_height, map_width := get_tilemap_dimensions(t^)
+	map_width, map_height := get_tilemap_dimensions(t^)
 
 	y: int = map_width - 1
-	for ;y > 0; y-=1 {
-		for x in 0..<map_width {
-			tag := get_entity_tile(t^, x,y)
+	for ; y > 0; y -= 1 {
+		for x in 0 ..< map_width {
+			tag := get_entity_tile(t^, x, y)
 			switch tag {
-				case .Box:
-					resolve_box(t, x,y)
-				case .None:
+			case .Box:
+				log.debugf("Baking found box at: [%v,%v]", x, y)
+				resolve_box(t, x, y)
+			case .None:
 			}
 
 		}
 	}
 }
 
-resolve_box :: proc(t: ^Tilemap, start_x,start_y: int) {
-	x, y := start_x, start_y
+resolve_box :: proc(t: ^Tilemap, start_x, start_y: int) {
+	x, y := start_x, start_y + 1
 	falling := true
-	
+
 	for {
 		tile := get_static_tile(t^, x, y)
 		entity := get_entity_tile(t^, x, y)
 
-		if tile == .Empty && entity == .None {
+		if tile != .Wall && entity == .None {
 			y += 1
 		} else {
+			set_entity_tile(t, start_x, start_y, .None)
+			set_entity_tile(t, x, y - 1, .Box)
+			log.debugf("Making an entity at [%v, %v] from [%v, %v]", x, y - 1, start_x, start_y)
 			make_entity({f32(x), f32(y - 1)}, .Box)
 			return
 		}

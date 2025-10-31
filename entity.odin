@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import rl "vendor:raylib"
 
 entities: [dynamic]Entity
@@ -36,22 +37,24 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 		shape = Rectangle{{1, 1}}
 	}
 
-	rb_index := append_elem(
+	append(
 		&rigidbodies,
 		Rigidbody{translation = translation, snapshot = translation, shape = shape},
 	)
+	rb_index := len(rigidbodies) - 1
+	log.warnf("Appended Rigidbody at index: %v", rb_index)
 	append(&entities, Entity{tag = tag, rigidbody_index = rb_index})
 }
 
 draw_entities :: proc() {
 	for e in entities {
 		switch e.tag {
-			case .None:
-			case .Box:
-				rb := rigidbodies[e.rigidbody_index]
-				pos := extend(rb.snapshot, 0)
-				extents := Vec3{1,1,1}
-				rl.DrawCubeV(pos, extents, rl.BLACK)
+		case .None:
+		case .Box:
+			rb := rigidbodies[e.rigidbody_index]
+			pos := extend(rb.snapshot, 0)
+			extents := Vec3{1, 1, 1}
+			rl.DrawCubeV(pos, extents, rl.BLACK)
 		}
 	}
 }

@@ -105,6 +105,6 @@ Tile_Range :: struct {
 	},
 }
 
-overlap :: proc(r1, r2: Tile_Range) -> bool {
+tile_overlap :: proc(r1, r2: Tile_Range) -> bool {
 	return r1.min <= r2.max && r2.min <= r1.max && r1.cross == r2.cross
 }
