@@ -59,7 +59,7 @@ get_entity_tile :: #force_inline proc(
 	x, y: $T,
 ) -> Entity_Tag where intrinsics.type_is_integer(T) {
 	map_width := CD * t.width
-	return t.entity_tiles_tiles[int(x + (y * map_width))]
+	return t.entity_tiles[int(x + (y * map_width))]
 }
 
 set_entity_tile :: #force_inline proc(
@@ -96,10 +96,13 @@ get_tilemap_dimensions :: proc(t: Tilemap, quiet: bool = true) -> (width, height
 }
 
 Tile_Range :: struct {
-	min:   int,
-	max:   int,
-	cross: int,
-	orientation: enum{X,Y}
+	min:         int,
+	max:         int,
+	cross:       int,
+	orientation: enum {
+		X,
+		Y,
+	},
 }
 
 overlap :: proc(r1, r2: Tile_Range) -> bool {
