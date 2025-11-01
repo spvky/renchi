@@ -63,10 +63,6 @@ init :: proc() {
 	init_physics_collections()
 	init_entity_collections()
 	world = make_world()
-	log.infof("Rigidbodies Length: %v", len(rigidbodies))
-	for rb in rigidbodies {
-		log.infof("Rigidbody Translation: %v", rb.translation)
-	}
 	rooms = load_rooms()
 	ui_texture_atlas = load_ui_textures()
 }
@@ -100,6 +96,9 @@ playing :: proc() {
 	}
 	alpha := time.simulation_time / TICK_RATE
 	world.player.snapshot = math.lerp(world.player.snapshot, world.player.translation, alpha)
+	for &rb in rigidbodies {
+		rb.snapshot = math.lerp(rb.snapshot, rb.collider.translation, alpha)
+	}
 }
 
 shutdown :: proc() {

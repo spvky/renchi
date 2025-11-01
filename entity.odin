@@ -28,18 +28,21 @@ delete_entity_collections :: proc() {
 }
 
 make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
-	shape: Collision_Shape
+	shape: Collider_Shape
 
 	switch tag {
 	case .None:
 		return
 	case .Box:
-		shape = Rectangle{{1, 1}}
+		shape = Collision_Rect{{1, 1}}
 	}
 
 	append(
 		&rigidbodies,
-		Rigidbody{translation = translation, snapshot = translation, shape = shape},
+		Rigidbody {
+			snapshot = translation,
+			collider = Physics_Collider{translation = translation, shape = shape},
+		},
 	)
 	rb_index := len(rigidbodies) - 1
 	append(&entities, Entity{tag = tag, rigidbody_index = rb_index})

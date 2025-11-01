@@ -5,10 +5,12 @@ import l "core:math/linalg"
 
 Physics_Collider :: struct {
 	translation: Vec2,
-	shape:       union {
-		Collision_Circle,
-		Collision_Rect,
-	},
+	shape:       Collider_Shape,
+}
+
+Collider_Shape :: union {
+	Collision_Circle,
+	Collision_Rect,
 }
 
 Collision_Circle :: struct {
@@ -16,8 +18,7 @@ Collision_Circle :: struct {
 }
 
 Collision_Rect :: struct {
-	min: Vec2,
-	max: Vec2,
+	extents: Vec2,
 }
 
 F_Range :: struct {
@@ -30,19 +31,35 @@ Simplex :: struct {
 	a, b, c, d: Vec2,
 }
 
-rect_vertices :: proc(s: Collision_Rect) -> [4]Vec2 {
-	return [4]Vec2{{s.min.x, s.max.y}, {s.min.x, s.min.y}, {s.max.x, s.max.y}, {s.max.x, s.min.y}}
+Mtv :: struct {
+	normal: Vec2,
+	depth:  f32,
 }
 
-overlap :: proc(r1, r2: F_Range) -> bool {
-	return r1.min <= r2.max && r2.min <= r1.max
+rect_vertices :: proc(t: Vec2, s: Collision_Rect) -> [4]Vec2 {
+	half := s.extents / 2
+	return [4]Vec2 {
+		t + {half.x, half.y},
+		t + {half.x, -half.y},
+		t + {-half.x, -half.y},
+		t + {-half.x, half.y},
+	}
+}
+
+overlap :: proc(r1, r2: F_Range) -> (colliding: bool, minimum_translation: f32) {
+	colliding = r1.min <= r2.max && r2.min <= r1.max
+	if !colliding {
+		return
+	}
+	minimum_translation = math.max(0, math.min(r1.max, r2.max) - math.max(r1.min, r2.min))
+	return
 }
 
 find_max_in_direction :: proc(c: Physics_Collider, d: Vec2) -> Vec2 {
 	point: Vec2
 	switch s in c.shape {
 	case Collision_Rect:
-		vertices := rect_vertices(s)
+		vertices := rect_vertices(c.translation, s)
 
 		max_dot: f32 = math.F32_MIN
 		max_index: int
@@ -71,11 +88,22 @@ update_simplex :: proc(s: ^Simplex, p: Vec2) {
 	count = math.min(count + 1, 4)
 }
 
+project_vertices :: proc(v: []Vec2, d: Vec2) -> F_Range {
+	v_min := l.dot(v[0], d)
+	v_max := v_min
+	for i in 1 ..< 4 {
+		p := l.dot(v[i], d)
+		v_min = min(p, v_min)
+		v_max = max(p, v_max)
+	}
+	return F_Range{v_min, v_max}
+}
+
 project :: proc(c: Physics_Collider, d: Vec2) -> F_Range {
 	min, max: f32
 	switch s in c.shape {
 	case Collision_Rect:
-		v := rect_vertices(s)
+		v := rect_vertices(c.translation, s)
 		min = l.dot(v[0], d)
 		max = min
 		for i in 1 ..< 4 {
@@ -92,22 +120,59 @@ project :: proc(c: Physics_Collider, d: Vec2) -> F_Range {
 	return F_Range{min, max}
 }
 
-sat :: proc(s1, s2: Physics_Collider) -> (colliding: bool) {
+sat :: proc(s1, s2: Physics_Collider) -> (colliding: bool, mtv: Mtv) {
 	// Only doing AABBs at the moment, but if I start handling rotation these will have to be calculated based on rotation
 	axes := [2]Vec2{{1, 0}, {0, 1}}
 	smallest: Vec2
-	smallest_overlap: f32
+	smallest_overlap: f32 = math.F32_MAX
+
 
 	for a in axes {
 		p1 := project(s1, a)
 		p2 := project(s2, a)
-		if overlap(p1, p2) {
-			return false
+		if collision, overlap_amount := overlap(p1, p2); collision {
+			if overlap_amount < smallest_overlap {
+				smallest_overlap = overlap_amount
+				smallest = a
+			}
 		} else {
-			//
+			return
 		}
 	}
-	return true
+	colliding = true
+	mtv = Mtv {
+		normal = smallest,
+		depth  = smallest_overlap,
+	}
+	return
+}
+
+static_sat :: proc(c: Collider, s: Physics_Collider) -> (colliding: bool, mtv: Mtv) {
+	// Only doing AABBs at the moment, but if I start handling rotation these will have to be calculated based on rotation
+	axes := [2]Vec2{{1, 0}, {0, 1}}
+	smallest: Vec2
+	smallest_overlap: f32 = math.F32_MAX
+
+	collider_verts := collider_vertices(c)
+
+	for a in axes {
+		p1 := project(s, a)
+		p2 := project_vertices(collider_verts[:], a)
+		if collision, overlap_amount := overlap(p1, p2); collision {
+			if overlap_amount < smallest_overlap {
+				smallest_overlap = overlap_amount
+				smallest = a
+			}
+		} else {
+			return
+		}
+	}
+	colliding = true
+	mtv = Mtv {
+		normal = smallest,
+		depth  = smallest_overlap,
+	}
+	return
 }
 
 gjk :: proc(s1, s2: Physics_Collider) -> bool {

@@ -10,10 +10,9 @@ colliders: [dynamic]Collider
 rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {
-	translation: Vec2,
-	snapshot:    Vec2,
-	velocity:    Vec2,
-	shape:       Collision_Shape,
+	collider: Physics_Collider,
+	snapshot: Vec2,
+	velocity: Vec2,
 }
 
 Collision_Shape :: union {
@@ -39,6 +38,12 @@ Collision_Data :: struct {
 	mtv:    Vec2,
 }
 
+
+collider_vertices :: proc(c: Collider) -> [4]Vec2 {
+	return [4]Vec2{{c.min.x, c.max.y}, {c.min.x, c.min.y}, {c.max.x, c.max.y}, {c.max.x, c.min.y}}
+}
+
+
 init_physics_collections :: proc() {
 	log.info("Rigidbodies Initialized")
 	rigidbodies = make([dynamic]Rigidbody, 0, 16)
@@ -62,6 +67,9 @@ physics_step :: proc() {
 	player_jump()
 	apply_player_gravity()
 	apply_player_velocity()
+
+	apply_rigidbody_gravity()
+	apply_rigidbody_velocity()
 }
 
 collision :: proc() {
@@ -95,62 +103,14 @@ aabb_overlap :: proc(a_min, a_max, b_min, b_max: Vec2) -> (colliding: bool, push
 	return
 }
 
-
-calculate_collision :: proc(player: ^Player, nearest_point: Vec2) -> Collision_Data {
-	collision: Collision_Data
-	collision_vector := player.translation - nearest_point
-	pen_depth := player.radius - l.length(collision_vector)
-	collision_normal := l.normalize(collision_vector)
-	mtv := collision_normal * pen_depth
-	collision.normal = collision_normal
-	collision.mtv = mtv
-	return collision
-}
-
-get_collision :: proc(
-	rb: ^Rigidbody,
-	c: Collider,
-) -> (
-	colliding: bool,
-	collision: Collision_Data,
-) {
-	switch v in rb.shape {
-	case Circle:
-	case Rectangle:
-		c_nearest := collider_nearest_point(c, rb.translation)
-	// rb_nearest := rectangle_nearest_point(v, rb.translation, c_neares
+apply_rigidbody_velocity :: proc() {
+	for &rb in rigidbodies {
+		rb.collider.translation += rb.velocity * TICK_RATE
 	}
-	return
 }
 
-// rigidbody_platform_collision :: proc() {
-// 	for &rb in rigidbodies {
-// 		rb_feet := rb.translation + Vec2{0, 0.55}
-// 		foot_collision: bool
-// 		for collider in colliders {
-// 			nearest_point := collider_nearest_point(collider, rb.translation)
-// 			// if l.distance(nearest_point, rb.translation) < rb.radius {
-// 			collision_vector := rb.translation - nearest_point
-// 			collision_normal := l.normalize0(collision_vector)
-// 			// pen_depth := rb.radius - l.length(collision_vector)
-// 			// mtv := collision_normal * pen_depth
-
-// 			rb.translation += mtv
-// 			x_dot := math.abs(l.dot(collision_normal, Vec2{1, 0}))
-// 			y_dot := math.abs(l.dot(collision_normal, Vec2{0, 1}))
-// 			if x_dot > 0.7 {
-// 				rb.velocity.x = 0
-// 			}
-// 			if y_dot > 0.7 {
-// 				rb.velocity.y = 0
-// 			}
-// 			// }
-// 			if l.distance(nearest_point, rb_feet) < 0.06 {
-// 				foot_collision = true
-// 			}
-// 		}
-// 		if foot_collision {
-// 		} else {
-// 		}
-// 	}
-// }
+apply_rigidbody_gravity :: proc() {
+	for &rb in rigidbodies {
+		rb.velocity.y += falling_gravity * TICK_RATE
+	}
+}
