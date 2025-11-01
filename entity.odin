@@ -42,7 +42,6 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 		Rigidbody{translation = translation, snapshot = translation, shape = shape},
 	)
 	rb_index := len(rigidbodies) - 1
-	log.warnf("Appended Rigidbody at index: %v", rb_index)
 	append(&entities, Entity{tag = tag, rigidbody_index = rb_index})
 }
 

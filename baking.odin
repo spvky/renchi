@@ -47,12 +47,6 @@ bake_map :: proc(t: ^Tilemap) {
 	log.debug("Finished baking water")
 	bake_entities(t)
 	log.debugf("Entities baked: %v", len(entities))
-	for e in entities {
-		log.debugf("Entity: %v", e)
-	}
-	for rb in rigidbodies {
-		log.debugf("Rigidbody: %v", rb)
-	}
 }
 
 reset_map :: proc(tilemap: ^Tilemap) {
@@ -465,7 +459,6 @@ bake_entities :: proc(t: ^Tilemap) {
 			tag := get_entity_tile(t^, x, y)
 			switch tag {
 			case .Box:
-				log.debugf("Baking found box at: [%v,%v]", x, y)
 				resolve_box(t, x, y)
 			case .None:
 			}
@@ -487,7 +480,6 @@ resolve_box :: proc(t: ^Tilemap, start_x, start_y: int) {
 		} else {
 			set_entity_tile(t, start_x, start_y, .None)
 			set_entity_tile(t, x, y - 1, .Box)
-			log.debugf("Making an entity at [%v, %v] from [%v, %v]", x, y - 1, start_x, start_y)
 			make_entity({f32(x), f32(y - 1)}, .Box)
 			return
 		}
