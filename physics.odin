@@ -6,7 +6,7 @@ import "core:log"
 import "core:math"
 import l "core:math/linalg"
 
-colliders: [dynamic]Collider
+colliders: [dynamic]Static_Collider
 rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {
@@ -28,7 +28,7 @@ Rectangle :: struct {
 	extents: Vec2,
 }
 
-Collider :: struct {
+Static_Collider :: struct {
 	max: Vec2,
 	min: Vec2,
 }
@@ -39,7 +39,7 @@ Collision_Data :: struct {
 }
 
 
-collider_vertices :: proc(c: Collider) -> [4]Vec2 {
+collider_vertices :: proc(c: Static_Collider) -> [4]Vec2 {
 	return [4]Vec2{{c.min.x, c.max.y}, {c.min.x, c.min.y}, {c.max.x, c.max.y}, {c.max.x, c.min.y}}
 }
 
@@ -48,7 +48,7 @@ init_physics_collections :: proc() {
 	log.info("Rigidbodies Initialized")
 	rigidbodies = make([dynamic]Rigidbody, 0, 16)
 	log.info("Colliders Initialized")
-	colliders = make([dynamic]Collider, 0, 64)
+	colliders = make([dynamic]Static_Collider, 0, 64)
 }
 
 clear_physics_collectsions :: proc() {
@@ -68,6 +68,7 @@ physics_step :: proc() {
 	apply_player_gravity()
 	apply_player_velocity()
 
+	rigidbody_platform_collision()
 	apply_rigidbody_gravity()
 	apply_rigidbody_velocity()
 }
@@ -77,7 +78,7 @@ collision :: proc() {
 
 }
 
-collider_nearest_point :: proc(c: Collider, v: Vec2) -> Vec2 {
+collider_nearest_point :: proc(c: Static_Collider, v: Vec2) -> Vec2 {
 	return l.clamp(v, c.min, c.max)
 }
 

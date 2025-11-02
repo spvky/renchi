@@ -214,7 +214,7 @@ generate_collision :: proc(t: Tilemap) {
 	for chain in wall_chains {
 		min := Vec2{f32(chain.start), f32(chain.y_start)} - half
 		max := Vec2{f32(chain.end + 1), f32(chain.y_end + 1)} - half
-		collider := Collider {
+		collider := Static_Collider {
 			min = min,
 			max = max,
 		}

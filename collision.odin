@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math"
 import l "core:math/linalg"
 
@@ -147,7 +148,7 @@ sat :: proc(s1, s2: Physics_Collider) -> (colliding: bool, mtv: Mtv) {
 	return
 }
 
-static_sat :: proc(c: Collider, s: Physics_Collider) -> (colliding: bool, mtv: Mtv) {
+static_sat :: proc(c: Static_Collider, s: Physics_Collider) -> (colliding: bool, mtv: Mtv) {
 	// Only doing AABBs at the moment, but if I start handling rotation these will have to be calculated based on rotation
 	axes := [2]Vec2{{1, 0}, {0, 1}}
 	smallest: Vec2
@@ -204,5 +205,53 @@ gjk :: proc(s1, s2: Physics_Collider) -> bool {
 
 		}
 
+	}
+}
+
+player_platform_collision :: proc() {
+	player := &world.player
+	player_feet := player.translation + Vec2{0, 0.55}
+	foot_collision: bool
+	for collider in colliders {
+		nearest_point := collider_nearest_point(collider, player.translation)
+		if l.distance(nearest_point, player.translation) < player.radius {
+			collision_vector := player.translation - nearest_point
+			collision_normal := l.normalize0(collision_vector)
+			pen_depth := player.radius - l.length(collision_vector)
+			mtv := collision_normal * pen_depth
+
+			player.translation += mtv
+			x_dot := math.abs(l.dot(collision_normal, Vec2{1, 0}))
+			y_dot := math.abs(l.dot(collision_normal, Vec2{0, 1}))
+			if x_dot > 0.7 {
+				player.velocity.x = 0
+			}
+			if y_dot > 0.7 {
+				player.velocity.y = 0
+			}
+		}
+		if l.distance(nearest_point, player_feet) < 0.06 {
+			foot_collision = true
+		}
+	}
+	if foot_collision {
+		player.state = .Grounded
+	} else {
+		player.state = .Airborne
+	}
+}
+
+rigidbody_platform_collision :: proc() {
+	for &rb in rigidbodies {
+		// Broad phase filter here
+		for collider in colliders {
+			if colliding, mtv := static_sat(collider, rb.collider); colliding {
+				log.debugf("COLLISION: %v", mtv)
+				rb.collider.translation -= (mtv.normal * mtv.depth)
+				if math.abs(l.dot(Vec2{0, 1}, mtv.normal)) > 0.7 {
+					rb.velocity.y = 0
+				}
+			}
+		}
 	}
 }
