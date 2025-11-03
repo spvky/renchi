@@ -15,6 +15,10 @@ Rigidbody :: struct {
 	velocity: Vec2,
 }
 
+Staticbody :: struct {
+	collider: Physics_Collider,
+}
+
 Collision_Shape :: union {
 	Circle,
 	Rectangle,
