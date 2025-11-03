@@ -4,6 +4,8 @@ import "core:log"
 import "core:math"
 import l "core:math/linalg"
 
+// TODO: As part of the broad phase, since at this point all colliders except for the player are axis alligned rectangles, concat all relevant colliders within a chunk (probably a collection of adjacent cells) into one list of sets of [4]Vec2, and do collision in one big pass, while indicating which colliders are static for resolution
+
 Physics_Collider :: struct {
 	translation: Vec2,
 	shape:       Collider_Shape,
@@ -45,6 +47,15 @@ rect_vertices :: proc(t: Vec2, s: Collision_Rect) -> [4]Vec2 {
 		t + {-half.x, -half.y},
 		t + {-half.x, half.y},
 	}
+}
+
+// normal from rectangle vertices, assuming counter clockwise order
+normals_from_rect_vertices :: proc(vertices: [4]Vec2) -> [2]Vec2 {
+	a1 := l.normalize(vertices[0] - vertices[1])
+	a1.x, a1.y = -a1.y, a1.x
+	a2 := l.normalize(vertices[1] - vertices[2])
+	a2.x, a2.y = -a2.y, a2.x
+	return [2]Vec2{a1, a2}
 }
 
 overlap :: proc(r1, r2: F_Range) -> (colliding: bool, minimum_translation: f32) {
@@ -246,7 +257,6 @@ rigidbody_platform_collision :: proc() {
 		// Broad phase filter here
 		for collider in colliders {
 			if colliding, mtv := static_sat(collider, rb.collider); colliding {
-				log.debugf("COLLISION: %v", mtv)
 				rb.collider.translation -= (mtv.normal * mtv.depth)
 				if math.abs(l.dot(Vec2{0, 1}, mtv.normal)) > 0.7 {
 					rb.velocity.y = 0
