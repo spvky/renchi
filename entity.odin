@@ -5,14 +5,29 @@ import rl "vendor:raylib"
 
 entities: [dynamic]Entity
 
+Entity :: struct {
+	tag:             Entity_Tag,
+	fields:          Entity_Fields,
+	rigidbody_index: int,
+}
+
 Entity_Tag :: enum u8 {
 	None,
 	Box,
 }
 
-Entity :: struct {
-	tag:             Entity_Tag,
-	rigidbody_index: int,
+Entity_Fields :: union {
+	Entity_Box,
+}
+
+Entity_Box :: struct {
+	state: Box_State,
+}
+
+Box_State :: enum {
+	Grounded,
+	Falling,
+	Water,
 }
 
 init_entity_collections :: proc() {
