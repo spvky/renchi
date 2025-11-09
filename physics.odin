@@ -19,19 +19,6 @@ Staticbody :: struct {
 	collider: Physics_Collider,
 }
 
-Collision_Shape :: union {
-	Circle,
-	Rectangle,
-}
-
-Circle :: struct {
-	radius: f32,
-}
-
-Rectangle :: struct {
-	extents: Vec2,
-}
-
 Static_Collider :: struct {
 	max: Vec2,
 	min: Vec2,
