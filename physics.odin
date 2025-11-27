@@ -7,6 +7,7 @@ import "core:math"
 import l "core:math/linalg"
 
 colliders: [dynamic]Static_Collider
+temp_colliders: [dynamic]Temp_Collider
 rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {

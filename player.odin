@@ -21,19 +21,19 @@ jump_speed := calulate_jump_speed()
 rising_gravity := calculate_rising_gravity()
 falling_gravity := calculate_falling_gravity()
 
-calulate_jump_speed :: proc() -> f32 {
+calulate_jump_speed :: proc "c" () -> f32 {
 	return (-2 * JUMP_HEIGHT) / TIME_TO_PEAK
 }
 
-calculate_rising_gravity :: proc() -> f32 {
+calculate_rising_gravity :: proc "c" () -> f32 {
 	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_PEAK, 2)
 }
 
-calculate_falling_gravity :: proc() -> f32 {
+calculate_falling_gravity :: proc "c" () -> f32 {
 	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_DESCENT, 2)
 }
 
-calculate_max_speed :: proc() -> f32 {
+calculate_max_speed :: proc "c" () -> f32 {
 	return MAX_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 

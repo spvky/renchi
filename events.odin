@@ -12,17 +12,13 @@ Event_Type :: enum {
 	Chest_Appeared,
 }
 
-Event_Payload_Unlocked_Door :: struct {
-	location: Vec2,
-}
 
-Event_Payload_Chest_Appeared :: struct {
+Event_Location_Payload :: struct {
 	location: Vec2,
 }
 
 Event_Payload :: union {
-	Event_Payload_Unlocked_Door,
-	Event_Payload_Chest_Appeared,
+	Event_Location_Payload,
 }
 
 Event_Callback :: proc(event: Event)
@@ -44,7 +40,6 @@ subscribe_event :: proc(type: Event_Type, callback: Event_Callback) {
 process_events :: proc() {
 	for queue.len(event_queue) > 0 {
 		event := queue.dequeue(&event_queue)
-
 		if listeners, ok := event_listeners[event.type]; ok {
 			for callback in listeners {
 				callback(event)

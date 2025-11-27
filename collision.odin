@@ -39,6 +39,15 @@ Mtv :: struct {
 	depth:  f32,
 }
 
+Temp_Collider :: struct {
+	points: [4]Vec2,
+	meta:   Temp_Collider_Meta,
+}
+
+Temp_Collider_Meta :: union {
+	int,
+}
+
 rect_vertices :: proc(t: Vec2, s: Collision_Rect) -> [4]Vec2 {
 	half := s.extents / 2
 	return [4]Vec2 {
@@ -263,5 +272,37 @@ rigidbody_platform_collision :: proc() {
 				}
 			}
 		}
+	}
+}
+
+prepare_temp_colliders :: proc() {
+	clear(&temp_colliders)
+
+	for c in colliders {
+		append(
+			&temp_colliders,
+			Temp_Collider {
+				points = {
+					{c.min.x, c.max.y},
+					{c.min.x, c.min.y},
+					{c.max.x, c.min.y},
+					{c.max.x, c.max.y},
+				},
+			},
+		)
+	}
+
+	for r in rigidbodies {
+		append(
+			&temp_colliders,
+			Temp_Collider {
+				points = {
+					{c.min.x, c.max.y},
+					{c.min.x, c.min.y},
+					{c.max.x, c.min.y},
+					{c.max.x, c.max.y},
+				},
+			},
+		)
 	}
 }

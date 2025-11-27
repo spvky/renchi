@@ -4,7 +4,6 @@
 package main
 
 import "core:c"
-import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 
@@ -25,6 +24,7 @@ Game_State :: enum {
 	Gameplay,
 }
 
+// Struct that contains realtime global data
 World :: struct {
 	camera:       rl.Camera3D,
 	offset:       Vec3,
