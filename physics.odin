@@ -14,10 +14,12 @@ Rigidbody :: struct {
 	collider: Physics_Collider,
 	snapshot: Vec2,
 	velocity: Vec2,
+	flags:    bit_set[Collision_Flag],
 }
 
 Staticbody :: struct {
 	collider: Physics_Collider,
+	flags:    bit_set[Collision_Flag],
 }
 
 Collision_Shape :: union {
@@ -34,8 +36,9 @@ Rectangle :: struct {
 }
 
 Static_Collider :: struct {
-	max: Vec2,
-	min: Vec2,
+	max:   Vec2,
+	min:   Vec2,
+	flags: bit_set[Collision_Flag],
 }
 
 Collision_Data :: struct {
@@ -67,7 +70,10 @@ delete_physics_collections :: proc() {
 }
 
 physics_step :: proc() {
-	player_platform_collision()
+
+	prepare_temp_colliders()
+	// player_platform_collision()
+	player_temp_collider_collision()
 	player_movement()
 	player_jump()
 	apply_player_gravity()
@@ -85,6 +91,18 @@ collision :: proc() {
 
 collider_nearest_point :: proc(c: Static_Collider, v: Vec2) -> Vec2 {
 	return l.clamp(v, c.min, c.max)
+}
+
+temp_collider_nearest_point :: proc(c: Temp_Collider, v: Vec2) -> Vec2 {
+	min, max := Vec2{1, 1} * math.F32_MAX, Vec2{-1, -1} * math.F32_MAX
+	for i in 0 ..< 4 {
+		for d in 0 ..< 2 {
+			min[d] = math.min(min[d], c.points[i][d])
+			max[d] = math.max(max[d], c.points[i][d])
+		}
+	}
+	nearest_point := l.clamp(v, min, max)
+	return nearest_point
 }
 
 rectangle_nearest_point :: proc(r: Rectangle, t, v: Vec2) -> Vec2 {

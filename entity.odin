@@ -57,6 +57,7 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 		Rigidbody {
 			snapshot = translation,
 			collider = Physics_Collider{translation = translation, shape = shape},
+			flags = {.Standable},
 		},
 	)
 	rb_index := len(rigidbodies) - 1

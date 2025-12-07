@@ -11,6 +11,11 @@ Physics_Collider :: struct {
 	shape:       Collider_Shape,
 }
 
+Collision_Flag :: enum {
+	Standable,
+	Oneway,
+}
+
 Collider_Shape :: union {
 	Collision_Circle,
 	Collision_Rect,
@@ -41,11 +46,7 @@ Mtv :: struct {
 
 Temp_Collider :: struct {
 	points: [4]Vec2,
-	meta:   Temp_Collider_Meta,
-}
-
-Temp_Collider_Meta :: union {
-	int,
+	flags:  bit_set[Collision_Flag],
 }
 
 rect_vertices :: proc(t: Vec2, s: Collision_Rect) -> [4]Vec2 {
@@ -261,6 +262,40 @@ player_platform_collision :: proc() {
 	}
 }
 
+player_temp_collider_collision :: proc() {
+	player := &world.player
+	player_feet := player.translation + Vec2{0, 0.55}
+	foot_collision: bool
+
+	for collider, i in temp_colliders {
+		nearest_point := temp_collider_nearest_point(collider, player.translation)
+		if l.distance(nearest_point, player.translation) < player.radius {
+			collision_vector := player.translation - nearest_point
+			collision_normal := l.normalize0(collision_vector)
+			pen_depth := player.radius - l.length(collision_vector)
+			mtv := collision_normal * pen_depth
+
+			player.translation += mtv
+			x_dot := math.abs(l.dot(collision_normal, Vec2{1, 0}))
+			y_dot := math.abs(l.dot(collision_normal, Vec2{0, 1}))
+			if x_dot > 0.7 {
+				player.velocity.x = 0
+			}
+			if y_dot > 0.7 {
+				player.velocity.y = 0
+			}
+		}
+		if l.distance(nearest_point, player_feet) < 0.06 && .Standable in collider.flags {
+			foot_collision = true
+		}
+	}
+	if foot_collision {
+		player.state = .Grounded
+	} else {
+		player.state = .Airborne
+	}
+}
+
 rigidbody_platform_collision :: proc() {
 	for &rb in rigidbodies {
 		// Broad phase filter here
@@ -288,21 +323,22 @@ prepare_temp_colliders :: proc() {
 					{c.max.x, c.min.y},
 					{c.max.x, c.max.y},
 				},
+				flags = c.flags,
 			},
 		)
 	}
 
 	for r in rigidbodies {
-		append(
-			&temp_colliders,
-			Temp_Collider {
-				points = {
-					{c.min.x, c.max.y},
-					{c.min.x, c.min.y},
-					{c.max.x, c.min.y},
-					{c.max.x, c.max.y},
-				},
-			},
-		)
+		#partial switch v in r.collider.shape {
+		case Collision_Rect:
+			half := v.extents / 2
+			max := r.collider.translation + half
+			min := r.collider.translation - half
+			temp_col := Temp_Collider {
+				points = {{min.x, max.y}, {min.x, min.y}, {max.x, min.y}, {max.x, max.y}},
+				flags  = r.flags,
+			}
+			append(&temp_colliders, temp_col)
+		}
 	}
 }

@@ -59,6 +59,7 @@ reset_map :: proc(tilemap: ^Tilemap) {
 
 draw_tilemap :: proc(t: Tilemap) {
 	draw_colliders()
+	draw_temp_colliders()
 	draw_water_paths(t)
 	draw_water_volumes(t)
 }
@@ -96,6 +97,18 @@ draw_colliders :: proc() {
 			rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
 			rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
 		}
+	}
+}
+draw_temp_colliders :: proc() {
+	for collider in temp_colliders {
+		a: Vec2 = collider.points[0]
+		b: Vec2 = collider.points[1]
+		c: Vec2 = collider.points[2]
+		d: Vec2 = collider.points[3]
+		rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
+		rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
+		rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
+		rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
 	}
 }
 
@@ -152,7 +165,7 @@ generate_collision :: proc(t: Tilemap) {
 
 	map_height, map_width := get_tilemap_dimensions(t)
 	wall_chains := make([dynamic]Wall_Chain, 0, 32, allocator = context.temp_allocator)
-	column_segments := make(map[Tile_Position]struct {}, 32, allocator = context.temp_allocator)
+	column_segments := make(map[Tile_Position]struct{}, 32, allocator = context.temp_allocator)
 	x, y: int
 	// Loop through our placed walls and find adjacent wall tiles to group together for generating collision AABBs
 	for y < map_height {
@@ -215,8 +228,9 @@ generate_collision :: proc(t: Tilemap) {
 		min := Vec2{f32(chain.start), f32(chain.y_start)} - half
 		max := Vec2{f32(chain.end + 1), f32(chain.y_end + 1)} - half
 		collider := Static_Collider {
-			min = min,
-			max = max,
+			min   = min,
+			max   = max,
+			flags = {.Standable},
 		}
 		append(&colliders, collider)
 	}
