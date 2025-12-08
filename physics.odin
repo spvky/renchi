@@ -79,8 +79,11 @@ physics_step :: proc() {
 	apply_player_gravity()
 	apply_player_velocity()
 
+	entity_submersion_handling(current_tilemap)
+
 	rigidbody_platform_collision()
 	apply_rigidbody_gravity()
+	entity_specific_physics()
 	apply_rigidbody_velocity()
 }
 

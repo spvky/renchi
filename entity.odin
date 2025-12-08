@@ -8,6 +8,7 @@ entities: [dynamic]Entity
 Entity :: struct {
 	tag:             Entity_Tag,
 	fields:          Entity_Fields,
+	flags:           bit_set[Entity_Flag],
 	rigidbody_index: int,
 }
 
@@ -22,6 +23,12 @@ Entity_Fields :: union {
 
 Entity_Box :: struct {
 	state: Box_State,
+}
+
+Entity_Flag :: enum {
+	Submerged,
+	Electrified,
+	Burning,
 }
 
 Box_State :: enum {
@@ -73,6 +80,40 @@ draw_entities :: proc() {
 			pos := extend(rb.snapshot, 0)
 			extents := Vec3{1, 1, 1}
 			rl.DrawCubeV(pos, extents, rl.BLACK)
+		}
+	}
+}
+
+entity_specific_physics :: proc() {
+	for e in entities {
+		switch e.tag {
+		case .None:
+		case .Box:
+			rb := &rigidbodies[e.rigidbody_index]
+			if .Submerged in e.flags {
+				rb.velocity.y = -2
+			}
+		}
+	}
+}
+
+entity_submersion_handling :: proc(t: Tilemap) {
+	for &e in entities {
+		switch e.tag {
+		case .None:
+		case .Box:
+			rb := rigidbodies[e.rigidbody_index]
+			submerged: bool
+			for v in t.water_volumes {
+				if water_volume_contains(v, rb.collider.translation) {
+					submerged = true
+				}
+			}
+			if submerged {
+				e.flags += {.Submerged}
+			} else {
+				e.flags -= {.Submerged}
+			}
 		}
 	}
 }

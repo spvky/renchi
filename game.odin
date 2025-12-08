@@ -4,6 +4,7 @@
 package main
 
 import "core:c"
+import "core:log"
 import "core:math"
 import rl "vendor:raylib"
 

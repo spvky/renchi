@@ -16,27 +16,6 @@ Wall_Chain :: struct {
 	end:     int,
 }
 
-Water_Path :: struct {
-	segments: [dynamic]Water_Path_Segment,
-}
-
-Water_Path_Segment :: struct {
-	start:     Tile_Position,
-	end:       Tile_Position,
-	length:    int,
-	direction: Direction,
-	level:     int,
-	finished:  bool,
-}
-
-Water_Volume :: struct {
-	top:    int,
-	bottom: int,
-	left:   int,
-	right:  int,
-}
-
-
 bake_map :: proc(t: ^Tilemap) {
 	m_width, m_height := get_tilemap_dimensions(t^)
 	place_tiles(t)
