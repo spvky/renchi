@@ -7,8 +7,8 @@ entities: [dynamic]Entity
 
 Entity :: struct {
 	tag:             Entity_Tag,
-	fields:          Entity_Fields,
-	flags:           bit_set[Entity_Flag],
+	state_flags:     bit_set[Entity_State_Flag;u16],
+	type_flags:      bit_set[Entity_Type_Flag;u16],
 	rigidbody_index: int,
 }
 
@@ -17,18 +17,15 @@ Entity_Tag :: enum u8 {
 	Box,
 }
 
-Entity_Fields :: union {
-	Entity_Box,
-}
-
-Entity_Box :: struct {
-	state: Box_State,
-}
-
-Entity_Flag :: enum {
+Entity_State_Flag :: enum u16 {
 	Submerged,
 	Electrified,
 	Burning,
+}
+
+Entity_Type_Flag :: enum u16 {
+	Moveable,
+	Grabable,
 }
 
 Box_State :: enum {
@@ -68,7 +65,10 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 		},
 	)
 	rb_index := len(rigidbodies) - 1
-	append(&entities, Entity{tag = tag, rigidbody_index = rb_index})
+	append(
+		&entities,
+		Entity{tag = tag, rigidbody_index = rb_index, type_flags = {.Moveable, .Grabable}},
+	)
 }
 
 draw_entities :: proc() {
@@ -90,7 +90,7 @@ entity_specific_physics :: proc() {
 		case .None:
 		case .Box:
 			rb := &rigidbodies[e.rigidbody_index]
-			if .Submerged in e.flags {
+			if .Submerged in e.state_flags {
 				rb.velocity.y = -2
 			}
 		}
@@ -110,9 +110,9 @@ entity_submersion_handling :: proc(t: Tilemap) {
 				}
 			}
 			if submerged {
-				e.flags += {.Submerged}
+				e.state_flags += {.Submerged}
 			} else {
-				e.flags -= {.Submerged}
+				e.state_flags -= {.Submerged}
 			}
 		}
 	}

@@ -24,10 +24,10 @@ Water_Volume :: struct {
 }
 
 water_volume_contains :: proc(wv: Water_Volume, pos: Vec2) -> bool {
-	contains_point :=
-		(pos.x >= f32(wv.left) &&
-			pos.x <= f32(wv.right) &&
-			pos.y >= f32(wv.top) + 0.5 &&
-			pos.y <= f32(wv.bottom + 1))
-	return contains_point
+	return(
+		pos.x >= f32(wv.left) &&
+		pos.x <= f32(wv.right) &&
+		pos.y >= f32(wv.top) + 0.8 &&
+		pos.y <= f32(wv.bottom + 1) \
+	)
 }
