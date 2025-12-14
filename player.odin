@@ -47,6 +47,7 @@ Player :: struct {
 	acceleration: f32,
 	deceleration: f32,
 	facing:       f32,
+	held_entity:  Maybe(Entity_Id),
 }
 
 Player_State :: enum {
@@ -92,6 +93,17 @@ player_movement :: proc() {
 		if math.abs(player.velocity.x) < 1 {
 			player.velocity.x = 0
 		}
+	}
+}
+
+player_grab :: proc() {
+	player := &world.player
+	// Check if any entities collide with the grab box when the button is pressed
+	// if we find one, turn it's rigidbody kinematic, remove collision and have the player carry it
+	for entity in entities {
+		// Collision
+		//	If collision is made and button is pressed
+		//		Set held entity to point to the grabbed entity
 	}
 }
 
