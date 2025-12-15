@@ -233,7 +233,7 @@ player_platform_collision :: proc() {
 	player := &world.player
 	player_feet := player.translation + Vec2{0, 0.55}
 	foot_collision: bool
-	for collider in colliders {
+	for collider in world.colliders {
 		nearest_point := collider_nearest_point(collider, player.translation)
 		if l.distance(nearest_point, player.translation) < player.radius {
 			collision_vector := player.translation - nearest_point
@@ -267,7 +267,7 @@ player_temp_collider_collision :: proc() {
 	player_feet := player.translation + Vec2{0, 0.55}
 	foot_collision: bool
 
-	for collider, i in temp_colliders {
+	for collider, i in world.temp_colliders {
 		nearest_point := temp_collider_nearest_point(collider, player.translation)
 		if l.distance(nearest_point, player.translation) < player.radius {
 			collision_vector := player.translation - nearest_point
@@ -297,9 +297,9 @@ player_temp_collider_collision :: proc() {
 }
 
 rigidbody_platform_collision :: proc() {
-	for &rb in rigidbodies {
+	for &rb in world.rigidbodies {
 		// Broad phase filter here
-		for collider in colliders {
+		for collider in world.colliders {
 			if colliding, mtv := static_sat(collider, rb.collider); colliding {
 				rb.collider.translation -= (mtv.normal * mtv.depth)
 				if math.abs(l.dot(Vec2{0, 1}, mtv.normal)) > 0.7 {
@@ -311,11 +311,11 @@ rigidbody_platform_collision :: proc() {
 }
 
 prepare_temp_colliders :: proc() {
-	clear(&temp_colliders)
+	clear(&world.temp_colliders)
 
-	for c in colliders {
+	for c in world.colliders {
 		append(
-			&temp_colliders,
+			&world.temp_colliders,
 			Temp_Collider {
 				points = {
 					{c.min.x, c.max.y},
@@ -328,7 +328,7 @@ prepare_temp_colliders :: proc() {
 		)
 	}
 
-	for r in rigidbodies {
+	for r in world.rigidbodies {
 		#partial switch v in r.collider.shape {
 		case Collision_Rect:
 			half := v.extents / 2
@@ -338,7 +338,7 @@ prepare_temp_colliders :: proc() {
 				points = {{min.x, max.y}, {min.x, min.y}, {max.x, min.y}, {max.x, max.y}},
 				flags  = r.flags,
 			}
-			append(&temp_colliders, temp_col)
+			append(&world.temp_colliders, temp_col)
 		}
 	}
 }

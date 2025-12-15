@@ -10,7 +10,7 @@ import rl "vendor:raylib"
 map_screen_debug :: proc() {
 	y_offset := 100
 	i: int
-	for room, tag in rooms {
+	for room, tag in assets.rooms {
 		if room.placed && tag != .None {
 			rooms_string := fmt.tprintf(
 				"Room: %v\n\tPlaced: %v\n\tPosition: %v\n\tRotation: %v",

@@ -14,7 +14,7 @@ load_ui_textures :: proc() -> [Ui_Texture_Tag]rl.Texture {
 }
 
 unload_ui_textures :: proc() {
-	for texture, _ in ui_texture_atlas {
+	for texture, _ in assets.ui_texture_atlas {
 		rl.UnloadTexture(texture)
 	}
 }

@@ -126,7 +126,7 @@ rotate_direction :: proc(dir: Direction, rotation: Direction) -> Direction {
 can_place :: proc(t: Tilemap, positions: []Cell_Position) -> bool {
 	can_place := true
 	placed_positions := make([dynamic]Cell_Position, 0, 64, allocator = context.temp_allocator)
-	for room, tag in rooms {
+	for room, tag in assets.rooms {
 		if room.placed {
 			append_elems(
 				&placed_positions,
@@ -146,7 +146,7 @@ can_place :: proc(t: Tilemap, positions: []Cell_Position) -> bool {
 }
 
 place_room :: proc(tag: Room_Tag, position: Cell_Position, rotation: Direction) {
-	room := &rooms[tag]
+	room := &assets.rooms[tag]
 	room.placed = true
 	room.position = position
 	room.rotation = rotation
@@ -161,7 +161,7 @@ positions_from_rotation :: proc(
 	origin: Cell_Position,
 	rotation: Direction,
 ) -> [dynamic]Cell_Position {
-	room := rooms[tag]
+	room := assets.rooms[tag]
 	positions_to_place := make([dynamic]Cell_Position, 0, 4, allocator = context.temp_allocator)
 
 	rotations: int
@@ -222,7 +222,7 @@ rotate_cell :: proc(
 }
 
 select_next_valid_tag :: proc() {
-	for room, tag in rooms {
+	for room, tag in assets.rooms {
 		if tag != .None && room.placed == false {
 			map_screen_state.selected_room = tag
 		}
@@ -257,10 +257,14 @@ draw_map_cursor :: proc() {
 	cursor := &map_screen_state.cursor
 	cursor_pos := cursor.displayed_position
 	if cursor.mode == .Place && game_state == .Map {
-		draw_room(rooms[map_screen_state.selected_room], cursor_pos, cursor.displayed_rotation)
+		draw_room(
+			assets.rooms[map_screen_state.selected_room],
+			cursor_pos,
+			cursor.displayed_rotation,
+		)
 	} else {
 		rl.DrawTexturePro(
-			ui_texture_atlas[.Cursor],
+			assets.ui_texture_atlas[.Cursor],
 			{0, 0, 16, 16},
 			{cursor_pos.x, cursor_pos.y, 25, 25},
 			{8, 8},
@@ -271,7 +275,7 @@ draw_map_cursor :: proc() {
 }
 
 draw_placed_rooms :: proc(t: Tilemap) {
-	for room, _ in rooms {
+	for room, _ in assets.rooms {
 		if room.placed {
 			draw_room(
 				room,

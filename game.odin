@@ -34,7 +34,6 @@ init :: proc() {
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
 	load_assets()
 	init_world()
-	init_render_textures()
 }
 
 update :: proc() {
@@ -66,7 +65,7 @@ playing :: proc() {
 	}
 	alpha := time.simulation_time / TICK_RATE
 	world.player.snapshot = math.lerp(world.player.snapshot, world.player.translation, alpha)
-	for &rb in rigidbodies {
+	for &rb in world.rigidbodies {
 		rb.snapshot = math.lerp(rb.snapshot, rb.collider.translation, alpha)
 	}
 }

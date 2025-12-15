@@ -127,13 +127,13 @@ aabb_overlap :: proc(a_min, a_max, b_min, b_max: Vec2) -> (colliding: bool, push
 }
 
 apply_rigidbody_velocity :: proc() {
-	for &rb in rigidbodies {
+	for &rb in world.rigidbodies {
 		rb.collider.translation += rb.velocity * TICK_RATE
 	}
 }
 
 apply_rigidbody_gravity :: proc() {
-	for &rb in rigidbodies {
+	for &rb in world.rigidbodies {
 		rb.velocity.y += falling_gravity * TICK_RATE
 	}
 }

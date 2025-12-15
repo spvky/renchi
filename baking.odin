@@ -31,7 +31,7 @@ bake_map :: proc(t: ^Tilemap) {
 reset_map :: proc(tilemap: ^Tilemap) {
 	clear(&tilemap.collision_tiles)
 	clear(&tilemap.entity_tiles)
-	for &room, _ in rooms {
+	for &room, _ in assets.rooms {
 		room.placed = false
 	}
 }
@@ -62,7 +62,7 @@ draw_water_paths :: proc(t: Tilemap) {
 }
 
 draw_colliders :: proc() {
-	for collider in colliders {
+	for collider in world.colliders {
 		a: Vec2 = collider.min
 		b: Vec2 = {collider.max.x, collider.min.y}
 		c: Vec2 = collider.max
@@ -79,7 +79,7 @@ draw_colliders :: proc() {
 	}
 }
 draw_temp_colliders :: proc() {
-	for collider in temp_colliders {
+	for collider in world.temp_colliders {
 		a: Vec2 = collider.points[0]
 		b: Vec2 = collider.points[1]
 		c: Vec2 = collider.points[2]
@@ -107,7 +107,7 @@ draw_water_volumes :: proc(t: Tilemap) {
 
 place_tiles :: proc(t: ^Tilemap) {
 	tiles_added, entities_added: int
-	for room, _ in rooms {
+	for room, _ in assets.rooms {
 		if room.placed {
 			for position, cell in room.cells {
 				tiles, entities, exits := rotate_cell(
@@ -211,7 +211,7 @@ generate_collision :: proc(t: Tilemap) {
 			max   = max,
 			flags = {.Standable},
 		}
-		append(&colliders, collider)
+		append(&world.colliders, collider)
 	}
 
 	end_time := time.now()

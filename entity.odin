@@ -97,14 +97,14 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 	}
 
 	append(
-		&rigidbodies,
+		&world.rigidbodies,
 		Rigidbody {
 			snapshot = translation,
 			collider = Physics_Collider{translation = translation, shape = shape},
 			flags = {.Standable},
 		},
 	)
-	rb_index := len(rigidbodies) - 1
+	rb_index := len(world.rigidbodies) - 1
 	append(
 		&entities,
 		Entity{tag = tag, rigidbody_index = rb_index, type_flags = {.Moveable, .Grabable}},
@@ -116,7 +116,7 @@ draw_entities :: proc() {
 		switch e.tag {
 		case .None:
 		case .Box:
-			rb := rigidbodies[e.rigidbody_index]
+			rb := world.rigidbodies[e.rigidbody_index]
 			pos := extend(rb.snapshot, 0)
 			extents := Vec3{1, 1, 1}
 			rl.DrawCubeV(pos, extents, rl.BLACK)
@@ -129,7 +129,7 @@ entity_specific_physics :: proc() {
 		switch e.tag {
 		case .None:
 		case .Box:
-			rb := &rigidbodies[e.rigidbody_index]
+			rb := &world.rigidbodies[e.rigidbody_index]
 			if .Submerged in e.state_flags {
 				rb.velocity.y = -2
 			}
@@ -142,7 +142,7 @@ entity_submersion_handling :: proc(t: Tilemap) {
 		switch e.tag {
 		case .None:
 		case .Box:
-			rb := rigidbodies[e.rigidbody_index]
+			rb := world.rigidbodies[e.rigidbody_index]
 			submerged: bool
 			for v in t.water_volumes {
 				if water_volume_contains(v, rb.collider.translation) {
