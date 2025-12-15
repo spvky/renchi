@@ -5,43 +5,6 @@ import rl "vendor:raylib"
 
 entities: [dynamic]Entity
 
-Entity_Manager :: struct {
-	entities:          [dynamic]Entity,
-	id_index_map:      map[Entity_Id]int,
-	current_entity_id: Entity_Id,
-}
-
-make_entity_manager :: proc() -> Entity_Manager {
-	entities := make([dynamic]Entity, 0, 32)
-	id_index_map := make(map[Entity_Id]int, 32)
-	return Entity_Manager{entities = entities, id_index_map = id_index_map}
-}
-
-get_entity :: proc(e: ^Entity_Manager, id: Entity_Id) -> ^Entity {
-	index := e.id_index_map[id]
-	return &e.entities[index]
-}
-
-append_entity :: proc(e: ^Entity_Manager, entity: ^Entity) {
-	id := e.current_entity_id
-	entity.id = id
-	append(&e.entities, entity^)
-	new_index := len(e.entities) - 1
-	e.id_index_map[id] = new_index
-	e.current_entity_id += 1
-}
-
-clear_entity_manager :: proc(e: ^Entity_Manager) {
-	clear(&e.entities)
-	clear(&e.id_index_map)
-	e.current_entity_id = 0
-}
-
-delete_entity_manager :: proc(e: ^Entity_Manager) {
-	delete(e.entities)
-	delete(e.id_index_map)
-}
-
 Entity_Id :: distinct u32
 
 Entity :: struct {
