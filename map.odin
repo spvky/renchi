@@ -15,10 +15,10 @@ TPC :: 625
 // For the map UI
 GRID_OFFSET: Vec2 = {27, 27}
 
-rooms: [Room_Tag]Room
 // Gonna deprecate
 // tilemap: [(TILE_COUNT * TILE_COUNT) * (CELL_COUNT * CELL_COUNT)]Tile
 // exit_map: [CELL_COUNT * CELL_COUNT]bit_set[Direction]
+
 map_screen_state := Map_Screen_State {
 	selected_room = .E,
 }
@@ -387,5 +387,5 @@ handle_map_screen_cursor :: proc(t: ^Tilemap) {
 }
 
 mapping :: proc() {
-	handle_map_screen_cursor(&current_tilemap)
+	handle_map_screen_cursor(&world.current_tilemap)
 }

@@ -6,9 +6,6 @@ import "core:log"
 import "core:math"
 import l "core:math/linalg"
 
-colliders: [dynamic]Static_Collider
-temp_colliders: [dynamic]Temp_Collider
-rigidbodies: [dynamic]Rigidbody
 
 Rigidbody :: struct {
 	collider: Physics_Collider,
@@ -54,32 +51,31 @@ collider_vertices :: proc(c: Static_Collider) -> [4]Vec2 {
 
 init_physics_collections :: proc() {
 	log.info("Rigidbodies Initialized")
-	rigidbodies = make([dynamic]Rigidbody, 0, 16)
+	world.rigidbodies = make([dynamic]Rigidbody, 0, 16)
 	log.info("Colliders Initialized")
-	colliders = make([dynamic]Static_Collider, 0, 64)
+	world.colliders = make([dynamic]Static_Collider, 0, 64)
 }
 
 clear_physics_collectsions :: proc() {
-	clear(&rigidbodies)
-	clear(&colliders)
+	clear(&world.rigidbodies)
+	clear(&world.colliders)
 }
 
 delete_physics_collections :: proc() {
-	delete(rigidbodies)
-	delete(colliders)
+	delete(world.rigidbodies)
+	delete(world.colliders)
 }
 
 physics_step :: proc() {
 
 	prepare_temp_colliders()
-	// player_platform_collision()
 	player_temp_collider_collision()
 	player_movement()
 	player_jump()
 	apply_player_gravity()
 	apply_player_velocity()
 
-	entity_submersion_handling(current_tilemap)
+	entity_submersion_handling(world.current_tilemap)
 
 	rigidbody_platform_collision()
 	apply_rigidbody_gravity()

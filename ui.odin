@@ -5,8 +5,6 @@ package main
 
 import rl "vendor:raylib"
 
-ui_texture_atlas: [Ui_Texture_Tag]rl.Texture
-
 Ui_Texture_Tag :: enum {
 	Cursor,
 }

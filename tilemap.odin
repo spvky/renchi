@@ -3,9 +3,6 @@ package main
 import "base:intrinsics"
 import "core:log"
 
-// Tile_Size should just = 1 in 3d
-current_tilemap: Tilemap
-
 Tilemap :: struct {
 	width:           int,
 	height:          int,

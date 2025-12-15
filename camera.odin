@@ -6,6 +6,11 @@ package main
 import l "core:math/linalg"
 import rl "vendor:raylib"
 
+Camera_Limits :: struct {
+	min: Vec2,
+	max: Vec2,
+}
+
 camera_limits: Camera_Limits
 camera_exits: bit_set[Direction]
 

@@ -9,33 +9,25 @@ GAMEPLAY_SCREEN_HEIGHT :: 432
 MAP_SCREEN_WIDTH :: 768
 MAP_SCREEN_HEIGHT :: 432
 
-gameplay_texture: rl.RenderTexture
-map_texture: rl.RenderTexture
-
-init_render_textures :: proc() {
-	map_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
-	gameplay_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
-}
-
 destroy_render_textures :: proc() {
-	rl.UnloadRenderTexture(map_texture)
-	rl.UnloadRenderTexture(gameplay_texture)
+	rl.UnloadRenderTexture(assets.map_texture)
+	rl.UnloadRenderTexture(assets.gameplay_texture)
 }
 
 write_to_map_texture :: proc() {
-	rl.BeginTextureMode(map_texture)
+	rl.BeginTextureMode(assets.map_texture)
 	rl.ClearBackground(rl.PINK)
-	draw_map(current_tilemap)
+	draw_map(world.current_tilemap)
 	rl.EndTextureMode()
 }
 
 write_to_gameplay_texture :: proc() {
-	rl.BeginTextureMode(gameplay_texture)
+	rl.BeginTextureMode(assets.gameplay_texture)
 	rl.ClearBackground(rl.GREEN)
 	rl.BeginMode3D(world.camera)
 	draw_player()
 	draw_entities()
-	draw_tilemap(current_tilemap)
+	draw_tilemap(world.current_tilemap)
 	rl.DrawCubeV({12, 12, 0}, V_ONE, rl.YELLOW)
 	rl.EndMode3D()
 	rl.EndTextureMode()
@@ -60,7 +52,7 @@ draw_map_texture :: proc(alpha: u8) {
 		width  = display_width,
 		height = display_width,
 	}
-	rl.DrawTexturePro(map_texture.texture, source, dest, {0, 0}, 0, {255, 255, 255, alpha})
+	rl.DrawTexturePro(assets.map_texture.texture, source, dest, {0, 0}, 0, {255, 255, 255, alpha})
 }
 
 draw_gameplay_texture :: proc() {
@@ -76,7 +68,7 @@ draw_gameplay_texture :: proc() {
 		width  = f32(WINDOW_WIDTH),
 		height = f32(WINDOW_HEIGHT),
 	}
-	rl.DrawTexturePro(gameplay_texture.texture, source, dest, {0, 0}, 0, rl.WHITE)
+	rl.DrawTexturePro(assets.gameplay_texture.texture, source, dest, {0, 0}, 0, rl.WHITE)
 }
 
 draw_textures_to_screen :: proc() {

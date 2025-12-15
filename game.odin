@@ -17,6 +17,7 @@ TICK_RATE :: 1.0 / 200.0
 
 run: bool
 world: World
+assets: Assets
 game_state: Game_State
 time: Time
 
@@ -25,47 +26,15 @@ Game_State :: enum {
 	Gameplay,
 }
 
-// Struct that contains realtime global data
-World :: struct {
-	camera:       rl.Camera3D,
-	offset:       Vec3,
-	player:       Player,
-	current_cell: Cell_Position,
-}
-
-make_world :: proc() -> World {
-	player := Player {
-		translation  = {12, 0},
-		radius       = 0.5,
-		acceleration = 275,
-		deceleration = 0.75,
-		facing       = 1,
-	}
-	return World {
-		camera = rl.Camera3D{up = Vec3{0, 1, 0}, fovy = 60, projection = .ORTHOGRAPHIC},
-		offset = {8, 18, 0},
-		player = player,
-	}
-}
-
-Camera_Limits :: struct {
-	min: Vec2,
-	max: Vec2,
-}
-
 init :: proc() {
 	if !ODIN_DEBUG {
 		rl.SetTraceLogLevel(.ERROR)
 	}
 	run = true
 	rl.InitWindow(i32(WINDOW_WIDTH), i32(WINDOW_HEIGHT), "Game")
+	load_assets()
+	init_world()
 	init_render_textures()
-	init_tilemap(&current_tilemap, 5, 8)
-	init_physics_collections()
-	init_entity_collections()
-	world = make_world()
-	rooms = load_rooms()
-	ui_texture_atlas = load_ui_textures()
 }
 
 update :: proc() {
@@ -107,7 +76,7 @@ shutdown :: proc() {
 	unload_ui_textures()
 	delete_entity_collections()
 	delete_physics_collections()
-	delete_tilemap(current_tilemap)
+	delete_tilemap(world.current_tilemap)
 	rl.CloseWindow()
 }
 

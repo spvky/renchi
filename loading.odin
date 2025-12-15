@@ -8,6 +8,21 @@ import "core:fmt"
 import "core:log"
 import "core:os"
 import "core:strconv"
+import rl "vendor:raylib"
+
+Assets :: struct {
+	rooms:            [Room_Tag]Room,
+	ui_texture_atlas: [Ui_Texture_Tag]rl.Texture,
+	gameplay_texture: rl.RenderTexture,
+	map_texture:      rl.RenderTexture,
+}
+
+load_assets :: proc() {
+	assets.rooms = load_rooms()
+	assets.ui_texture_atlas = load_ui_textures()
+	assets.map_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
+	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
+}
 
 load_rooms :: proc() -> [Room_Tag]Room {
 	return {
