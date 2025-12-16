@@ -76,3 +76,9 @@ update_light_values :: proc(light: ^Light) {
 
 	rl.SetShaderValue(assets.lighting_shader, light.colorLoc, &light.color, .VEC4)
 }
+
+lighting_shader_update :: proc() {
+	for i in 0 ..< world.lighting.count {
+		update_light_values(&world.lighting.lights[i])
+	}
+}
