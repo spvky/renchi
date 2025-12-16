@@ -18,6 +18,7 @@ World :: struct {
 	colliders:       [dynamic]Static_Collider,
 	temp_colliders:  [dynamic]Temp_Collider,
 	rigidbodies:     [dynamic]Rigidbody,
+	lighting:        Lighting,
 }
 
 init_world :: proc() {
@@ -38,4 +39,9 @@ init_world :: proc() {
 	}
 	world.offset = {8, 18, 0}
 	world.player = player
+	world.lighting = {
+		ambient = {0.1, 0.1, 0.1, 1},
+	}
+	ambient_loc := rl.GetShaderLocation(assets.lighting_shader, "ambient")
+	rl.SetShaderValue(assets.lighting_shader, ambient_loc, &world.lighting.ambient, .VEC4)
 }

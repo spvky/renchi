@@ -62,6 +62,12 @@ camera_follow :: proc() {
 			target_pos + Vec3{0, 0, 500},
 			frametime * 20,
 		)
+		rl.SetShaderValue(
+			assets.lighting_shader,
+			assets.lighting_shader.locs[SHADER_LOC_VIEW],
+			&world.camera.position,
+			.VEC3,
+		)
 	}
 }
 

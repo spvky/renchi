@@ -10,11 +10,14 @@ import "core:os"
 import "core:strconv"
 import rl "vendor:raylib"
 
+SHADER_LOC_VIEW :: 12
+
 Assets :: struct {
 	rooms:            [Room_Tag]Room,
 	ui_texture_atlas: [Ui_Texture_Tag]rl.Texture,
 	gameplay_texture: rl.RenderTexture,
 	map_texture:      rl.RenderTexture,
+	lighting_shader:  rl.Shader,
 }
 
 load_assets :: proc() {
@@ -22,6 +25,10 @@ load_assets :: proc() {
 	assets.ui_texture_atlas = load_ui_textures()
 	assets.map_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_HEIGHT, WINDOW_HEIGHT)
+	lighting_shader := rl.LoadShader("assets/shaders/lighting.vs", "assets/shaders/lighting.fs")
+
+	lighting_shader.locs[SHADER_LOC_VIEW] = rl.GetShaderLocation(lighting_shader, "viewPos")
+	assets.lighting_shader = lighting_shader
 }
 
 load_rooms :: proc() -> [Room_Tag]Room {

@@ -9,6 +9,7 @@ import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 Vec3 :: [3]f32
+Vec4 :: [4]f32
 V_ONE :: Vec3{1, 1, 1}
 Cell_Position :: [2]i16
 Tile_Position :: [2]u16
