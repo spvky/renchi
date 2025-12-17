@@ -79,5 +79,5 @@ void main()
     //finalColor = pow(finalColor, vec4(1.0/2.2));
 
 		float lightDist = 1.0 / distance(fragPosition, lights[0].position);
-		finalColor = mix(vec4(0.0,0.0,0.0,1.0), texelColor*(ambient/10.0), lightDist);
+		finalColor = mix(vec4(0.0,0.0,0.0,1.0), texelColor*(ambient*5.0), lightDist);
 }

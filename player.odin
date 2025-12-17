@@ -119,9 +119,9 @@ draw_player :: proc() {
 		color = rl.BLUE
 	}
 	player_pos := extend(player.snapshot, 0)
-	rl.BeginShaderMode(assets.lighting_shader)
+	// rl.BeginShaderMode(assets.lighting_shader)
 	rl.DrawSphere(player_pos, player.radius, rl.RED)
-	rl.EndShaderMode()
+	// rl.EndShaderMode()
 	// Grab box
 	// rl.DrawCubeV(player_pos + {0.75 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
 }

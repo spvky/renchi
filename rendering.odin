@@ -23,7 +23,7 @@ write_to_map_texture :: proc() {
 
 write_to_gameplay_texture :: proc() {
 	rl.BeginTextureMode(assets.gameplay_texture)
-	rl.ClearBackground(rl.GREEN)
+	rl.ClearBackground(rl.BLACK)
 	rl.BeginMode3D(world.camera)
 	draw_player()
 	draw_entities()
