@@ -58,8 +58,7 @@ Player_State :: enum {
 apply_player_velocity :: proc() {
 	player := &world.player
 	player.translation += player.velocity * TICK_RATE
-	set_light_position(&world.lighting.lights[0], extend(player.translation, -1))
-	log.debugf("%v", world.lighting.lights[0])
+	set_light_position(&world.lighting.lights[0], extend(player.translation, 0))
 }
 
 apply_player_gravity :: proc() {
@@ -120,6 +119,9 @@ draw_player :: proc() {
 		color = rl.BLUE
 	}
 	player_pos := extend(player.snapshot, 0)
+	rl.BeginShaderMode(assets.lighting_shader)
 	rl.DrawSphere(player_pos, player.radius, rl.RED)
-	rl.DrawCubeV(player_pos + {0.75 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
+	rl.EndShaderMode()
+	// Grab box
+	// rl.DrawCubeV(player_pos + {0.75 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
 }
