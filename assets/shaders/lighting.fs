@@ -43,7 +43,7 @@ void main()
 
     vec4 tint = colDiffuse*fragColor;
 
-    // NOTE: Implement here your fragment shader code
+    // None of this is used currently
 
     for (int i = 0; i < MAX_LIGHTS; i++)
     {
@@ -69,14 +69,15 @@ void main()
             specular += specCo;
         }
     }
-		float lightDist = 1.0 / distance(fragPosition, lights[0].position);
 
     //finalColor = (texelColor*((tint + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
     //finalColor += texelColor*(ambient/10.0)*tint;
 		//finalColor = vec4(lights[0].position.x / 25.0, lights[0].position.y / 25.0, 0.0, 1.0);
 
-		finalColor = mix(vec4(0.0,0.0,0.0,1.0), texelColor*(ambient/10.0), lightDist);
 
     // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0/2.2));
+    //finalColor = pow(finalColor, vec4(1.0/2.2));
+
+		float lightDist = 1.0 / distance(fragPosition, lights[0].position);
+		finalColor = mix(vec4(0.0,0.0,0.0,1.0), texelColor*(ambient/10.0), lightDist);
 }
