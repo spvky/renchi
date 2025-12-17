@@ -38,7 +38,7 @@ reset_map :: proc(tilemap: ^Tilemap) {
 
 draw_tilemap :: proc(t: Tilemap) {
 	draw_colliders()
-	draw_temp_colliders()
+	// draw_temp_colliders()
 	draw_water_paths(t)
 	draw_water_volumes(t)
 }
@@ -69,13 +69,9 @@ draw_colliders :: proc() {
 		d: Vec2 = {collider.min.x, collider.max.y}
 		center := extend((a + b + c + d) / 4, 0)
 		size := Vec3{collider.max.x - collider.min.x, collider.max.y - collider.min.y, 1}
+		rl.BeginShaderMode(assets.lighting_shader)
 		rl.DrawCubeV(center, size, rl.GRAY)
-		if ODIN_DEBUG {
-			rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
-			rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
-			rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
-			rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
-		}
+		rl.EndShaderMode()
 	}
 }
 draw_temp_colliders :: proc() {

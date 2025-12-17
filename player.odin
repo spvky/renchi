@@ -3,8 +3,8 @@
 */
 package main
 
+import "core:log"
 import "core:math"
-import l "core:math/linalg"
 import rl "vendor:raylib"
 
 // How far can the player jump horizontally (in pixels)
@@ -58,6 +58,8 @@ Player_State :: enum {
 apply_player_velocity :: proc() {
 	player := &world.player
 	player.translation += player.velocity * TICK_RATE
+	set_light_position(&world.lighting.lights[0], extend(player.translation, -1))
+	log.debugf("%v", world.lighting.lights[0])
 }
 
 apply_player_gravity :: proc() {

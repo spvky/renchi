@@ -29,7 +29,13 @@ Light_Type :: enum u8 {
 	Point       = 1,
 }
 
-create_point_light :: proc(position: Vec3, color: Vec4 = {1, 1, 1, 1}) {
+create_point_light :: proc(
+	position: Vec3,
+	color: Vec4 = {1, 1, 1, 1},
+) -> (
+	light_index: int,
+	ok: bool,
+) {
 	if world.lighting.count < 16 {
 		i := int(world.lighting.count)
 		light := Light {
@@ -40,11 +46,11 @@ create_point_light :: proc(position: Vec3, color: Vec4 = {1, 1, 1, 1}) {
 		}
 		light.enabledLoc = rl.GetShaderLocation(
 			assets.lighting_shader,
-			rl.TextFormat("lights[%i].enbaled", i),
+			rl.TextFormat("lights[%i].enabled", i),
 		)
 		light.typeLoc = rl.GetShaderLocation(
 			assets.lighting_shader,
-			rl.TextFormat("lights[%i].type", i),
+			rl.TextFormat("lights[%i].type", int(i)),
 		)
 		light.positionLoc = rl.GetShaderLocation(
 			assets.lighting_shader,
@@ -61,10 +67,18 @@ create_point_light :: proc(position: Vec3, color: Vec4 = {1, 1, 1, 1}) {
 		world.lighting.lights[i] = light
 		update_light_values(&world.lighting.lights[i])
 		world.lighting.count += 1
-
+		light_index = i
+		ok = true
 	} else {
 		log.warn("Cannot create light, maximum of 16 lights has already been reached")
+		light_index = -1
 	}
+	return
+}
+
+set_light_position :: proc(light: ^Light, position: Vec3) {
+	light.position = position
+	update_light_values(light)
 }
 
 update_light_values :: proc(light: ^Light) {
