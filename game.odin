@@ -50,6 +50,14 @@ update :: proc() {
 playing :: proc() {
 	camera_follow()
 
+	// light_pos := Vec3 {
+	// 	math.floor(world.player.snapshot.x * 100 + 0.05) / 100,
+	// 	math.floor(world.player.snapshot.y * 100 + 0.05) / 100,
+	// 	0,
+	// }
+	// log.debugf("Setting light position to %v", light_pos)
+	// set_light_position(&world.lighting.lights[0], light_pos)
+
 	if !time.started {
 		time.t = f32(rl.GetTime())
 		time.started = true

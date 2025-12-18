@@ -96,3 +96,13 @@ lighting_shader_update :: proc() {
 		update_light_values(&world.lighting.lights[i])
 	}
 }
+
+Spotlight :: struct {
+	position:     Vec2,
+	inner:        f32,
+	radius:       f32,
+	// Locs
+	position_loc: i32,
+	inner_loc:    i32,
+	radius_loc:   i32,
+}

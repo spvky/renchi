@@ -44,5 +44,5 @@ init_world :: proc() {
 	}
 	ambient_loc := rl.GetShaderLocation(assets.lighting_shader, "ambient")
 	rl.SetShaderValue(assets.lighting_shader, ambient_loc, &world.lighting.ambient, .VEC4)
-	create_point_light({0, 0, 0})
+	create_point_light({12, 12, 0})
 }
