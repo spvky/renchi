@@ -35,7 +35,7 @@ map_screen_debug :: proc() {
 player_debug :: proc() {
 	player := world.player
 	debug_string := fmt.tprintf(
-		"Player:\n\tTranslation: [%.1f,%.1f]\n\tOffset: [%.1f,%.1f]\nCurrent Cell: [%v,%v]\nDelta: %v\nFlags: \n%v\n%v",
+		"Player:\n\tTranslation: [%.1f,%.1f]\n\tOffset: [%.1f,%.1f]\nCurrent Cell: [%v,%v]\nDelta: %v\nMax Speed: %v\nFlags: \n%v\n%v",
 		player.translation.x,
 		player.translation.y,
 		world.offset.x,
@@ -43,6 +43,7 @@ player_debug :: proc() {
 		world.current_cell.x,
 		world.current_cell.y,
 		world.player.move_delta,
+		max_speed,
 		world.player.state_flags,
 		world.player.prev_state_flags,
 	)

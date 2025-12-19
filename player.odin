@@ -39,30 +39,27 @@ calculate_max_speed :: proc "c" () -> f32 {
 }
 
 Player :: struct {
-	move_delta:       f32,
-	translation:      Vec2,
-	velocity:         Vec2,
-	snapshot:         Vec2,
-	radius:           f32,
-	acceleration:     f32,
-	deceleration:     f32,
-	facing:           f32,
-	state_flags:      bit_set[Player_State_Flags],
-	prev_state_flags: bit_set[Player_State_Flags],
+	move_delta:            f32,
+	translation:           Vec2,
+	velocity:              Vec2,
+	snapshot:              Vec2,
+	radius:                f32,
+	acceleration:          f32,
+	deceleration:          f32,
+	facing:                f32,
+	lateral_movement_lock: u16,
+	state_flags:           bit_set[Player_State_Flags;u8],
+	prev_state_flags:      bit_set[Player_State_Flags;u8],
 }
 
 
 Player_State_Flags :: enum u8 {
 	Grounded,
 	Jumping,
-	LateralLock,
 	TouchingLeftWall,
 	TouchingRightWall,
 	DoubleJump,
 	Clinging,
-}
-
-initialize_player_events :: proc() {
 }
 
 apply_player_velocity :: proc() {
@@ -109,20 +106,47 @@ player_jump :: proc() {
 			consume_action(.Jump)
 			return
 		}
+		if .Clinging in player.state_flags {
+			dir: f32
+			if .TouchingLeftWall in player.state_flags {
+				dir += 1
+			}
+			if .TouchingRightWall in player.state_flags {
+				dir -= 1
+			}
+			player.velocity.y = jump_speed * 0.625
+			player.move_delta = dir
+			player.velocity.x = dir * max_speed * 1.5
+			player.lateral_movement_lock = 25
+			player.state_flags -= {.Clinging, .TouchingLeftWall, .TouchingRightWall}
+			consume_action(.Jump)
+			return
+		}
+		if .DoubleJump in player.state_flags {
+			player.velocity.y = jump_speed * 0.85
+			player.state_flags -= {.DoubleJump}
+			consume_action(.Jump)
+			return
+		}
 	}
 }
 
 player_movement :: proc() {
 	player := &world.player
-	if player.move_delta != 0 {
-		if player.move_delta * player.velocity.x < max_speed {
-			player.velocity.x += TICK_RATE * player.acceleration * player.move_delta
-		}
-	} else {
-		factor := 1 - player.deceleration
-		player.velocity.x = player.velocity.x * factor
-		if math.abs(player.velocity.x) < 1 {
-			player.velocity.x = 0
+	if player.lateral_movement_lock > 0 {
+		player.lateral_movement_lock = clamp(player.lateral_movement_lock - 1, 0, 255)
+	}
+	if player.lateral_movement_lock == 0 {
+		if player.move_delta != 0 {
+			if player.move_delta * player.velocity.x < max_speed {
+				player.velocity.x += TICK_RATE * player.acceleration * player.move_delta
+			}
+		} else {
+			factor := 1 - player.deceleration
+			player.velocity.x = player.velocity.x * factor
+			if math.abs(player.velocity.x) < 1 {
+				player.velocity.x = 0
+			}
 		}
 	}
 }

@@ -17,8 +17,8 @@ Event_Type :: enum {
 
 
 Event_Player_State_Change_Payload :: struct {
-	gained: bit_set[Player_State_Flags],
-	lost:   bit_set[Player_State_Flags],
+	gained: bit_set[Player_State_Flags;u8],
+	lost:   bit_set[Player_State_Flags;u8],
 }
 Event_Location_Payload :: struct {
 	location: Vec2,
