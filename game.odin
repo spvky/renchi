@@ -68,6 +68,7 @@ playing :: proc() {
 	time.t = t1
 	time.simulation_time += elapsed
 	for time.simulation_time >= TICK_RATE {
+		process_events()
 		physics_step()
 		time.simulation_time -= TICK_RATE
 	}

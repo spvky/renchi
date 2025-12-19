@@ -74,6 +74,7 @@ physics_step :: proc() {
 	player_jump()
 	apply_player_gravity()
 	apply_player_velocity()
+	manage_player_state_flags()
 
 	entity_submersion_handling(world.current_tilemap)
 
@@ -81,11 +82,6 @@ physics_step :: proc() {
 	apply_rigidbody_gravity()
 	entity_specific_physics()
 	apply_rigidbody_velocity()
-}
-
-collision :: proc() {
-	player_platform_collision()
-
 }
 
 collider_nearest_point :: proc(c: Static_Collider, v: Vec2) -> Vec2 {

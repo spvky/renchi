@@ -13,6 +13,7 @@ Physics_Collider :: struct {
 
 Collision_Flag :: enum {
 	Standable,
+	Clingable,
 	Oneway,
 }
 
@@ -197,75 +198,13 @@ static_sat :: proc(c: Static_Collider, s: Physics_Collider) -> (colliding: bool,
 	return
 }
 
-gjk :: proc(s1, s2: Physics_Collider) -> bool {
-	iter: int
-	simp: Simplex
-	d := s1.translation - s2.translation
-	if d.x == 0 && d.y == 0 {
-		d.x = 1
-	}
-	update_simplex(&simp, support(s1, s2, d))
-
-	if l.dot(simp.a, d) <= 0 {
-		return false
-	}
-
-	d = -simp.a
-
-	for {
-		iter += 1
-		update_simplex(&simp, support(s1, s2, d))
-
-		if l.dot(simp.a, d) <= 0 {
-			return false
-		}
-
-		ao := -simp.a
-
-		if simp.count < 2 {
-
-		}
-
-	}
-}
-
-player_platform_collision :: proc() {
-	player := &world.player
-	player_feet := player.translation + Vec2{0, 0.55}
-	foot_collision: bool
-	for collider in world.colliders {
-		nearest_point := collider_nearest_point(collider, player.translation)
-		if l.distance(nearest_point, player.translation) < player.radius {
-			collision_vector := player.translation - nearest_point
-			collision_normal := l.normalize0(collision_vector)
-			pen_depth := player.radius - l.length(collision_vector)
-			mtv := collision_normal * pen_depth
-
-			player.translation += mtv
-			x_dot := math.abs(l.dot(collision_normal, Vec2{1, 0}))
-			y_dot := math.abs(l.dot(collision_normal, Vec2{0, 1}))
-			if x_dot > 0.7 {
-				player.velocity.x = 0
-			}
-			if y_dot > 0.7 {
-				player.velocity.y = 0
-			}
-		}
-		if l.distance(nearest_point, player_feet) < 0.06 {
-			foot_collision = true
-		}
-	}
-	if foot_collision {
-		player.state = .Grounded
-	} else {
-		player.state = .Airborne
-	}
-}
-
 player_temp_collider_collision :: proc() {
 	player := &world.player
 	player_feet := player.translation + Vec2{0, 0.55}
-	foot_collision: bool
+	player_left_arm := player.translation + Vec2{-0.55, 0}
+	player_right_arm := player.translation + Vec2{0.55, 0}
+	foot_collision, right_arm_collision, left_arm_collision: bool
+	falling := player.velocity.y > 0
 
 	for collider, i in world.temp_colliders {
 		nearest_point := temp_collider_nearest_point(collider, player.translation)
@@ -288,11 +227,35 @@ player_temp_collider_collision :: proc() {
 		if l.distance(nearest_point, player_feet) < 0.06 && .Standable in collider.flags {
 			foot_collision = true
 		}
+		if falling {
+			if l.distance(nearest_point, player_right_arm) < 0.06 && .Clingable in collider.flags {
+				right_arm_collision = true
+			}
+			if l.distance(nearest_point, player_left_arm) < 0.06 && .Clingable in collider.flags {
+				left_arm_collision = true
+			}
+		}
 	}
 	if foot_collision {
-		player.state = .Grounded
+		player_land()
 	} else {
-		player.state = .Airborne
+		player.state_flags -= {.Grounded}
+	}
+
+	if left_arm_collision {
+		player.state_flags += {.TouchingLeftWall, .Clinging}
+	} else {
+		player.state_flags -= {.TouchingLeftWall}
+	}
+
+	if right_arm_collision {
+		player.state_flags += {.TouchingRightWall, .Clinging}
+	} else {
+		player.state_flags -= {.TouchingRightWall}
+	}
+
+	if !left_arm_collision && !right_arm_collision {
+		player.state_flags -= {.Clinging}
 	}
 }
 

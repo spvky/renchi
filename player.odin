@@ -20,6 +20,7 @@ max_speed := calculate_max_speed()
 jump_speed := calulate_jump_speed()
 rising_gravity := calculate_rising_gravity()
 falling_gravity := calculate_falling_gravity()
+clinging_gravity := falling_gravity * 0.05
 
 calulate_jump_speed :: proc "c" () -> f32 {
 	return (-2 * JUMP_HEIGHT) / TIME_TO_PEAK
@@ -38,21 +39,30 @@ calculate_max_speed :: proc "c" () -> f32 {
 }
 
 Player :: struct {
-	state:        Player_State,
-	move_delta:   f32,
-	translation:  Vec2,
-	velocity:     Vec2,
-	snapshot:     Vec2,
-	radius:       f32,
-	acceleration: f32,
-	deceleration: f32,
-	facing:       f32,
-	held_entity:  Maybe(Entity_Id),
+	move_delta:       f32,
+	translation:      Vec2,
+	velocity:         Vec2,
+	snapshot:         Vec2,
+	radius:           f32,
+	acceleration:     f32,
+	deceleration:     f32,
+	facing:           f32,
+	state_flags:      bit_set[Player_State_Flags],
+	prev_state_flags: bit_set[Player_State_Flags],
 }
 
-Player_State :: enum {
+
+Player_State_Flags :: enum u8 {
 	Grounded,
-	Airborne,
+	Jumping,
+	LateralLock,
+	TouchingLeftWall,
+	TouchingRightWall,
+	DoubleJump,
+	Clinging,
+}
+
+initialize_player_events :: proc() {
 }
 
 apply_player_velocity :: proc() {
@@ -63,23 +73,44 @@ apply_player_velocity :: proc() {
 
 apply_player_gravity :: proc() {
 	player := &world.player
-	if player.velocity.y < 0 {
-		player.velocity.y += rising_gravity * TICK_RATE
+	if .Clinging in player.state_flags {
+		player.velocity.y += clinging_gravity * TICK_RATE
 	} else {
-		player.velocity.y += falling_gravity * TICK_RATE
+		if player.velocity.y < 0 {
+			player.velocity.y += rising_gravity * TICK_RATE
+		} else {
+			player.velocity.y += falling_gravity * TICK_RATE
+		}
 	}
+}
+
+manage_player_state_flags :: proc() {
+	player := &world.player
+	gained_states := player.state_flags - player.prev_state_flags
+	lost_states := player.prev_state_flags - player.state_flags
+	if card(gained_states) > 0 || card(lost_states) > 0 {
+		publish_event(
+			.Player_State_Change,
+			Event_Player_State_Change_Payload{lost = lost_states, gained = gained_states},
+		)
+	}
+	player.prev_state_flags = player.state_flags
 }
 
 player_jump :: proc() {
 	player := &world.player
 	if is_action_buffered(.Jump) {
-		switch player.state {
-		case .Grounded:
+		if .Grounded in player.state_flags {
 			player.velocity.y = jump_speed
 			consume_action(.Jump)
-		case .Airborne:
+			return
 		}
 	}
+}
+
+player_land :: proc() {
+	world.player.state_flags += {.Grounded, .DoubleJump}
+	world.player.state_flags -= {.Clinging}
 }
 
 player_movement :: proc() {
@@ -108,20 +139,39 @@ player_grab :: proc() {
 	}
 }
 
+// Rendering
+
 draw_player :: proc() {
 	player := world.player
 
 	color: rl.Color
-	switch player.state {
-	case .Grounded:
+	if .Grounded in player.state_flags {
 		color = rl.WHITE
-	case .Airborne:
+	} else {
 		color = rl.BLUE
 	}
 	player_pos := extend(player.snapshot, 0)
-	// rl.BeginShaderMode(assets.lighting_shader)
-	rl.DrawSphere(player_pos, player.radius, rl.RED)
-	// rl.EndShaderMode()
+	rl.DrawSphere(player_pos, player.radius, color)
 	// Grab box
 	// rl.DrawCubeV(player_pos + {0.75 * player.facing, 0, 0}, {1.5, 1, 1}, {120, 0, 0, 100})
+}
+
+register_player_event_listeners :: proc() {
+	subscribe_event(.Player_State_Change, player_player_state_change_callback)
+}
+
+// Event Callbacks
+player_player_state_change_callback :: proc(event: Event) {
+	player := &world.player
+	#partial switch event.type {
+	case .Player_State_Change:
+		payload := event.payload.(Event_Player_State_Change_Payload)
+		gained, lost := payload.gained, payload.lost
+		log.debugf("Player State Change Callback:\ngained: %v\nlost: %v", gained, lost)
+		// Initiate Wall Cling
+		if .Clinging in gained {
+			log.debug("Player Started wall cling")
+			player.velocity.y = 0
+		}
+	}
 }

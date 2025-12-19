@@ -69,9 +69,7 @@ draw_colliders :: proc() {
 		d: Vec2 = {collider.min.x, collider.max.y}
 		center := extend((a + b + c + d) / 4, 0)
 		size := Vec3{collider.max.x - collider.min.x, collider.max.y - collider.min.y, 1}
-		rl.BeginShaderMode(assets.lighting_shader)
 		rl.DrawCubeV(center, size, rl.GRAY)
-		rl.EndShaderMode()
 	}
 }
 draw_temp_colliders :: proc() {
@@ -205,7 +203,7 @@ generate_collision :: proc(t: Tilemap) {
 		collider := Static_Collider {
 			min   = min,
 			max   = max,
-			flags = {.Standable},
+			flags = {.Standable, .Clingable},
 		}
 		append(&world.colliders, collider)
 	}

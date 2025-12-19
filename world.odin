@@ -3,6 +3,7 @@
 */
 package main
 
+import "core:container/queue"
 import rl "vendor:raylib"
 
 // Struct that contains realtime global data
@@ -19,11 +20,14 @@ World :: struct {
 	temp_colliders:  [dynamic]Temp_Collider,
 	rigidbodies:     [dynamic]Rigidbody,
 	lighting:        Lighting,
+	event_listeners: map[Event_Type][dynamic]Event_Callback,
+	event_queue:     queue.Queue(Event),
 }
 
 init_world :: proc() {
 	init_physics_collections()
 	init_entity_collections()
+	init_events_system()
 	player := Player {
 		translation  = {12, 0},
 		radius       = 0.5,
@@ -42,7 +46,8 @@ init_world :: proc() {
 	world.lighting = {
 		ambient = {0.1, 0.1, 0.1, 1},
 	}
-	ambient_loc := rl.GetShaderLocation(assets.lighting_shader, "ambient")
-	rl.SetShaderValue(assets.lighting_shader, ambient_loc, &world.lighting.ambient, .VEC4)
-	create_point_light({12, 12, 0})
+	register_player_event_listeners()
+	// ambient_loc := rl.GetShaderLocation(assets.lighting_shader, "ambient")
+	// rl.SetShaderValue(assets.lighting_shader, ambient_loc, &world.lighting.ambient, .VEC4)
+	// create_point_light({12, 12, 0})
 }
