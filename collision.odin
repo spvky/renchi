@@ -228,16 +228,17 @@ player_temp_collider_collision :: proc() {
 			foot_collision = true
 		}
 		if falling {
-			if l.distance(nearest_point, player_right_arm) < 0.06 && .Clingable in collider.flags {
+			if l.distance(nearest_point, player_right_arm) < 0.1 && .Clingable in collider.flags {
 				right_arm_collision = true
 			}
-			if l.distance(nearest_point, player_left_arm) < 0.06 && .Clingable in collider.flags {
+			if l.distance(nearest_point, player_left_arm) < 0.1 && .Clingable in collider.flags {
 				left_arm_collision = true
 			}
 		}
 	}
 	if foot_collision {
-		player_land()
+		world.player.state_flags += {.Grounded, .DoubleJump}
+		world.player.state_flags -= {.Clinging}
 	} else {
 		player.state_flags -= {.Grounded}
 	}
@@ -252,10 +253,6 @@ player_temp_collider_collision :: proc() {
 		player.state_flags += {.TouchingRightWall, .Clinging}
 	} else {
 		player.state_flags -= {.TouchingRightWall}
-	}
-
-	if !left_arm_collision && !right_arm_collision {
-		player.state_flags -= {.Clinging}
 	}
 }
 

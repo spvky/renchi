@@ -83,17 +83,21 @@ apply_player_gravity :: proc() {
 		}
 	}
 }
-
 manage_player_state_flags :: proc() {
 	player := &world.player
-	gained_states := player.state_flags - player.prev_state_flags
-	lost_states := player.prev_state_flags - player.state_flags
-	if card(gained_states) > 0 || card(lost_states) > 0 {
+	if card(player.state_flags & {.TouchingLeftWall, .TouchingRightWall}) == 0 &&
+	   card(player.prev_state_flags & {.TouchingLeftWall, .TouchingRightWall}) == 0 {
+		player.state_flags -= {.Clinging}
+	}
+	gained := player.state_flags - player.prev_state_flags
+	lost := player.prev_state_flags - player.state_flags
+	if card(gained) > 0 || card(lost) > 0 {
 		publish_event(
 			.Player_State_Change,
-			Event_Player_State_Change_Payload{lost = lost_states, gained = gained_states},
+			Event_Player_State_Change_Payload{lost = lost, gained = gained},
 		)
 	}
+	prev := player.prev_state_flags
 	player.prev_state_flags = player.state_flags
 }
 
@@ -106,11 +110,6 @@ player_jump :: proc() {
 			return
 		}
 	}
-}
-
-player_land :: proc() {
-	world.player.state_flags += {.Grounded, .DoubleJump}
-	world.player.state_flags -= {.Clinging}
 }
 
 player_movement :: proc() {
@@ -167,10 +166,8 @@ player_player_state_change_callback :: proc(event: Event) {
 	case .Player_State_Change:
 		payload := event.payload.(Event_Player_State_Change_Payload)
 		gained, lost := payload.gained, payload.lost
-		log.debugf("Player State Change Callback:\ngained: %v\nlost: %v", gained, lost)
 		// Initiate Wall Cling
 		if .Clinging in gained {
-			log.debug("Player Started wall cling")
 			player.velocity.y = 0
 		}
 	}
