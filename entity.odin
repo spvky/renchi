@@ -8,11 +8,11 @@ entities: [dynamic]Entity
 Entity_Id :: distinct u32
 
 Entity :: struct {
-	id:              Entity_Id,
-	tag:             Entity_Tag,
-	state_flags:     bit_set[Entity_State_Flag;u16],
-	type_flags:      bit_set[Entity_Type_Flag;u16],
-	rigidbody_index: int,
+	id:                Entity_Id,
+	tag:               Entity_Tag,
+	state_flags:       bit_set[Entity_State_Flag;u16],
+	interaction_flags: bit_set[Entity_Interaction_Flag;u16],
+	rigidbody_index:   int,
 }
 
 Entity_Tag :: enum u8 {
@@ -26,7 +26,7 @@ Entity_State_Flag :: enum u16 {
 	Burning,
 }
 
-Entity_Type_Flag :: enum u16 {
+Entity_Interaction_Flag :: enum u16 {
 	Moveable,
 	Grabable,
 }
@@ -70,7 +70,7 @@ make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
 	rb_index := len(world.rigidbodies) - 1
 	append(
 		&entities,
-		Entity{tag = tag, rigidbody_index = rb_index, type_flags = {.Moveable, .Grabable}},
+		Entity{tag = tag, rigidbody_index = rb_index, interaction_flags = {.Moveable, .Grabable}},
 	)
 }
 

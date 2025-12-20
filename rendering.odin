@@ -71,7 +71,7 @@ draw_gameplay_texture :: proc() {
 	rl.DrawTexturePro(assets.gameplay_texture.texture, source, dest, {0, 0}, 0, rl.WHITE)
 }
 
-draw_textures_to_screen :: proc() {
+render_textures_to_screen :: proc() {
 	map_alpha: u8
 	if game_state == .Map {
 		map_alpha = 255
@@ -89,11 +89,75 @@ render :: proc() {
 	write_to_render_textures()
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.WHITE)
-	draw_textures_to_screen()
+	render_textures_to_screen()
 	if ODIN_DEBUG {
 		rl.DrawCircle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 5, rl.WHITE)
 		map_screen_debug()
 		player_debug()
 	}
 	rl.EndDrawing()
+}
+
+// Specific element draw instructions
+draw_tilemap :: proc(t: Tilemap) {
+	draw_colliders()
+	// draw_temp_colliders()
+	draw_water_paths(t)
+	draw_water_volumes(t)
+}
+
+draw_water_paths :: proc(t: Tilemap) {
+	for p in t.water_paths {
+		for s in p.segments {
+			start := Vec3{f32(s.start.x), f32(s.start.y), 0}
+			end: Vec3
+			#partial switch s.direction {
+			case .East:
+				end = start + Vec3{f32(s.length), 0, 0}
+			case .West:
+				end = start - Vec3{f32(s.length), 0, 0}
+			case .South:
+				end = start + Vec3{0, f32(s.length), 0}
+			}
+			rl.DrawLine3D(start, end, rl.BLUE)
+		}
+	}
+}
+
+draw_colliders :: proc() {
+	for collider in world.colliders {
+		a: Vec2 = collider.min
+		b: Vec2 = {collider.max.x, collider.min.y}
+		c: Vec2 = collider.max
+		d: Vec2 = {collider.min.x, collider.max.y}
+		center := extend((a + b + c + d) / 4, 0)
+		size := Vec3{collider.max.x - collider.min.x, collider.max.y - collider.min.y, 1}
+		rl.DrawCubeV(center, size, rl.GRAY)
+	}
+}
+draw_temp_colliders :: proc() {
+	for collider in world.temp_colliders {
+		a: Vec2 = collider.points[0]
+		b: Vec2 = collider.points[1]
+		c: Vec2 = collider.points[2]
+		d: Vec2 = collider.points[3]
+		rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
+		rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
+		rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
+		rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
+	}
+}
+
+// This feels a bit magic and wonky, but good for now
+draw_water_volumes :: proc(t: Tilemap) {
+	for v in t.water_volumes {
+		equator := (f32(v.top) + f32(v.bottom) + 1) / 2
+		meridian := (f32(v.left) + f32(v.right)) / 2
+		height := f32(v.bottom) - f32(v.top)
+		width := f32(v.right) - f32(v.left) + 1
+		position := Vec3{meridian, equator, 0}
+		extents := Vec3{width, height, 2}
+		color := rl.Color{0, 0, 150, 100}
+		rl.DrawCubeV(position, extents, color)
+	}
 }

@@ -52,7 +52,6 @@ Player :: struct {
 	prev_state_flags:      bit_set[Player_State_Flags;u8],
 }
 
-
 Player_State_Flags :: enum u8 {
 	Grounded,
 	Jumping,

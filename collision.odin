@@ -243,13 +243,13 @@ player_temp_collider_collision :: proc() {
 		player.state_flags -= {.Grounded}
 	}
 
-	if left_arm_collision {
+	if left_arm_collision && !foot_collision {
 		player.state_flags += {.TouchingLeftWall, .Clinging}
 	} else {
 		player.state_flags -= {.TouchingLeftWall}
 	}
 
-	if right_arm_collision {
+	if right_arm_collision && !foot_collision {
 		player.state_flags += {.TouchingRightWall, .Clinging}
 	} else {
 		player.state_flags -= {.TouchingRightWall}

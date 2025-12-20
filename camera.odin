@@ -26,10 +26,10 @@ camera_follow :: proc() {
 			world.offset.y += 25 * frametime
 		}
 		if rl.IsKeyDown(.LEFT) {
-			world.offset.x -= 25 * frametime
+			world.offset.x -= 5 * frametime
 		}
 		if rl.IsKeyDown(.RIGHT) {
-			world.offset.x += 25 * frametime
+			world.offset.x += 5 * frametime
 		}
 		if rl.IsKeyDown(.ONE) {
 			world.camera.fovy -= 100 * frametime

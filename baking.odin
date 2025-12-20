@@ -19,13 +19,12 @@ Wall_Chain :: struct {
 bake_map :: proc(t: ^Tilemap) {
 	m_width, m_height := get_tilemap_dimensions(t^)
 	place_tiles(t)
-	log.debug("Finished placing tiles")
+	log.info("Finished placing tiles")
 	generate_collision(t^)
-	log.debug("Finished generating collision")
+	log.info("Finished generating collision")
 	bake_water(t)
-	log.debug("Finished baking water")
+	log.info("Finished baking water")
 	bake_entities(t)
-	log.debugf("Entities baked: %v", len(entities))
 }
 
 reset_map :: proc(tilemap: ^Tilemap) {
@@ -33,69 +32,6 @@ reset_map :: proc(tilemap: ^Tilemap) {
 	clear(&tilemap.entity_tiles)
 	for &room, _ in assets.rooms {
 		room.placed = false
-	}
-}
-
-draw_tilemap :: proc(t: Tilemap) {
-	draw_colliders()
-	// draw_temp_colliders()
-	draw_water_paths(t)
-	draw_water_volumes(t)
-}
-
-draw_water_paths :: proc(t: Tilemap) {
-	for p in t.water_paths {
-		for s in p.segments {
-			start := Vec3{f32(s.start.x), f32(s.start.y), 0}
-			end: Vec3
-			#partial switch s.direction {
-			case .East:
-				end = start + Vec3{f32(s.length), 0, 0}
-			case .West:
-				end = start - Vec3{f32(s.length), 0, 0}
-			case .South:
-				end = start + Vec3{0, f32(s.length), 0}
-			}
-			rl.DrawLine3D(start, end, rl.BLUE)
-		}
-	}
-}
-
-draw_colliders :: proc() {
-	for collider in world.colliders {
-		a: Vec2 = collider.min
-		b: Vec2 = {collider.max.x, collider.min.y}
-		c: Vec2 = collider.max
-		d: Vec2 = {collider.min.x, collider.max.y}
-		center := extend((a + b + c + d) / 4, 0)
-		size := Vec3{collider.max.x - collider.min.x, collider.max.y - collider.min.y, 1}
-		rl.DrawCubeV(center, size, rl.GRAY)
-	}
-}
-draw_temp_colliders :: proc() {
-	for collider in world.temp_colliders {
-		a: Vec2 = collider.points[0]
-		b: Vec2 = collider.points[1]
-		c: Vec2 = collider.points[2]
-		d: Vec2 = collider.points[3]
-		rl.DrawLine3D(extend(a, 0.5), extend(b, 0.5), rl.RED)
-		rl.DrawLine3D(extend(b, 0.5), extend(c, 0.5), rl.RED)
-		rl.DrawLine3D(extend(c, 0.5), extend(d, 0.5), rl.RED)
-		rl.DrawLine3D(extend(d, 0.5), extend(a, 0.5), rl.RED)
-	}
-}
-
-// This feels a bit magic and wonky, but good for now
-draw_water_volumes :: proc(t: Tilemap) {
-	for v in t.water_volumes {
-		equator := (f32(v.top) + f32(v.bottom) + 1) / 2
-		meridian := (f32(v.left) + f32(v.right)) / 2
-		height := f32(v.bottom) - f32(v.top)
-		width := f32(v.right) - f32(v.left) + 1
-		position := Vec3{meridian, equator, 0}
-		extents := Vec3{width, height, 2}
-		color := rl.Color{0, 0, 150, 100}
-		rl.DrawCubeV(position, extents, color)
 	}
 }
 
@@ -208,16 +144,17 @@ generate_collision :: proc(t: Tilemap) {
 		append(&world.colliders, collider)
 	}
 
-	end_time := time.now()
-	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
 
 	if ODIN_DEBUG {
+		end_time := time.now()
+		total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
 		log.debugf("Collision Generation took %v ms", total_duration)
 	}
 }
 
 // For now to keep things seperated this will be a totally seperate baking step, ideally we would iterate the tilemap as few times as possible
 bake_water :: proc(t: ^Tilemap) {
+	start_time := time.now()
 	map_width, map_height := get_tilemap_dimensions(t^, false)
 	for y in 0 ..< map_height {
 		for x in 0 ..< map_width {
@@ -228,8 +165,16 @@ bake_water :: proc(t: ^Tilemap) {
 		}
 	}
 	generate_water_volumes(t)
-	log.warnf("Paths: %v", t.water_paths)
-	log.warnf("Volumes: %v", t.water_volumes)
+	if ODIN_DEBUG {
+		end_time := time.now()
+		total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
+		log.debugf(
+			"Water resolution took %v ms\n\tPaths: %v\n\tVolumes: %v",
+			total_duration,
+			len(t.water_paths),
+			len(t.water_volumes),
+		)
+	}
 }
 
 
@@ -334,16 +279,6 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 						volume_range.min - 1,
 						volume_range.cross - left_height,
 					)
-					if ODIN_DEBUG {
-						log.debugf(
-							"Climbing Left Side for range: %v\n Wall Pos is [%v,%v] -- %v\n Left Height = %v",
-							volume_range,
-							volume_range.min - 1,
-							volume_range.cross - left_height,
-							tile,
-							left_height,
-						)
-					}
 					if !water_passthrough(tile) {
 						left_height += 1
 					} else {
@@ -357,16 +292,6 @@ generate_water_volumes :: proc(t: ^Tilemap) {
 						volume_range.max + 1,
 						volume_range.cross - right_height,
 					)
-					if ODIN_DEBUG {
-						log.debugf(
-							"Climbing right Side for range: %v\n Wall Pos is [%v,%v] -- %v\n Right Height = %v",
-							volume_range,
-							volume_range.max + 1,
-							volume_range.cross - right_height,
-							tile,
-							right_height,
-						)
-					}
 					if !water_passthrough(tile) {
 						right_height += 1
 					} else {
