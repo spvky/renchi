@@ -17,6 +17,7 @@ World :: struct {
 	current_tilemap: Tilemap,
 	// Physics collections
 	colliders:       [dynamic]Static_Collider,
+	entities:        Handle_Array(New_Entity, Entity_Handle),
 	temp_colliders:  [dynamic]Temp_Collider,
 	rigidbodies:     [dynamic]Rigidbody,
 	lighting:        Lighting,

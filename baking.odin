@@ -7,7 +7,6 @@ import "core:log"
 import "core:math"
 import "core:slice"
 import "core:time"
-import rl "vendor:raylib"
 
 Wall_Chain :: struct {
 	y_start: int,

@@ -11,7 +11,7 @@ Rigidbody :: struct {
 	collider: Physics_Collider,
 	snapshot: Vec2,
 	velocity: Vec2,
-	flags:    bit_set[Collision_Flag],
+	flags:    bit_set[Collision_Flag;u8],
 }
 
 Staticbody :: struct {
@@ -35,7 +35,7 @@ Rectangle :: struct {
 Static_Collider :: struct {
 	max:   Vec2,
 	min:   Vec2,
-	flags: bit_set[Collision_Flag],
+	flags: bit_set[Collision_Flag;u8],
 }
 
 Collision_Data :: struct {

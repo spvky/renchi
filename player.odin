@@ -52,6 +52,17 @@ Player :: struct {
 	prev_state_flags:      bit_set[Player_State_Flags;u8],
 }
 
+// Data that holds additional player data
+Player_Data :: struct {
+	move_delta:            f32,
+	acceleration:          f32,
+	deceleration:          f32,
+	facing:                f32,
+	lateral_movement_lock: u16,
+	state_flags:           bit_set[Player_State_Flags;u8],
+	prev_state_flags:      bit_set[Player_State_Flags;u8],
+}
+
 Player_State_Flags :: enum u8 {
 	Grounded,
 	Jumping,

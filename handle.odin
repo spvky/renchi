@@ -1,14 +1,14 @@
 package main
 
 Handle :: struct {
-	idx:        u32,
-	generation: u32,
+	idx:        u16,
+	generation: u8,
 }
 
 HANDLE_NONE :: Handle{}
 
 Handle_Array :: struct($T: typeid, $HT: typeid) {
-	items:    [dynamic]T,
+	items:    #soa[dynamic]T,
 	freelist: [dynamic]HT,
 	num:      int,
 }

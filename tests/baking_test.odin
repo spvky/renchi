@@ -1,8 +1,10 @@
-package main
+package test
 
-import "core:testing"
+import g ".."
 import "core:log"
+import "core:testing"
 
+// odinfmt: disable
 SIMPLE_CELL :: [625]u8 {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -34,7 +36,7 @@ SIMPLE_CELL :: [625]u8 {
 
 @(test)
 water_bake_test :: proc(tst: ^testing.T) {
-	collision_tiles := make([dynamic]Tile,0, 625)
+	collision_tiles := make([dynamic]g.Tile,0, 625)
 	raw_array := [625]u8 {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -63,26 +65,27 @@ water_bake_test :: proc(tst: ^testing.T) {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	}
 
-	tile_array: [625]Tile
+	tile_array: [625]g.Tile
 
 	for i in 0 ..< 625 {
-		tile_array[i] = Tile(raw_array[i])
+		tile_array[i] = g.Tile(raw_array[i])
 	}
 
 	append_elems(&collision_tiles, ..tile_array[:])
 
-	t := Tilemap {
+	t := g.Tilemap {
 		collision_tiles = collision_tiles,
-		water_paths = make([dynamic]Water_Path, 0, 16),
+		water_paths = make([dynamic]g.Water_Path, 0, 16),
 		width = 1,
 		height = 1
 	}
 
-	bake_water(&t)
+	g.bake_water(&t)
 	
 	log.infof("Paths: %v", t.water_paths)
 	log.infof("Volumes: %v", t.water_volumes)
 	// testing.expectf(tst,len(t.water_paths[0].segments) == 0, "Test failed: %v", t.water_paths)
-	delete_tilemap(t)
+	g.delete_tilemap(t)
 	testing.expect(tst, true, "Failed")
 }
+// odinfmt: enable

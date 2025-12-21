@@ -11,7 +11,7 @@ Physics_Collider :: struct {
 	shape:       Collider_Shape,
 }
 
-Collision_Flag :: enum {
+Collision_Flag :: enum u8 {
 	Standable,
 	Clingable,
 	Oneway,
@@ -47,7 +47,7 @@ Mtv :: struct {
 
 Temp_Collider :: struct {
 	points: [4]Vec2,
-	flags:  bit_set[Collision_Flag],
+	flags:  bit_set[Collision_Flag;u8],
 }
 
 rect_vertices :: proc(t: Vec2, s: Collision_Rect) -> [4]Vec2 {
