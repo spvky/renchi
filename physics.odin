@@ -6,66 +6,26 @@ import "core:log"
 import "core:math"
 import l "core:math/linalg"
 
-
 Rigidbody :: struct {
-	collider: Physics_Collider,
-	snapshot: Vec2,
-	velocity: Vec2,
-	flags:    bit_set[Collision_Flag;u8],
+	translation:     Vec2,
+	snapshot:        Vec2,
+	shape:           Collider_Shape,
+	rb_flags:        bit_set[Rigidbody_Flags;u8],
+	collision_flags: bit_set[Collision_Flag;u8],
+	active:          bool,
 }
 
-Staticbody :: struct {
-	collider: Physics_Collider,
-	flags:    bit_set[Collision_Flag],
-}
 
-Collision_Shape :: union {
-	Circle,
-	Rectangle,
+Rigidbody_Flags :: enum u8 {
+	Sensor,
+	X_Trans_Lock,
+	Y_Trans_Lock,
+	Static,
 }
-
-Circle :: struct {
-	radius: f32,
-}
-
-Rectangle :: struct {
-	extents: Vec2,
-}
-
-Static_Collider :: struct {
-	max:   Vec2,
-	min:   Vec2,
-	flags: bit_set[Collision_Flag;u8],
-}
-
-Collision_Data :: struct {
-	normal: Vec2,
-	mtv:    Vec2,
-}
-
 
 collider_vertices :: proc(c: Static_Collider) -> [4]Vec2 {
 	return [4]Vec2{{c.min.x, c.max.y}, {c.min.x, c.min.y}, {c.max.x, c.max.y}, {c.max.x, c.min.y}}
 }
-
-
-init_physics_collections :: proc() {
-	log.info("Rigidbodies Initialized")
-	world.rigidbodies = make([dynamic]Rigidbody, 0, 16)
-	log.info("Colliders Initialized")
-	world.colliders = make([dynamic]Static_Collider, 0, 64)
-}
-
-clear_physics_collectsions :: proc() {
-	clear(&world.rigidbodies)
-	clear(&world.colliders)
-}
-
-delete_physics_collections :: proc() {
-	delete(world.rigidbodies)
-	delete(world.colliders)
-}
-
 physics_step :: proc() {
 
 	prepare_temp_colliders()

@@ -13,6 +13,11 @@ Handle_Array :: struct($T: typeid, $HT: typeid) {
 	num:      int,
 }
 
+ha_init :: proc(ha: ^Handle_Array($T, $HT), cap: int = 0) {
+	ha.items = make(#soa[dynamic]T, 0, cap)
+	ha.freelist = make([dynamic]HT)
+}
+
 ha_clear :: proc(ha: ^Handle_Array($T, $HT)) {
 	clear(&ha.items)
 	clear(&ha.freelist)
@@ -72,7 +77,7 @@ ha_remove :: proc(ha: ^Handle_Array($T, $HT), h: HT) {
 }
 
 ha_valid :: proc(ha: Handle_Array($T, $HT), h: HT) -> bool {
-	return ha_get(ha, h) != nil
+	return ha_get_ptr(ha, h) != nil
 }
 
 Handle_Array_Iter :: struct($T: typeid, $HT: typeid) {

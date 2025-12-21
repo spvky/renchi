@@ -6,9 +6,28 @@ import l "core:math/linalg"
 
 // TODO: As part of the broad phase, since at this point all colliders except for the player are axis alligned rectangles, concat all relevant colliders within a chunk (probably a collection of adjacent cells) into one list of sets of [4]Vec2, and do collision in one big pass, while indicating which colliders are static for resolution
 
-Physics_Collider :: struct {
-	translation: Vec2,
-	shape:       Collider_Shape,
+Collision_Shape :: union {
+	Circle,
+	Rectangle,
+}
+
+Circle :: struct {
+	radius: f32,
+}
+
+Rectangle :: struct {
+	extents: Vec2,
+}
+
+Static_Collider :: struct {
+	max:   Vec2,
+	min:   Vec2,
+	flags: bit_set[Collision_Flag;u8],
+}
+
+Collision_Data :: struct {
+	normal: Vec2,
+	mtv:    Vec2,
 }
 
 Collision_Flag :: enum u8 {
@@ -18,15 +37,15 @@ Collision_Flag :: enum u8 {
 }
 
 Collider_Shape :: union {
-	Collision_Circle,
-	Collision_Rect,
+	Collider_Circle,
+	Collider_Rect,
 }
 
-Collision_Circle :: struct {
+Collider_Circle :: struct {
 	radius: f32,
 }
 
-Collision_Rect :: struct {
+Collider_Rect :: struct {
 	extents: Vec2,
 }
 
@@ -76,39 +95,6 @@ overlap :: proc(r1, r2: F_Range) -> (colliding: bool, minimum_translation: f32) 
 	}
 	minimum_translation = math.max(0, math.min(r1.max, r2.max) - math.max(r1.min, r2.min))
 	return
-}
-
-find_max_in_direction :: proc(c: Physics_Collider, d: Vec2) -> Vec2 {
-	point: Vec2
-	switch s in c.shape {
-	case Collision_Rect:
-		vertices := rect_vertices(c.translation, s)
-
-		max_dot: f32 = math.F32_MIN
-		max_index: int
-
-		for v, i in vertices {
-			dot := l.dot(v, d)
-			if dot > max_dot {
-				max_dot = dot
-				max_index = i
-			}
-		}
-		point = vertices[max_index]
-	case Collision_Circle:
-		point = c.translation + (l.normalize(d) * s.radius)
-	}
-	return point
-}
-
-support :: proc(c1, c2: Physics_Collider, d: Vec2) -> Vec2 {
-	return find_max_in_direction(c1, d) - find_max_in_direction(c2, -d)
-}
-
-update_simplex :: proc(s: ^Simplex, p: Vec2) {
-	using s
-	a, b, c, d = p, a, b, c
-	count = math.min(count + 1, 4)
 }
 
 project_vertices :: proc(v: []Vec2, d: Vec2) -> F_Range {

@@ -3,21 +3,21 @@ package main
 import "core:log"
 import rl "vendor:raylib"
 
-entities: [dynamic]Entity
-
-Entity_Id :: distinct u32
-
 Entity :: struct {
-	id:                Entity_Id,
+	handle:            Entity_Handle,
 	tag:               Entity_Tag,
-	state_flags:       bit_set[Entity_State_Flag;u16],
-	interaction_flags: bit_set[Entity_Interaction_Flag;u16],
-	rigidbody_index:   int,
+	interaction_flags: bit_set[Entity_Interaction_Flag;u8],
+	state_flags:       bit_set[Entity_State_Flag;u8],
+	using rigidbody:   Rigidbody,
 }
+
+Entity_Handle :: distinct Handle
 
 Entity_Tag :: enum u8 {
 	None,
+	Player,
 	Box,
+	Level_Collision,
 }
 
 Entity_State_Flag :: enum u16 {
@@ -37,16 +37,42 @@ Box_State :: enum {
 	Water,
 }
 
-init_entity_collections :: proc() {
-	entities = make([dynamic]Entity, 0, 32)
-}
+// Creates an entity and adds it to the entity collection
+create_entity :: proc(
+	tag: Entity_Tag,
+	translation: Vec2,
+	shape: Collider_Shape,
+	interaction_flags: bit_set[Entity_Interaction_Flag] = {},
+	state_flags: bit_set[Entity_State_Flag] = {},
+	rigidbody_flags: bit_set[Rigidbody_Flags] = {},
+	collision_flags: bit_set[Collision_Flag] = {},
+	data: rawptr = nil,
+) -> Entity_Handle {
+	e: Entity
+	e.tag = tag
+	e.translation = translation
+	e.snapshot = translation
+	e.shape = shape
+	switch tag {
+	case .Player:
+	case .Box:
+	case .Level_Collision:
+		e.shape = shape
 
-clear_entity_collections :: proc() {
-	clear(&entities)
-}
+		if card(rigidbody_flags) == 0 {
+			e.rb_flags = {.Static}
+		} else {
+			e.rb_flags = rigidbody_flags
+		}
 
-delete_entity_collections :: proc() {
-	delete(entities)
+		if card(collision_flags) == 0 {
+			e.collision_flags = {.Clingable, .Standable}
+		} else {
+			e.collision_flags = collision_flags
+		}
+	}
+
+	return ha_add(&world.entities, e)
 }
 
 make_entity :: proc(translation: Vec2, tag: Entity_Tag) {
